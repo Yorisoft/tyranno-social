@@ -51,8 +51,8 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
       </div>
 
       {/* Profile Info */}
-      <div className="container mx-auto px-4 -mt-20 relative z-10">
-        <div className="max-w-4xl mx-auto">
+      <div className="px-4 -mt-20 relative z-10">
+        <div>
           <div className="mb-6">
             <Button
               variant="ghost"

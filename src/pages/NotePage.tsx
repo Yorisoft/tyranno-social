@@ -35,8 +35,8 @@ export function NotePage({ eventId }: NotePageProps) {
   if (isLoadingNote) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
+        <div className="px-4 py-8">
+          <div className="max-w-3xl mx-auto">
             <Skeleton className="h-10 w-24 mb-6" />
             <Card>
               <CardHeader>
@@ -82,8 +82,8 @@ export function NotePage({ eventId }: NotePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+      <div className="px-4 py-8">
+        <div className="max-w-3xl mx-auto">
           <Button
             variant="ghost"
             size="sm"

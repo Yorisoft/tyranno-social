@@ -51,7 +51,7 @@ const Index = () => {
       {/* Hero Header */}
       <header className="relative border-b border-border/50 bg-background/80 backdrop-blur-lg">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 -z-10" />
-        <div className="container mx-auto px-4 py-8">
+        <div className="px-4 py-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="relative shrink-0">
@@ -82,8 +82,8 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto flex gap-6">
+      <main className="px-4 py-8">
+        <div className="flex gap-6">
           {/* Feed Section */}
           <div className="flex-1 min-w-0 space-y-6">
           {/* Compose Section */}
@@ -176,7 +176,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border/50 bg-background/80 backdrop-blur-lg mt-16">
-        <div className="container mx-auto px-4 py-6">
+        <div className="px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
             <a
               href="https://shakespeare.diy"
