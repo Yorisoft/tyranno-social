@@ -2,10 +2,12 @@ import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useReactions } from '@/hooks/useReactions';
 import { useReplies } from '@/hooks/useReplies';
+import { useRepostedEvent } from '@/hooks/useRepostedEvent';
 import { genUserName } from '@/lib/genUserName';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { NoteContent } from '@/components/NoteContent';
 import { EmojiReactionPicker } from '@/components/EmojiReactionPicker';
 import { formatDistanceToNow } from 'date-fns';
@@ -19,27 +21,39 @@ interface PostCardProps {
 }
 
 export function PostCard({ event, onClick }: PostCardProps) {
-  const author = useAuthor(event.pubkey);
-  const metadata: NostrMetadata | undefined = author.data?.metadata;
-  const { data: reactions } = useReactions(event.id);
-  const { data: replies } = useReplies(event.id);
+  // Check if this is a repost
+  const isRepost = event.kind === 6 || event.kind === 16;
+  const { data: repostedEvent } = useRepostedEvent(event);
 
-  const displayName = metadata?.display_name || metadata?.name || genUserName(event.pubkey);
-  const username = metadata?.name || genUserName(event.pubkey);
+  // Use reposted event for display if available, otherwise use original
+  const displayEvent = isRepost && repostedEvent ? repostedEvent : event;
+  const reposter = useAuthor(event.pubkey);
+  
+  const author = useAuthor(displayEvent.pubkey);
+  const metadata: NostrMetadata | undefined = author.data?.metadata;
+  const { data: reactions } = useReactions(displayEvent.id);
+  const { data: replies } = useReplies(displayEvent.id);
+
+  const displayName = metadata?.display_name || metadata?.name || genUserName(displayEvent.pubkey);
+  const username = metadata?.name || genUserName(displayEvent.pubkey);
   const profileImage = metadata?.picture;
 
-  const npub = nip19.npubEncode(event.pubkey);
-  const noteId = nip19.noteEncode(event.id);
+  const npub = nip19.npubEncode(displayEvent.pubkey);
+  const noteId = nip19.noteEncode(displayEvent.id);
 
-  const timeAgo = formatDistanceToNow(new Date(event.created_at * 1000), {
+  const timeAgo = formatDistanceToNow(new Date(displayEvent.created_at * 1000), {
     addSuffix: true,
   });
 
+  // Reposter info
+  const reposterMetadata: NostrMetadata | undefined = reposter.data?.metadata;
+  const reposterName = reposterMetadata?.display_name || reposterMetadata?.name || genUserName(event.pubkey);
+
   // Extract image URLs from content
-  const imageUrls = event.content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp)/gi) || [];
+  const imageUrls = displayEvent.content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp)/gi) || [];
   
   // Extract URLs from imeta tags
-  const imetaImages = event.tags
+  const imetaImages = displayEvent.tags
     .filter(([name]) => name === 'imeta')
     .map(tag => {
       const urlTag = tag.find(item => item.startsWith('url '));
@@ -69,7 +83,15 @@ export function PostCard({ event, onClick }: PostCardProps) {
       className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 cursor-pointer"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-3">
+      {isRepost && repostedEvent && (
+        <div className="px-4 pt-3 pb-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Repeat2 className="h-3 w-3" />
+            <span>{reposterName} reposted</span>
+          </div>
+        </div>
+      )}
+      <CardHeader className={isRepost && repostedEvent ? "pb-3 pt-2" : "pb-3"}>
         <div className="flex items-start gap-3">
           <a href={`/${npub}`} className="shrink-0">
             <Avatar className="h-10 w-10 ring-2 ring-background transition-all group-hover:ring-primary/20">
@@ -102,7 +124,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
       </CardHeader>
       <CardContent className="pb-4">
         <div className="mb-4 break-words whitespace-pre-wrap">
-          <NoteContent event={event} className="text-sm leading-relaxed" />
+          <NoteContent event={displayEvent} className="text-sm leading-relaxed" />
         </div>
 
         {/* Image Display */}
@@ -175,7 +197,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
             <Repeat2 className="h-4 w-4" />
           </Button>
           <EmojiReactionPicker
-            eventId={event.id}
+            eventId={displayEvent.id}
             className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
           />
         </div>

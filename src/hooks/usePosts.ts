@@ -8,10 +8,10 @@ import type { NostrEvent } from '@nostrify/nostrify';
 export type FeedCategory = 'following' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
 
 const categoryKinds: Record<FeedCategory, number[]> = {
-  following: [1, 30023, 31337, 34235],
-  text: [1],
+  following: [1, 6, 16, 30023, 31337, 34235],
+  text: [1, 6, 16],
   articles: [30023],
-  photos: [1],
+  photos: [1, 6, 16],
   music: [31337],
   videos: [34235],
 };
@@ -67,10 +67,15 @@ export function usePosts(category: FeedCategory = 'following', limit: number = 1
         });
       }
 
-      // Filter out replies from all categories
-      filteredEvents = filteredEvents.filter(
-        (event) => !event.tags.some(([name]) => name === 'e')
-      );
+      // Filter out replies from all categories (but keep reposts which also have 'e' tags)
+      filteredEvents = filteredEvents.filter((event) => {
+        // Keep reposts (kind 6 and 16)
+        if (event.kind === 6 || event.kind === 16) {
+          return true;
+        }
+        // Filter out replies (events with 'e' tags)
+        return !event.tags.some(([name]) => name === 'e');
+      });
 
       return filteredEvents;
     },
