@@ -73,9 +73,9 @@ const Index = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-red-600 blur-xl opacity-60 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 via-red-900 to-yellow-700 blur-xl opacity-50 animate-pulse" />
                 <div className="relative p-1">
-                  <TyrannoCoin className="h-14 w-14 sm:h-16 sm:w-16 drop-shadow-2xl" />
+                  <TyrannoCoin className="h-14 w-14 sm:h-16 sm:w-16 drop-shadow-2xl filter brightness-110" />
                 </div>
               </div>
               <div className="min-w-0">
