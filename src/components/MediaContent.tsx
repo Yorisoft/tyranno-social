@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { LinkPreview } from './LinkPreview';
+import { ImageGallery } from './ImageGallery';
 
 interface MediaContentProps {
   event: NostrEvent;
@@ -12,6 +13,9 @@ interface MediaItem {
 }
 
 export function MediaContent({ event }: MediaContentProps) {
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
   const media = useMemo(() => {
     const items: MediaItem[] = [];
     
@@ -80,46 +84,54 @@ export function MediaContent({ event }: MediaContentProps) {
   const videos = media.filter(item => item.type === 'video');
   const links = media.filter(item => item.type === 'link');
 
+  const imageUrls = images.map(img => img.url);
+
+  const handleImageClick = (index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  };
+
   if (media.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-3">
-      {/* Images */}
-      {images.length > 0 && (
-        <div className={`grid gap-2 ${
-          images.length === 1 ? 'grid-cols-1' : 
-          images.length === 2 ? 'grid-cols-2' : 
-          images.length === 3 ? 'grid-cols-3' : 
-          'grid-cols-2'
-        }`}>
-          {images.slice(0, 4).map((item, index) => (
-            <div
-              key={`img-${index}`}
-              className={`relative overflow-hidden rounded-lg bg-muted ${
-                images.length === 3 && index === 0 ? 'col-span-3' : ''
-              }`}
-            >
-              <img
-                src={item.url}
-                alt=""
-                className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105 cursor-pointer"
-                loading="lazy"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(item.url, '_blank');
-                }}
-              />
-            </div>
-          ))}
-          {images.length > 4 && (
-            <div className="col-span-2 text-center text-sm text-muted-foreground">
-              +{images.length - 4} more images
-            </div>
-          )}
-        </div>
-      )}
+    <>
+      <div className="space-y-3">
+        {/* Images */}
+        {images.length > 0 && (
+          <div className={`grid gap-2 ${
+            images.length === 1 ? 'grid-cols-1' : 
+            images.length === 2 ? 'grid-cols-2' : 
+            images.length === 3 ? 'grid-cols-3' : 
+            'grid-cols-2'
+          }`}>
+            {images.slice(0, 4).map((item, index) => (
+              <div
+                key={`img-${index}`}
+                className={`relative overflow-hidden rounded-lg bg-muted ${
+                  images.length === 3 && index === 0 ? 'col-span-3' : ''
+                }`}
+              >
+                <img
+                  src={item.url}
+                  alt=""
+                  className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105 cursor-pointer"
+                  loading="lazy"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageClick(index);
+                  }}
+                />
+              </div>
+            ))}
+            {images.length > 4 && (
+              <div className="col-span-2 text-center text-sm text-muted-foreground">
+                +{images.length - 4} more images
+              </div>
+            )}
+          </div>
+        )}
 
       {/* Videos */}
       {videos.length > 0 && (
@@ -161,6 +173,15 @@ export function MediaContent({ event }: MediaContentProps) {
           )}
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Image Gallery */}
+      <ImageGallery
+        images={imageUrls}
+        initialIndex={galleryIndex}
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+      />
+    </>
   );
 }
