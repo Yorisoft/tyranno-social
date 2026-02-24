@@ -15,7 +15,8 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Grid3x3, FileText, Image, Music, Video, Users } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users } from 'lucide-react';
+import { TyrannoCoin } from '@/components/TyrannoCoin';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 const Index = () => {
@@ -72,9 +73,9 @@ const Index = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/50 blur-xl opacity-50" />
-                <div className="relative bg-gradient-to-br from-primary to-primary/80 p-3 rounded-2xl shadow-lg">
-                  <Grid3x3 className="h-8 w-8 text-primary-foreground" />
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-red-600 blur-xl opacity-60 animate-pulse" />
+                <div className="relative p-1">
+                  <TyrannoCoin className="h-14 w-14 sm:h-16 sm:w-16 drop-shadow-2xl" />
                 </div>
               </div>
               <div className="min-w-0">
