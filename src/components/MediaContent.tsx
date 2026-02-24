@@ -133,8 +133,13 @@ export function MediaContent({ event }: MediaContentProps) {
                 src={item.url}
                 controls
                 className="w-full h-auto max-h-96 object-contain"
-                preload="metadata"
+                preload="none"
+                playsInline
                 onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  console.warn('Video load error:', item.url);
+                  e.currentTarget.style.display = 'none';
+                }}
               >
                 Your browser does not support the video tag.
               </video>
