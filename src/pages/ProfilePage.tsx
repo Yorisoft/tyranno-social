@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
 import { MasonryGrid } from '@/components/MasonryGrid';
+import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +12,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
 import { ArrowLeft, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { NostrMetadata } from '@nostrify/nostrify';
+import type { NostrMetadata, NostrEvent } from '@nostrify/nostrify';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ProfilePageProps {
@@ -20,6 +22,8 @@ interface ProfilePageProps {
 export function ProfilePage({ pubkey }: ProfilePageProps) {
   const navigate = useNavigate();
   const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
+  const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { data: profileData, isLoading: isLoadingProfile } = useProfile(pubkey);
   const { data: posts, isLoading: isLoadingPosts } = useUserPosts(pubkey);
 
@@ -32,9 +36,14 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const website = metadata?.website;
 
   useSeoMeta({
-    title: `${displayName} (@${username}) - Masonry Social`,
-    description: bio || `View ${displayName}'s profile on Masonry Social`,
+    title: `${displayName} (@${username}) - Tyrannosocial`,
+    description: bio || `View ${displayName}'s profile on Tyrannosocial`,
   });
+
+  const handlePostClick = (event: NostrEvent) => {
+    setSelectedPost(event);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -140,7 +149,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 ))}
               </div>
             ) : posts && posts.length > 0 ? (
-              <MasonryGrid posts={posts} columns={columns} />
+              <MasonryGrid posts={posts} columns={columns} onPostClick={handlePostClick} />
             ) : (
               <Card className="border-dashed">
                 <CardContent className="py-12 px-8 text-center">
@@ -151,6 +160,13 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
           </div>
         </div>
       </div>
+
+      {/* Post Detail Dialog */}
+      <PostDetailDialog
+        event={selectedPost}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }

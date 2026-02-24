@@ -3,6 +3,7 @@ import { useSeoMeta } from '@unhead/react';
 import { usePosts, type FeedCategory } from '@/hooks/usePosts';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { ComposePost } from '@/components/ComposePost';
+import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileSidebar } from '@/components/MobileSidebar';
@@ -13,13 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Grid3x3, FileText, Image, Music, Video, Hash } from 'lucide-react';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<FeedCategory>('all');
   const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
+  const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useSeoMeta({
-    title: 'Masonry Social - A Beautiful Nostr Experience',
+    title: 'Tyrannosocial - A Beautiful Nostr Experience',
     description: 'Discover and share moments in a stunning masonry grid layout. Built on Nostr, the decentralized social protocol.',
   });
 
@@ -46,6 +50,11 @@ const Index = () => {
 
   const CategoryIcon = categoryIcons[selectedCategory];
 
+  const handlePostClick = (event: NostrEvent) => {
+    setSelectedPost(event);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Hero Header */}
@@ -62,7 +71,7 @@ const Index = () => {
               </div>
               <div className="min-w-0">
                 <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">
-                  Masonry Social
+                  Tyrannosocial
                 </h1>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
@@ -118,7 +127,7 @@ const Index = () => {
                     <div className="inline-flex p-4 rounded-full bg-primary/10 mb-2">
                       <Sparkles className="h-8 w-8 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">Welcome to Masonry Social</h2>
+                    <h2 className="text-2xl font-bold">Welcome to Tyrannosocial</h2>
                     <p className="text-muted-foreground">
                       A beautiful way to experience Nostr. Log in to start sharing your moments with the world.
                     </p>
@@ -150,7 +159,7 @@ const Index = () => {
               </div>
             ) : posts && posts.length > 0 ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <MasonryGrid posts={posts} columns={columns} />
+                <MasonryGrid posts={posts} columns={columns} onPostClick={handlePostClick} />
               </div>
             ) : (
               <Card className="border-dashed">
@@ -190,6 +199,13 @@ const Index = () => {
           </p>
         </div>
       </footer>
+
+      {/* Post Detail Dialog */}
+      <PostDetailDialog
+        event={selectedPost}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 };

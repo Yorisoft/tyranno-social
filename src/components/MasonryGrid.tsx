@@ -4,9 +4,10 @@ import { PostCard } from '@/components/PostCard';
 interface MasonryGridProps {
   posts: NostrEvent[];
   columns: number;
+  onPostClick?: (event: NostrEvent) => void;
 }
 
-export function MasonryGrid({ posts, columns: columnsProp }: MasonryGridProps) {
+export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: MasonryGridProps) {
   // Ensure columns is a valid number between 1 and 4
   const columns = Math.max(1, Math.min(4, Number(columnsProp) || 3));
 
@@ -28,7 +29,11 @@ export function MasonryGrid({ posts, columns: columnsProp }: MasonryGridProps) {
       {columnPosts.map((columnItems, columnIndex) => (
         <div key={columnIndex} className="flex flex-col gap-4">
           {columnItems.map((post) => (
-            <PostCard key={post.id} event={post} />
+            <PostCard 
+              key={post.id} 
+              event={post} 
+              onClick={() => onPostClick?.(post)}
+            />
           ))}
         </div>
       ))}

@@ -28,8 +28,8 @@ export function NotePage({ eventId }: NotePageProps) {
   const profileImage = metadata?.picture;
 
   useSeoMeta({
-    title: event ? `${displayName} on Masonry Social` : 'Loading...',
-    description: event?.content.slice(0, 160) || 'View this post on Masonry Social',
+    title: event ? `${displayName} on Tyrannosocial` : 'Loading...',
+    description: event?.content.slice(0, 160) || 'View this post on Tyrannosocial',
   });
 
   if (isLoadingNote) {
