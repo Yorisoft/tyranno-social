@@ -2,6 +2,7 @@ import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useReactions } from '@/hooks/useReactions';
 import { useReplies } from '@/hooks/useReplies';
+import { useRepostedEvent } from '@/hooks/useRepostedEvent';
 import { useFollows } from '@/hooks/useFollows';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
@@ -81,13 +82,21 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
   const { mutate: publishEvent, isPending } = useNostrPublish();
   const [replyContent, setReplyContent] = useState('');
 
-  const author = useAuthor(event?.pubkey || '');
+  // Check if this is a repost
+  const isRepost = event && (event.kind === 6 || event.kind === 16);
+  const { data: repostedEvent } = useRepostedEvent(event || {} as NostrEvent);
+  
+  // Use reposted event for display if available, otherwise use original
+  const displayEvent = isRepost && repostedEvent ? repostedEvent : event;
+  const reposter = useAuthor(event?.pubkey || '');
+
+  const author = useAuthor(displayEvent?.pubkey || '');
   const metadata: NostrMetadata | undefined = author.data?.metadata;
-  const { data: reactions, isLoading: isLoadingReactions } = useReactions(event?.id || '');
-  const { data: replies, isLoading: isLoadingReplies } = useReplies(event?.id || '');
+  const { data: reactions, isLoading: isLoadingReactions } = useReactions(displayEvent?.id || '');
+  const { data: replies, isLoading: isLoadingReplies } = useReplies(displayEvent?.id || '');
   const { data: followPubkeys = [] } = useFollows(user?.pubkey);
 
-  if (!event) return null;
+  if (!event || !displayEvent) return null;
 
   // Sort replies to prioritize follows
   const sortedReplies = replies?.slice().sort((a, b) => {
@@ -102,12 +111,16 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
     return b.created_at - a.created_at;
   });
 
-  const displayName = metadata?.display_name || metadata?.name || genUserName(event.pubkey);
-  const username = metadata?.name || genUserName(event.pubkey);
+  const displayName = metadata?.display_name || metadata?.name || genUserName(displayEvent.pubkey);
+  const username = metadata?.name || genUserName(displayEvent.pubkey);
   const profileImage = metadata?.picture;
-  const npub = nip19.npubEncode(event.pubkey);
+  const npub = nip19.npubEncode(displayEvent.pubkey);
 
-  const timeAgo = formatDistanceToNow(new Date(event.created_at * 1000), {
+  // Reposter info
+  const reposterMetadata: NostrMetadata | undefined = reposter.data?.metadata;
+  const reposterName = reposterMetadata?.display_name || reposterMetadata?.name || genUserName(event?.pubkey || '');
+
+  const timeAgo = formatDistanceToNow(new Date(displayEvent.created_at * 1000), {
     addSuffix: true,
   });
 
@@ -119,8 +132,8 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
         kind: 1,
         content: replyContent.trim(),
         tags: [
-          ['e', event.id, '', 'reply'],
-          ['p', event.pubkey],
+          ['e', displayEvent.id, '', 'reply'],
+          ['p', displayEvent.pubkey],
         ],
       },
       {
@@ -142,6 +155,13 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
 
             {/* Original Post */}
             <div className="space-y-4">
+              {isRepost && repostedEvent && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2 border-b border-border/50">
+                  <Repeat2 className="h-4 w-4" />
+                  <span>{reposterName} reposted</span>
+                </div>
+              )}
+              
               <div className="flex items-start gap-3">
                 <a href={`/${npub}`} className="shrink-0">
                   <Avatar className="h-12 w-12 ring-2 ring-background">
@@ -167,11 +187,11 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
 
               <div className="space-y-4">
                 <div className="text-base leading-relaxed whitespace-pre-wrap break-words">
-                  <NoteContent event={event} />
+                  <NoteContent event={displayEvent} />
                 </div>
                 
                 {/* Media Content */}
-                <MediaContent event={event} />
+                <MediaContent event={displayEvent} />
               </div>
 
               {/* Reactions */}
@@ -207,7 +227,7 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                   <Repeat2 className="h-4 w-4" />
                 </Button>
                 <EmojiReactionPicker
-                  eventId={event.id}
+                  eventId={displayEvent.id}
                   className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
                 />
               </div>
