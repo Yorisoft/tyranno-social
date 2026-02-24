@@ -25,55 +25,77 @@ export function LinkPreview({ url }: LinkPreviewProps) {
         setIsLoading(true);
         setError(false);
 
-        // Use a CORS proxy to fetch Open Graph data
-        const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
-        const response = await fetch(proxyUrl);
+        // Try to extract basic info from URL
+        const hostname = new URL(url).hostname;
+        const pathname = new URL(url).pathname;
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch');
+        // Use a CORS proxy to fetch Open Graph data with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        try {
+          const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl, { 
+            signal: controller.signal,
+            headers: {
+              'Accept': 'text/html',
+            }
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch');
+          }
+
+          const html = await response.text();
+          
+          // Parse Open Graph and meta tags
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          
+          const getMetaContent = (property: string): string | undefined => {
+            const element = doc.querySelector(`meta[property="${property}"]`) || 
+                           doc.querySelector(`meta[name="${property}"]`);
+            return element?.getAttribute('content') || undefined;
+          };
+
+          const title = getMetaContent('og:title') || 
+                       doc.querySelector('title')?.textContent || 
+                       undefined;
+          
+          const description = getMetaContent('og:description') || 
+                             getMetaContent('description') || 
+                             undefined;
+          
+          const image = getMetaContent('og:image') || 
+                       getMetaContent('twitter:image') || 
+                       undefined;
+          
+          const siteName = getMetaContent('og:site_name') || 
+                          hostname || 
+                          undefined;
+
+          const favicon = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+
+          setPreview({
+            title,
+            description,
+            image,
+            favicon,
+            siteName,
+          });
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          // Fallback: create a basic preview from URL
+          setPreview({
+            title: pathname !== '/' ? pathname.split('/').pop() : hostname,
+            siteName: hostname,
+            favicon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
+          });
         }
-
-        const html = await response.text();
-        
-        // Parse Open Graph and meta tags
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        const getMetaContent = (property: string): string | undefined => {
-          const element = doc.querySelector(`meta[property="${property}"]`) || 
-                         doc.querySelector(`meta[name="${property}"]`);
-          return element?.getAttribute('content') || undefined;
-        };
-
-        const title = getMetaContent('og:title') || 
-                     doc.querySelector('title')?.textContent || 
-                     undefined;
-        
-        const description = getMetaContent('og:description') || 
-                           getMetaContent('description') || 
-                           undefined;
-        
-        const image = getMetaContent('og:image') || 
-                     getMetaContent('twitter:image') || 
-                     undefined;
-        
-        const siteName = getMetaContent('og:site_name') || 
-                        new URL(url).hostname || 
-                        undefined;
-
-        const favicon = doc.querySelector('link[rel="icon"]')?.getAttribute('href') ||
-                       doc.querySelector('link[rel="shortcut icon"]')?.getAttribute('href') ||
-                       `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`;
-
-        setPreview({
-          title,
-          description,
-          image,
-          favicon,
-          siteName,
-        });
       } catch (err) {
-        console.error('Error fetching link preview:', err);
+        // URL parsing error - just show error state
         setError(true);
       } finally {
         setIsLoading(false);
