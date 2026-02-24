@@ -20,6 +20,7 @@ import {
   Video,
   Hash,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 import {
   Sheet,
@@ -31,7 +32,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 
-export type FeedCategory = 'all' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
+export type FeedCategory = 'all' | 'following' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
 
 interface SidebarProps {
   selectedCategory: FeedCategory;
@@ -49,6 +50,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText; kinds: number[] }> = [
     { id: 'all', label: 'All Posts', icon: Hash, kinds: [1] },
+    { id: 'following', label: 'My Feed', icon: Users, kinds: [1] },
     { id: 'text', label: 'Text Notes', icon: FileText, kinds: [1] },
     { id: 'articles', label: 'Articles', icon: FileText, kinds: [30023] },
     { id: 'photos', label: 'Photos', icon: Image, kinds: [1] },

@@ -2,6 +2,7 @@ import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useReactions } from '@/hooks/useReactions';
 import { useReplies } from '@/hooks/useReplies';
+import { useFollows } from '@/hooks/useFollows';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { genUserName } from '@/lib/genUserName';
@@ -31,7 +32,7 @@ interface PostDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function ReplyItem({ reply }: { reply: NostrEvent }) {
+function ReplyItem({ reply, isFollowing }: { reply: NostrEvent; isFollowing?: boolean }) {
   const author = useAuthor(reply.pubkey);
   const metadata: NostrMetadata | undefined = author.data?.metadata;
 
@@ -45,7 +46,7 @@ function ReplyItem({ reply }: { reply: NostrEvent }) {
   });
 
   return (
-    <div className="flex gap-3 py-3">
+    <div className={`flex gap-3 py-3 ${isFollowing ? 'bg-primary/5 -mx-4 px-4 rounded-lg' : ''}`}>
       <a href={`/${npub}`} className="shrink-0">
         <Avatar className="h-8 w-8">
           <AvatarImage src={profileImage} alt={displayName} />
@@ -80,8 +81,22 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
   const metadata: NostrMetadata | undefined = author.data?.metadata;
   const { data: reactions, isLoading: isLoadingReactions } = useReactions(event?.id || '');
   const { data: replies, isLoading: isLoadingReplies } = useReplies(event?.id || '');
+  const { data: followPubkeys = [] } = useFollows(user?.pubkey);
 
   if (!event) return null;
+
+  // Sort replies to prioritize follows
+  const sortedReplies = replies?.slice().sort((a, b) => {
+    const aIsFollow = followPubkeys.includes(a.pubkey);
+    const bIsFollow = followPubkeys.includes(b.pubkey);
+    
+    // Follows come first
+    if (aIsFollow && !bIsFollow) return -1;
+    if (!aIsFollow && bIsFollow) return 1;
+    
+    // Then sort by time (newest first)
+    return b.created_at - a.created_at;
+  });
 
   const displayName = metadata?.display_name || metadata?.name || genUserName(event.pubkey);
   const username = metadata?.name || genUserName(event.pubkey);
@@ -239,11 +254,14 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                     </div>
                   ))}
                 </div>
-              ) : replies && replies.length > 0 ? (
+              ) : sortedReplies && sortedReplies.length > 0 ? (
                 <div className="divide-y divide-border/50">
-                  {replies.map((reply) => (
-                    <ReplyItem key={reply.id} reply={reply} />
-                  ))}
+                  {sortedReplies.map((reply) => {
+                    const isFollowing = followPubkeys.includes(reply.pubkey);
+                    return (
+                      <ReplyItem key={reply.id} reply={reply} isFollowing={isFollowing} />
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">

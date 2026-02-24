@@ -20,6 +20,7 @@ import {
   Hash,
   ChevronRight,
   Menu,
+  Users,
 } from 'lucide-react';
 import {
   Sheet,
@@ -47,6 +48,7 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText }> = [
     { id: 'all', label: 'All Posts', icon: Hash },
+    { id: 'following', label: 'My Feed', icon: Users },
     { id: 'text', label: 'Text Notes', icon: FileText },
     { id: 'articles', label: 'Articles', icon: FileText },
     { id: 'photos', label: 'Photos', icon: Image },

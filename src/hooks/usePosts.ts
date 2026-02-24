@@ -2,12 +2,14 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useFollows } from '@/hooks/useFollows';
 import type { NostrEvent } from '@nostrify/nostrify';
 
-export type FeedCategory = 'all' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
+export type FeedCategory = 'all' | 'following' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
 
 const categoryKinds: Record<FeedCategory, number[]> = {
   all: [1, 30023, 31337, 34235],
+  following: [1, 30023, 31337, 34235],
   text: [1],
   articles: [30023],
   photos: [1],
@@ -19,9 +21,10 @@ export function usePosts(category: FeedCategory = 'all', limit: number = 100) {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
+  const { data: followPubkeys = [] } = useFollows(user?.pubkey);
 
   return useQuery({
-    queryKey: ['posts', category, limit, user?.pubkey, config.relayMetadata.updatedAt],
+    queryKey: ['posts', category, limit, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length],
     queryFn: async () => {
       const kinds = categoryKinds[category];
       
@@ -35,12 +38,19 @@ export function usePosts(category: FeedCategory = 'all', limit: number = 100) {
         ? nostr.group(relayUrls)
         : nostr;
 
-      const events = await relayGroup.query([
-        {
-          kinds,
-          limit,
-        },
-      ]);
+      // For 'following' category, filter by authors
+      const query = category === 'following' && followPubkeys.length > 0
+        ? {
+            kinds,
+            authors: followPubkeys,
+            limit,
+          }
+        : {
+            kinds,
+            limit,
+          };
+
+      const events = await relayGroup.query([query]);
 
       // Filter logic based on category
       let filteredEvents = events;

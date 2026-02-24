@@ -35,6 +35,20 @@ export function PostCard({ event, onClick }: PostCardProps) {
     addSuffix: true,
   });
 
+  // Extract image URLs from content
+  const imageUrls = event.content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp)/gi) || [];
+  
+  // Extract URLs from imeta tags
+  const imetaImages = event.tags
+    .filter(([name]) => name === 'imeta')
+    .map(tag => {
+      const urlTag = tag.find(item => item.startsWith('url '));
+      return urlTag ? urlTag.replace('url ', '') : null;
+    })
+    .filter((url): url is string => url !== null);
+
+  const allImages = [...new Set([...imageUrls, ...imetaImages])];
+
   const replyCount = replies?.length || 0;
   const topReactions = reactions
     ? Object.entries(reactions)
@@ -90,6 +104,36 @@ export function PostCard({ event, onClick }: PostCardProps) {
         <div className="mb-4 break-words whitespace-pre-wrap">
           <NoteContent event={event} className="text-sm leading-relaxed" />
         </div>
+
+        {/* Image Display */}
+        {allImages.length > 0 && (
+          <div className={`grid gap-2 mb-4 ${
+            allImages.length === 1 ? 'grid-cols-1' : 
+            allImages.length === 2 ? 'grid-cols-2' : 
+            allImages.length === 3 ? 'grid-cols-3' : 
+            'grid-cols-2'
+          }`}>
+            {allImages.slice(0, 4).map((url, index) => (
+              <div
+                key={index}
+                className={`relative overflow-hidden rounded-lg bg-muted ${
+                  allImages.length === 3 && index === 0 ? 'col-span-3' : ''
+                }`}
+              >
+                <img
+                  src={url}
+                  alt=""
+                  className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(url, '_blank');
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Reactions Display */}
         {topReactions.length > 0 && (

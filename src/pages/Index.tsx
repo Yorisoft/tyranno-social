@@ -13,7 +13,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Grid3x3, FileText, Image, Music, Video, Hash } from 'lucide-react';
+import { Sparkles, Grid3x3, FileText, Image, Music, Video, Hash, Users } from 'lucide-react';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 const Index = () => {
@@ -32,6 +32,7 @@ const Index = () => {
 
   const categoryIcons: Record<FeedCategory, typeof FileText> = {
     all: Hash,
+    following: Users,
     text: FileText,
     articles: FileText,
     photos: Image,
@@ -41,6 +42,7 @@ const Index = () => {
 
   const categoryLabels: Record<FeedCategory, string> = {
     all: 'All Posts',
+    following: 'My Feed',
     text: 'Text Notes',
     articles: 'Articles',
     photos: 'Photos',
