@@ -6,7 +6,9 @@ import { ComposePost } from '@/components/ComposePost';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileSidebar } from '@/components/MobileSidebar';
+import { ColumnSelector } from '@/components/ColumnSelector';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +16,7 @@ import { Sparkles, Grid3x3, FileText, Image, Music, Video, Hash } from 'lucide-r
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<FeedCategory>('all');
+  const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
 
   useSeoMeta({
     title: 'Masonry Social - A Beautiful Nostr Experience',
@@ -90,17 +93,20 @@ const Index = () => {
             </div>
           )}
 
-          {/* Category Badge */}
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-sm py-1.5 px-3">
-              <CategoryIcon className="h-4 w-4 mr-2" />
-              {categoryLabels[selectedCategory]}
-            </Badge>
-            {posts && (
-              <span className="text-sm text-muted-foreground">
-                {posts.length} {posts.length === 1 ? 'post' : 'posts'}
-              </span>
-            )}
+          {/* Category Badge and Column Selector */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm py-1.5 px-3">
+                <CategoryIcon className="h-4 w-4 mr-2" />
+                {categoryLabels[selectedCategory]}
+              </Badge>
+              {posts && (
+                <span className="text-sm text-muted-foreground">
+                  {posts.length} {posts.length === 1 ? 'post' : 'posts'}
+                </span>
+              )}
+            </div>
+            <ColumnSelector columns={columns} onColumnsChange={setColumns} />
           </div>
 
           {/* Posts */}
@@ -144,7 +150,7 @@ const Index = () => {
               </div>
             ) : posts && posts.length > 0 ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <MasonryGrid posts={posts} />
+                <MasonryGrid posts={posts} columns={columns} />
               </div>
             ) : (
               <Card className="border-dashed">

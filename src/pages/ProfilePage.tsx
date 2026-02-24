@@ -1,10 +1,12 @@
 import { useSeoMeta } from '@unhead/react';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
 import { MasonryGrid } from '@/components/MasonryGrid';
+import { ColumnSelector } from '@/components/ColumnSelector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
 import { ArrowLeft, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +19,7 @@ interface ProfilePageProps {
 
 export function ProfilePage({ pubkey }: ProfilePageProps) {
   const navigate = useNavigate();
+  const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
   const { data: profileData, isLoading: isLoadingProfile } = useProfile(pubkey);
   const { data: posts, isLoading: isLoadingPosts } = useUserPosts(pubkey);
 
@@ -112,7 +115,10 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
 
           {/* Posts */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold px-2">Posts</h2>
+            <div className="flex items-center justify-between gap-4 flex-wrap px-2">
+              <h2 className="text-xl font-semibold">Posts</h2>
+              <ColumnSelector columns={columns} onColumnsChange={setColumns} />
+            </div>
             {isLoadingPosts ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -134,7 +140,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 ))}
               </div>
             ) : posts && posts.length > 0 ? (
-              <MasonryGrid posts={posts} />
+              <MasonryGrid posts={posts} columns={columns} />
             ) : (
               <Card className="border-dashed">
                 <CardContent className="py-12 px-8 text-center">
