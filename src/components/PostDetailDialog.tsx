@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { NoteContent } from '@/components/NoteContent';
 import { EmojiReactionPicker } from '@/components/EmojiReactionPicker';
+import { MediaContent } from '@/components/MediaContent';
 import { MessageCircle, Repeat2, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nip19 } from 'nostr-tools';
@@ -64,8 +65,11 @@ function ReplyItem({ reply, isFollowing }: { reply: NostrEvent; isFollowing?: bo
           <span className="text-xs text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground">{timeAgo}</span>
         </div>
-        <div className="text-sm whitespace-pre-wrap break-words">
-          <NoteContent event={reply} />
+        <div className="space-y-2">
+          <div className="text-sm whitespace-pre-wrap break-words">
+            <NoteContent event={reply} />
+          </div>
+          <MediaContent event={reply} />
         </div>
       </div>
     </div>
@@ -161,8 +165,13 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                 </div>
               </div>
 
-              <div className="text-base leading-relaxed whitespace-pre-wrap break-words">
-                <NoteContent event={event} />
+              <div className="space-y-4">
+                <div className="text-base leading-relaxed whitespace-pre-wrap break-words">
+                  <NoteContent event={event} />
+                </div>
+                
+                {/* Media Content */}
+                <MediaContent event={event} />
               </div>
 
               {/* Reactions */}
