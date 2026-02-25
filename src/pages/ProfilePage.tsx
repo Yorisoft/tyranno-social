@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useToast } from '@/hooks/useToast';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { ColumnSelector } from '@/components/ColumnSelector';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2, Edit } from 'lucide-react';
+import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2, Edit, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { EditProfileForm } from '@/components/EditProfileForm';
@@ -27,6 +28,7 @@ interface ProfilePageProps {
 export function ProfilePage({ pubkey }: ProfilePageProps) {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const { toast } = useToast();
   const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
   const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -36,6 +38,23 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
 
   // Check if this is the current user's own profile
   const isOwnProfile = user?.pubkey === pubkey;
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: 'Copied!',
+        description: `${label} copied to clipboard`,
+      });
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to copy to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const metadata: NostrMetadata | undefined = profileData?.metadata;
   const displayName = metadata?.display_name || metadata?.name || genUserName(pubkey);
@@ -146,23 +165,33 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           )}
                           
                           {(lud16 || lud06) && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <button
+                              onClick={() => copyToClipboard(lud16 || lud06 || '', 'Lightning address')}
+                              className="flex items-center gap-1.5 text-muted-foreground hover:text-amber-500 transition-colors group cursor-pointer"
+                              title="Click to copy Lightning address"
+                            >
                               <Zap className="h-4 w-4 text-amber-500" />
                               <span className="truncate max-w-xs font-mono text-xs">
                                 {lud16 || lud06}
                               </span>
-                            </div>
+                              <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
                           )}
                         </div>
                         
                         {/* Nostr Address */}
                         <div className="mt-4 pt-4 border-t border-border/50">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Mail className="h-3.5 w-3.5" />
-                            <code className="bg-muted px-2 py-1 rounded font-mono truncate max-w-full">
+                          <button
+                            onClick={() => copyToClipboard(npub, 'Nostr public key')}
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors group cursor-pointer w-full"
+                            title="Click to copy public key"
+                          >
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
+                            <code className="bg-muted px-2 py-1 rounded font-mono truncate flex-1 text-left group-hover:bg-muted/80">
                               {npub}
                             </code>
-                          </div>
+                            <Copy className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          </button>
                         </div>
                         </div>
                       </div>
