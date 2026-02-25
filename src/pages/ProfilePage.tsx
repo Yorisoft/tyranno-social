@@ -10,10 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { nip19 } from 'nostr-tools';
 import type { NostrMetadata, NostrEvent } from '@nostrify/nostrify';
 import { formatDistanceToNow } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfilePageProps {
   pubkey: string;
@@ -34,6 +36,10 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const banner = metadata?.banner;
   const profileImage = metadata?.picture;
   const website = metadata?.website;
+  const nip05 = metadata?.nip05;
+  const lud16 = metadata?.lud16;
+  const lud06 = metadata?.lud06;
+  const npub = nip19.npubEncode(pubkey);
 
   useSeoMeta({
     title: `${displayName} (@${username}) - Tyrannosocial`,
@@ -96,23 +102,58 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl font-bold mb-1">{displayName}</h1>
-                        <p className="text-muted-foreground mb-3">@{username}</p>
+                        <div className="flex items-start gap-3 mb-2 flex-wrap">
+                          <div>
+                            <h1 className="text-2xl font-bold">{displayName}</h1>
+                            {metadata?.display_name && metadata?.name && metadata.display_name !== metadata.name && (
+                              <p className="text-sm text-muted-foreground">@{metadata.name}</p>
+                            )}
+                          </div>
+                          {nip05 && (
+                            <Badge variant="secondary" className="gap-1 mt-1">
+                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                              <span className="text-xs">{nip05}</span>
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mb-3">@{username}</p>
+                        
                         {bio && (
-                          <p className="text-sm mb-4 whitespace-pre-wrap break-words">{bio}</p>
+                          <p className="text-sm mb-4 whitespace-pre-wrap break-words leading-relaxed">{bio}</p>
                         )}
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        
+                        <div className="flex flex-wrap gap-4 text-sm">
                           {website && (
                             <a
-                              href={website}
+                              href={website.startsWith('http') ? website : `https://${website}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
                             >
                               <LinkIcon className="h-4 w-4" />
-                              {website.replace(/^https?:\/\//, '')}
+                              <span className="truncate max-w-xs">{website.replace(/^https?:\/\//, '')}</span>
                             </a>
                           )}
+                          
+                          {(lud16 || lud06) && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Zap className="h-4 w-4 text-amber-500" />
+                              <span className="truncate max-w-xs font-mono text-xs">
+                                {lud16 || lud06}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Nostr Address */}
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Mail className="h-3.5 w-3.5" />
+                            <code className="bg-muted px-2 py-1 rounded font-mono truncate max-w-full">
+                              {npub}
+                            </code>
+                          </div>
                         </div>
                       </div>
                     </div>
