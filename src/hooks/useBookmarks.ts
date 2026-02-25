@@ -19,7 +19,12 @@ export function useBookmarks() {
   return useQuery({
     queryKey: ['bookmarks', user?.pubkey, config.relayMetadata.updatedAt],
     queryFn: async () => {
-      if (!user) return { items: [], events: [] };
+      if (!user) {
+        console.log('No user logged in, skipping bookmark fetch');
+        return { items: [], events: [] };
+      }
+
+      console.log('Fetching bookmarks for user:', user.pubkey);
 
       // Get relay URLs from user's configuration
       const relayUrls = config.relayMetadata.relays
@@ -42,8 +47,11 @@ export function useBookmarks() {
 
       const bookmarkItems: BookmarkItem[] = [];
 
+      console.log('Found', bookmarkLists.length, 'bookmark lists');
+
       if (bookmarkLists.length > 0) {
         const list = bookmarkLists[0];
+        console.log('Bookmark list:', list);
 
         // Extract public bookmarks from tags
         for (const tag of list.tags) {
@@ -115,6 +123,7 @@ export function useBookmarks() {
       // TODO: Fetch articles (kind 30023) if needed
       // For now, just return events
 
+      console.log('Returning', bookmarkItems.length, 'bookmark items and', events.length, 'events');
       return { items: bookmarkItems, events };
     },
     enabled: !!user,

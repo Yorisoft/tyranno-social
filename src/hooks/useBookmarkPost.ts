@@ -70,6 +70,8 @@ export function useBookmarkPost() {
         throw new Error('Must be logged in to bookmark');
       }
 
+      console.log('Toggling bookmark for event:', eventId, 'isPrivate:', isPrivate);
+
       const relayUrls = config.relayMetadata.relays
         .filter(r => r.read)
         .map(r => r.url);
@@ -137,12 +139,15 @@ export function useBookmarkPost() {
       }
 
       // Publish updated bookmark list
+      console.log('Publishing bookmark list with', publicTags.length, 'public tags and', privateTags.length, 'private tags');
+      
       await nostr.event({
         kind: 10003,
         content: encryptedContent,
         tags: publicTags,
       });
 
+      console.log('Bookmark', action, 'successfully');
       return action;
     },
     onSuccess: (action, variables) => {
