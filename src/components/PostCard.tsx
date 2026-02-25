@@ -196,11 +196,13 @@ export function PostCard({ event, onClick }: PostCardProps) {
             >
               <Repeat2 className="h-4 w-4" />
             </Button>
-            <ZapButton
-              target={displayEvent as any}
-              className="h-8 px-2 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors flex items-center gap-1"
-              showCount={true}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <ZapButton
+                target={displayEvent as any}
+                className="h-8 px-2 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors flex items-center gap-1"
+                showCount={true}
+              />
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -221,17 +223,17 @@ export function PostCard({ event, onClick }: PostCardProps) {
           </div>
 
           {/* More options menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -274,7 +276,8 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 Copy User npub
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </div>
       </CardContent>
     </Card>
