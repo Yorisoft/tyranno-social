@@ -1,24 +1,17 @@
 import { useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useBookmarks } from '@/hooks/useBookmarks';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
 import { RelayListManager } from '@/components/RelayListManager';
-import { PostCard } from '@/components/PostCard';
-import { PostDetailDialog } from '@/components/PostDetailDialog';
-import type { NostrEvent } from '@nostrify/nostrify';
 import {
   Moon,
   Sun,
   Wifi,
   Bell,
-  Bookmark,
   FileText,
   Image,
   Music,
@@ -48,18 +41,9 @@ interface MobileSidebarProps {
 export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSidebarProps) {
   const { theme, setTheme } = useTheme();
   const { config } = useAppContext();
-  const { data: bookmarksData, isLoading: isLoadingBookmarks } = useBookmarks();
   const [open, setOpen] = useState(false);
-  const [selectedBookmark, setSelectedBookmark] = useState<NostrEvent | null>(null);
-  const [bookmarkDialogOpen, setBookmarkDialogOpen] = useState(false);
 
   const isDark = theme === 'dark';
-
-  const handleBookmarkClick = (event: NostrEvent) => {
-    setSelectedBookmark(event);
-    setBookmarkDialogOpen(true);
-    setOpen(false);
-  };
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText }> = [
     { id: 'following', label: 'My Feed', icon: Users },
@@ -94,7 +78,7 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
           </SheetHeader>
 
           <Tabs defaultValue="categories" className="flex-1 flex flex-col">
-            <TabsList className="mx-6 grid w-auto grid-cols-4 mb-4">
+            <TabsList className="mx-6 grid w-auto grid-cols-3 mb-4">
               <TabsTrigger value="categories">
                 <Hash className="h-4 w-4" />
               </TabsTrigger>
@@ -103,9 +87,6 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
               </TabsTrigger>
               <TabsTrigger value="notifications">
                 <Bell className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger value="bookmarks">
-                <Bookmark className="h-4 w-4" />
               </TabsTrigger>
             </TabsList>
 
@@ -187,60 +168,11 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
                 </div>
               </TabsContent>
 
-              <TabsContent value="bookmarks" className="space-y-4 mt-0">
-                {isLoadingBookmarks ? (
-                  <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Card key={i} className="overflow-hidden">
-                        <div className="p-4 space-y-3">
-                          <div className="flex items-start gap-3">
-                            <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                            <div className="space-y-2 flex-1">
-                              <Skeleton className="h-4 w-24" />
-                              <Skeleton className="h-3 w-16" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-4/5" />
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : bookmarksData && bookmarksData.events.length > 0 ? (
-                  <div className="space-y-3">
-                    {bookmarksData.events.map((event) => (
-                      <PostCard
-                        key={event.id}
-                        event={event}
-                        onClick={() => handleBookmarkClick(event)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-center space-y-2">
-                      <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No bookmarks yet</p>
-                      <p className="text-xs text-muted-foreground">
-                        Save posts to read them later
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
+
             </ScrollArea>
           </Tabs>
         </div>
       </SheetContent>
-
-      {/* Bookmark Detail Dialog */}
-      <PostDetailDialog
-        event={selectedBookmark}
-        open={bookmarkDialogOpen}
-        onOpenChange={setBookmarkDialogOpen}
-      />
     </Sheet>
   );
 }
