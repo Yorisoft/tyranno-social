@@ -78,18 +78,16 @@ export function useBookmarkSets() {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
 
-  // Get local bookmark sets from localStorage
-  const [localSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
-    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
-    {}
-  );
-
   return useQuery({
-    queryKey: ['bookmark-sets', user?.pubkey, config.relayMetadata.updatedAt, localSets],
+    queryKey: ['bookmark-sets', user?.pubkey, config.relayMetadata.updatedAt],
     queryFn: async () => {
       if (!user) {
         return [];
       }
+
+      // Get local bookmark sets from localStorage directly (not via hook to avoid stale closure)
+      const localSetsRaw = localStorage.getItem(getLocalStorageKey(user.pubkey));
+      const localSets: Record<string, LocalBookmarkSet> = localSetsRaw ? JSON.parse(localSetsRaw) : {};
 
       // Get remote bookmark sets from Nostr
       let remoteSets: BookmarkSet[] = [];
@@ -315,8 +313,11 @@ export function useCreateBookmarkSet() {
 
       return { id: dTag };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Force immediate refetch of bookmark sets
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+      queryClient.refetchQueries({ queryKey: ['bookmark-sets'] });
+      
       toast({
         title: 'List created!',
         description: 'Your bookmark list has been saved locally',
@@ -394,6 +395,7 @@ export function useDeleteBookmarkSet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+      queryClient.refetchQueries({ queryKey: ['bookmark-sets'] });
       toast({
         title: 'List deleted',
         description: 'Bookmark list has been deleted',
@@ -540,6 +542,7 @@ export function useAddToBookmarkSet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+      queryClient.refetchQueries({ queryKey: ['bookmark-sets'] });
       queryClient.invalidateQueries({ queryKey: ['bookmark-set-items'] });
       toast({
         title: 'Added to list!',
@@ -671,6 +674,7 @@ export function useRemoveFromBookmarkSet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+      queryClient.refetchQueries({ queryKey: ['bookmark-sets'] });
       queryClient.invalidateQueries({ queryKey: ['bookmark-set-items'] });
       toast({
         title: 'Removed from list',

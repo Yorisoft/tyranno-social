@@ -67,10 +67,13 @@ export function BookmarkListsDialog({
         description: newListDescription.trim() || undefined,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           setNewListTitle('');
           setNewListDescription('');
           setShowCreateForm(false);
+          
+          // Don't close the dialog - let user add the post to the new list
+          // The new list will appear in the list below
         },
       }
     );
