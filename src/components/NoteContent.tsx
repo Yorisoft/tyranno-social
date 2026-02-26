@@ -62,8 +62,9 @@ export function NoteContent({
   const processedContent = useMemo(() => {
     const text = event.content;
     
-    // Regex to find URLs, Nostr references (with or without nostr: prefix), hashtags, and indexed mentions (#[0], #[1], etc.)
-    const regex = /(https?:\/\/[^\s]+)|(?:nostr:)?(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)|(#\[(\d+)\])/g;
+    // Regex to find Nostr references (with or without nostr: prefix), URLs, hashtags, and indexed mentions (#[0], #[1], etc.)
+    // Put Nostr references BEFORE URLs to prevent nostr:nevent1 from being treated as a URL
+    const regex = /(?:nostr:)?(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(https?:\/\/[^\s]+)|(#\w+)|(#\[(\d+)\])/g;
     
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
@@ -72,7 +73,7 @@ export function NoteContent({
     let hiddenCount = 0;
     
     while ((match = regex.exec(text)) !== null) {
-      const [fullMatch, url, nostrPrefix, nostrData, hashtag, indexedMention, mentionIndex] = match;
+      const [fullMatch, nostrPrefix, nostrData, url, hashtag, indexedMention, mentionIndex] = match;
       const index = match.index;
       
       // Add text before this match
@@ -80,44 +81,7 @@ export function NoteContent({
         parts.push(text.substring(lastIndex, index));
       }
       
-      if (indexedMention && mentionIndex) {
-        // Handle indexed mentions like #[0]
-        const idx = parseInt(mentionIndex);
-        if (idx < mentionedPubkeys.length) {
-          const pubkey = mentionedPubkeys[idx];
-          parts.push(
-            <NostrMention key={`indexed-mention-${keyCounter++}`} pubkey={pubkey} />
-          );
-        } else {
-          parts.push(fullMatch);
-        }
-      } else if (url) {
-        // Check if this URL is a media URL that's already displayed
-        const isMediaUrl = mediaUrls.has(url);
-        
-        if (isMediaUrl && !showHiddenLinks) {
-          // Hide media URLs since they're shown as thumbnails
-          hiddenCount++;
-          // Don't add the URL to parts
-        } else {
-          // Handle non-media URLs or show hidden links if toggled
-          parts.push(
-            <a 
-              key={`url-${keyCounter++}`}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                "hover:underline break-all transition-colors",
-                isMediaUrl ? "text-muted-foreground text-xs" : "text-primary hover:text-primary/80"
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {url}
-            </a>
-          );
-        }
-      } else if (nostrPrefix && nostrData) {
+      if (nostrPrefix && nostrData) {
         // Handle Nostr references
         try {
           const nostrId = `${nostrPrefix}${nostrData}`;
@@ -164,6 +128,43 @@ export function NoteContent({
           }
         } catch {
           // If decoding fails, just render as text
+          parts.push(fullMatch);
+        }
+      } else if (url) {
+        // Check if this URL is a media URL that's already displayed
+        const isMediaUrl = mediaUrls.has(url);
+        
+        if (isMediaUrl && !showHiddenLinks) {
+          // Hide media URLs since they're shown as thumbnails
+          hiddenCount++;
+          // Don't add the URL to parts
+        } else {
+          // Handle non-media URLs or show hidden links if toggled
+          parts.push(
+            <a 
+              key={`url-${keyCounter++}`}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "hover:underline break-all transition-colors",
+                isMediaUrl ? "text-muted-foreground text-xs" : "text-primary hover:text-primary/80"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {url}
+            </a>
+          );
+        }
+      } else if (indexedMention && mentionIndex) {
+        // Handle indexed mentions like #[0]
+        const idx = parseInt(mentionIndex);
+        if (idx < mentionedPubkeys.length) {
+          const pubkey = mentionedPubkeys[idx];
+          parts.push(
+            <NostrMention key={`indexed-mention-${keyCounter++}`} pubkey={pubkey} />
+          );
+        } else {
           parts.push(fullMatch);
         }
       } else if (hashtag) {
