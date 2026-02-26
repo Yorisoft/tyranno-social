@@ -17,12 +17,19 @@ export function NoteContent({
   event, 
   className, 
 }: NoteContentProps) {  
+  // Get mentioned pubkeys from p tags for replacements
+  const mentionedPubkeys = useMemo(() => {
+    return event.tags
+      .filter(([name]) => name === 'p')
+      .map(([_, pubkey]) => pubkey);
+  }, [event.tags]);
+
   // Process the content to render mentions, links, etc.
   const content = useMemo(() => {
     const text = event.content;
     
-    // Regex to find URLs, Nostr references, and hashtags
-    const regex = /(https?:\/\/[^\s]+)|nostr:(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)/g;
+    // Regex to find URLs, Nostr references, hashtags, and indexed mentions (#[0], #[1], etc.)
+    const regex = /(https?:\/\/[^\s]+)|nostr:(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)|(#\[(\d+)\])/g;
     
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
@@ -30,7 +37,7 @@ export function NoteContent({
     let keyCounter = 0;
     
     while ((match = regex.exec(text)) !== null) {
-      const [fullMatch, url, nostrPrefix, nostrData, hashtag] = match;
+      const [fullMatch, url, nostrPrefix, nostrData, hashtag, indexedMention, mentionIndex] = match;
       const index = match.index;
       
       // Add text before this match
@@ -38,7 +45,18 @@ export function NoteContent({
         parts.push(text.substring(lastIndex, index));
       }
       
-      if (url) {
+      if (indexedMention && mentionIndex) {
+        // Handle indexed mentions like #[0]
+        const idx = parseInt(mentionIndex);
+        if (idx < mentionedPubkeys.length) {
+          const pubkey = mentionedPubkeys[idx];
+          parts.push(
+            <NostrMention key={`indexed-mention-${keyCounter++}`} pubkey={pubkey} />
+          );
+        } else {
+          parts.push(fullMatch);
+        }
+      } else if (url) {
         // Handle URLs
         parts.push(
           <a 
@@ -46,7 +64,8 @@ export function NoteContent({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:underline break-all"
+            className="text-primary hover:text-primary/80 hover:underline break-all transition-colors"
+            onClick={(e) => e.stopPropagation()}
           >
             {url}
           </a>
@@ -89,7 +108,8 @@ export function NoteContent({
               <Link 
                 key={`nostr-${keyCounter++}`}
                 to={`/${nostrId}`}
-                className="text-blue-500 hover:underline break-all"
+                className="text-primary hover:text-primary/80 hover:underline break-all transition-colors"
+                onClick={(e) => e.stopPropagation()}
               >
                 {fullMatch}
               </Link>
@@ -106,7 +126,8 @@ export function NoteContent({
           <Link 
             key={`hashtag-${keyCounter++}`}
             to={`/t/${tag}`}
-            className="text-blue-500 hover:underline"
+            className="text-primary hover:text-primary/80 hover:underline transition-colors"
+            onClick={(e) => e.stopPropagation()}
           >
             {hashtag}
           </Link>
@@ -127,7 +148,7 @@ export function NoteContent({
     }
     
     return parts;
-  }, [event]);
+  }, [event.content, mentionedPubkeys]);
 
   return (
     <div className={cn("whitespace-pre-wrap break-words", className)}>
@@ -147,11 +168,12 @@ function NostrMention({ pubkey }: { pubkey: string }) {
     <Link 
       to={`/${npub}`}
       className={cn(
-        "font-medium hover:underline",
+        "font-semibold hover:underline transition-colors inline-flex items-center gap-0.5",
         hasRealName 
-          ? "text-blue-500" 
-          : "text-gray-500 hover:text-gray-700"
+          ? "text-primary hover:text-primary/80" 
+          : "text-muted-foreground hover:text-foreground"
       )}
+      onClick={(e) => e.stopPropagation()}
     >
       @{displayName}
     </Link>
