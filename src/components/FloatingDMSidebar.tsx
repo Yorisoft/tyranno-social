@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, X, MessageCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, X, MessageCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ export function FloatingDMSidebar({ onOpenConversation, onCloseConversation, ope
   const { conversations } = useDMContext();
   const { data: followingPubkeys = [] } = useFollowing(user?.pubkey || '');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Don't show sidebar if user is not logged in
   if (!user) {
@@ -40,7 +42,7 @@ export function FloatingDMSidebar({ onOpenConversation, onCloseConversation, ope
     pubkey => !recentDMPubkeys.includes(pubkey) && pubkey !== user.pubkey // Exclude self
   );
 
-  const combinedList = [...recentDMPubkeys, ...followingNotInRecent];
+  // We'll filter in the render phase since we need to use hooks for each user
 
   return (
     <>
@@ -64,74 +66,41 @@ export function FloatingDMSidebar({ onOpenConversation, onCloseConversation, ope
             </p>
           </div>
 
+          {/* Search */}
+          <div className="p-3 border-b border-border/50">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* User List */}
           <ScrollArea className="flex-1">
             <div className="p-2">
-              {combinedList.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm px-4">
-                  No contacts yet. Follow users to chat with them!
-                </div>
-              ) : (
-                <>
-                  {/* Recent DMs Section */}
-                  {recentDMPubkeys.length > 0 && (
-                    <div className="mb-3">
-                      <div className="px-2 py-1 mb-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Recent
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        {recentDMPubkeys.map((pubkey) => {
-                          const isOpen = openConversations.includes(pubkey);
-                          const conversation = conversations.find(c => c.pubkey === pubkey);
-                          const hasUnread = conversation?.lastMessage && !conversation.lastMessageFromUser;
-
-                          return (
-                            <UserListItem
-                              key={pubkey}
-                              pubkey={pubkey}
-                              isRecent={true}
-                              isOpen={isOpen}
-                              hasUnread={hasUnread || false}
-                              onOpen={() => onOpenConversation(pubkey)}
-                              onClose={() => onCloseConversation(pubkey)}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Following Section */}
-                  {followingNotInRecent.length > 0 && (
-                    <div>
-                      <div className="px-2 py-1 mb-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Following
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        {followingNotInRecent.map((pubkey) => {
-                          const isOpen = openConversations.includes(pubkey);
-
-                          return (
-                            <UserListItem
-                              key={pubkey}
-                              pubkey={pubkey}
-                              isRecent={false}
-                              isOpen={isOpen}
-                              hasUnread={false}
-                              onOpen={() => onOpenConversation(pubkey)}
-                              onClose={() => onCloseConversation(pubkey)}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+              <UserListContent
+                recentDMPubkeys={recentDMPubkeys}
+                followingNotInRecent={followingNotInRecent}
+                conversations={conversations}
+                openConversations={openConversations}
+                searchQuery={searchQuery}
+                onOpenConversation={onOpenConversation}
+                onCloseConversation={onCloseConversation}
+              />
             </div>
           </ScrollArea>
         </div>
@@ -154,6 +123,117 @@ export function FloatingDMSidebar({ onOpenConversation, onCloseConversation, ope
       </Button>
     </>
   );
+}
+
+interface UserListContentProps {
+  recentDMPubkeys: string[];
+  followingNotInRecent: string[];
+  conversations: any[];
+  openConversations: string[];
+  searchQuery: string;
+  onOpenConversation: (pubkey: string) => void;
+  onCloseConversation: (pubkey: string) => void;
+}
+
+function UserListContent({ 
+  recentDMPubkeys, 
+  followingNotInRecent, 
+  conversations, 
+  openConversations, 
+  searchQuery,
+  onOpenConversation,
+  onCloseConversation 
+}: UserListContentProps) {
+  // Filter recent DMs
+  const filteredRecentDMs = recentDMPubkeys.filter(pubkey => {
+    if (!searchQuery.trim()) return true;
+    return matchesSearch(pubkey, searchQuery);
+  });
+
+  // Filter following
+  const filteredFollowing = followingNotInRecent.filter(pubkey => {
+    if (!searchQuery.trim()) return true;
+    return matchesSearch(pubkey, searchQuery);
+  });
+
+  if (filteredRecentDMs.length === 0 && filteredFollowing.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground text-sm px-4">
+        {searchQuery.trim() ? 'No users found' : 'No contacts yet. Follow users to chat with them!'}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Recent DMs Section */}
+      {filteredRecentDMs.length > 0 && (
+        <div className="mb-3">
+          <div className="px-2 py-1 mb-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Recent
+            </p>
+          </div>
+          <div className="space-y-1">
+            {filteredRecentDMs.map((pubkey) => {
+              const isOpen = openConversations.includes(pubkey);
+              const conversation = conversations.find(c => c.pubkey === pubkey);
+              const hasUnread = conversation?.lastMessage && !conversation.lastMessageFromUser;
+
+              return (
+                <UserListItem
+                  key={pubkey}
+                  pubkey={pubkey}
+                  isRecent={true}
+                  isOpen={isOpen}
+                  hasUnread={hasUnread || false}
+                  onOpen={() => onOpenConversation(pubkey)}
+                  onClose={() => onCloseConversation(pubkey)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Following Section */}
+      {filteredFollowing.length > 0 && (
+        <div>
+          <div className="px-2 py-1 mb-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Following
+            </p>
+          </div>
+          <div className="space-y-1">
+            {filteredFollowing.map((pubkey) => {
+              const isOpen = openConversations.includes(pubkey);
+
+              return (
+                <UserListItem
+                  key={pubkey}
+                  pubkey={pubkey}
+                  isRecent={false}
+                  isOpen={isOpen}
+                  hasUnread={false}
+                  onOpen={() => onOpenConversation(pubkey)}
+                  onClose={() => onCloseConversation(pubkey)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function matchesSearch(pubkey: string, query: string): boolean {
+  const author = useAuthor(pubkey);
+  const metadata = author.data?.metadata;
+  const displayName = metadata?.display_name || metadata?.name || genUserName(pubkey);
+  const username = metadata?.name || genUserName(pubkey);
+  const searchLower = query.toLowerCase();
+  return displayName.toLowerCase().includes(searchLower) || username.toLowerCase().includes(searchLower);
 }
 
 interface UserListItemProps {
