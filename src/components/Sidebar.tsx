@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useBookmarks } from '@/hooks/useBookmarks';
+import { useBookmarkSets, useBookmarkSetItems } from '@/hooks/useBookmarkSets';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,9 @@ import {
   Hash,
   ChevronRight,
   Users,
+  Lock,
+  Globe,
+  FolderOpen,
 } from 'lucide-react';
 import {
   Sheet,
@@ -39,6 +42,12 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 export type FeedCategory = 'following' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
 
@@ -47,24 +56,69 @@ interface SidebarProps {
   onCategoryChange: (category: FeedCategory) => void;
 }
 
+function BookmarkSetContent({ setId }: { setId: string }) {
+  const { data: items, isLoading } = useBookmarkSetItems(setId);
+  const [selectedEvent, setSelectedEvent] = useState<NostrEvent | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleEventClick = (event: NostrEvent) => {
+    setSelectedEvent(event);
+    setDialogOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 pt-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <div className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-sm text-muted-foreground">No posts in this list</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-3 pt-2">
+        {items.map((event) => (
+          <PostCard key={event.id} event={event} onClick={() => handleEventClick(event)} />
+        ))}
+      </div>
+      <PostDetailDialog event={selectedEvent} open={dialogOpen} onOpenChange={setDialogOpen} />
+    </>
+  );
+}
+
 export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const { theme, setTheme } = useTheme();
   const { config } = useAppContext();
   const { user } = useCurrentUser();
-  const { data: bookmarksData, isLoading: isLoadingBookmarks } = useBookmarks();
+  const { data: bookmarkSets, isLoading: isLoadingBookmarks } = useBookmarkSets();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications();
   const [relaysOpen, setRelaysOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
-  const [selectedBookmark, setSelectedBookmark] = useState<NostrEvent | null>(null);
-  const [bookmarkDialogOpen, setBookmarkDialogOpen] = useState(false);
 
   const isDark = theme === 'dark';
 
-  const handleBookmarkClick = (event: NostrEvent) => {
-    setSelectedBookmark(event);
-    setBookmarkDialogOpen(true);
-  };
+  const totalBookmarks = bookmarkSets?.reduce((sum, set) => sum + set.itemCount, 0) || 0;
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText; kinds: number[] }> = [
     { id: 'following', label: 'My Feed', icon: Users, kinds: [1] },
@@ -280,22 +334,22 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           </CardContent>
         </Card>
 
-        {/* Bookmarks */}
+        {/* Bookmark Lists */}
         <Card className="border-border/50 bg-gradient-to-br from-card to-pink-50/20 dark:from-card dark:to-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bookmark className="h-5 w-5 text-primary" />
-              Bookmarks
+              Bookmark Lists
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Sheet open={bookmarksOpen} onOpenChange={setBookmarksOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="w-full group">
-                  <Bookmark className="h-4 w-4 mr-2 group-hover:text-pink-500 transition-colors" />
-                  Saved Posts
+                  <FolderOpen className="h-4 w-4 mr-2 group-hover:text-pink-500 transition-colors" />
+                  View Lists
                   <Badge variant="secondary" className="ml-auto bg-gradient-to-r from-pink-100 to-rose-100 text-pink-700 border-pink-200 dark:from-secondary dark:to-secondary dark:text-secondary-foreground dark:border-border">
-                    {bookmarksData?.events.length || 0}
+                    {totalBookmarks}
                   </Badge>
                 </Button>
               </SheetTrigger>
@@ -303,51 +357,90 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <Bookmark className="h-5 w-5 text-primary" />
-                    Bookmarks
+                    Bookmark Lists
                   </SheetTitle>
                   <SheetDescription>
-                    Your saved posts (public and private)
+                    Organize your saved posts into custom lists
                   </SheetDescription>
                 </SheetHeader>
                 <Separator className="my-4" />
                 <ScrollArea className="h-[calc(100vh-140px)] pr-4">
-                  {isLoadingBookmarks ? (
+                  {!user ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-center space-y-2">
+                        <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">Log in to see your bookmark lists</p>
+                      </div>
+                    </div>
+                  ) : isLoadingBookmarks ? (
                     <div className="space-y-4">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="overflow-hidden">
                           <div className="p-4 space-y-3">
-                            <div className="flex items-start gap-3">
-                              <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                              <div className="space-y-2 flex-1">
-                                <Skeleton className="h-4 w-24" />
-                                <Skeleton className="h-3 w-16" />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Skeleton className="h-4 w-full" />
-                              <Skeleton className="h-4 w-4/5" />
+                            <Skeleton className="h-5 w-32" />
+                            <Skeleton className="h-4 w-full" />
+                            <div className="flex gap-2">
+                              <Skeleton className="h-5 w-16" />
+                              <Skeleton className="h-5 w-20" />
                             </div>
                           </div>
                         </Card>
                       ))}
                     </div>
-                  ) : bookmarksData && bookmarksData.events.length > 0 ? (
-                    <div className="space-y-3">
-                      {bookmarksData.events.map((event) => (
-                        <PostCard
-                          key={event.id}
-                          event={event}
-                          onClick={() => handleBookmarkClick(event)}
-                        />
+                  ) : bookmarkSets && bookmarkSets.length > 0 ? (
+                    <Accordion type="multiple" className="space-y-3">
+                      {bookmarkSets.map((set) => (
+                        <AccordionItem
+                          key={set.id}
+                          value={set.id}
+                          className="border rounded-lg overflow-hidden bg-card"
+                        >
+                          <AccordionTrigger className="px-4 hover:no-underline hover:bg-accent/50 transition-colors">
+                            <div className="flex items-start justify-between w-full pr-2">
+                              <div className="flex-1 text-left">
+                                <div className="font-medium flex items-center gap-2">
+                                  <Bookmark className="h-4 w-4 text-primary" />
+                                  {set.title}
+                                </div>
+                                {set.description && (
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                                    {set.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {set.itemCount} {set.itemCount === 1 ? 'item' : 'items'}
+                                  </Badge>
+                                  {set.publicItems.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      <Globe className="h-3 w-3 mr-1" />
+                                      {set.publicItems.length}
+                                    </Badge>
+                                  )}
+                                  {set.privateItems.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      <Lock className="h-3 w-3 mr-1" />
+                                      {set.privateItems.length}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-4">
+                            <Separator className="mb-3" />
+                            <BookmarkSetContent setId={set.id} />
+                          </AccordionContent>
+                        </AccordionItem>
                       ))}
-                    </div>
+                    </Accordion>
                   ) : (
                     <div className="flex items-center justify-center h-64">
                       <div className="text-center space-y-2">
                         <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">No bookmarks yet</p>
+                        <p className="text-muted-foreground">No bookmark lists yet</p>
                         <p className="text-xs text-muted-foreground">
-                          Save posts to read them later
+                          Create lists to organize your saved posts
                         </p>
                       </div>
                     </div>
@@ -359,13 +452,6 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         </Card>
 
       </div>
-
-      {/* Bookmark Detail Dialog */}
-      <PostDetailDialog
-        event={selectedBookmark}
-        open={bookmarkDialogOpen}
-        onOpenChange={setBookmarkDialogOpen}
-      />
     </aside>
   );
 }

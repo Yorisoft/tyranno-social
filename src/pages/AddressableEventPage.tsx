@@ -21,7 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { EmojiReactionPicker } from '@/components/EmojiReactionPicker';
 import { ZapButton } from '@/components/ZapButton';
-import { BookmarkDialog } from '@/components/BookmarkDialog';
+import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
 import { MessageCircle, Repeat2, Send, Bookmark, ArrowLeft } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
@@ -152,17 +152,7 @@ export function AddressableEventPage({ kind, pubkey, identifier }: AddressableEv
 
   const handleBookmarkClick = () => {
     if (!event) return;
-    
-    if (isBookmarked) {
-      toggleBookmark.mutate({ eventId: event.id, isPrivate: false });
-    } else {
-      setBookmarkDialogOpen(true);
-    }
-  };
-
-  const handleBookmarkConfirm = (isPrivate: boolean) => {
-    if (!event) return;
-    toggleBookmark.mutate({ eventId: event.id, isPrivate });
+    setBookmarkDialogOpen(true);
   };
 
   useSeoMeta({
@@ -408,13 +398,14 @@ export function AddressableEventPage({ kind, pubkey, identifier }: AddressableEv
             </Card>
           )}
 
-          {/* Bookmark Dialog */}
-          <BookmarkDialog
-            open={bookmarkDialogOpen}
-            onOpenChange={setBookmarkDialogOpen}
-            onConfirm={handleBookmarkConfirm}
-            isBookmarked={!!isBookmarked}
-          />
+          {/* Bookmark Lists Dialog */}
+          {event && (
+            <BookmarkListsDialog
+              open={bookmarkDialogOpen}
+              onOpenChange={setBookmarkDialogOpen}
+              eventId={event.id}
+            />
+          )}
           </>
         )}
       </div>

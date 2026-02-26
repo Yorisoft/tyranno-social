@@ -15,7 +15,7 @@ import { NoteContent } from '@/components/NoteContent';
 import { EmojiReactionPicker } from '@/components/EmojiReactionPicker';
 import { MediaContent } from '@/components/MediaContent';
 import { ZapButton } from '@/components/ZapButton';
-import { BookmarkDialog } from '@/components/BookmarkDialog';
+import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
 import { formatDistanceToNow } from 'date-fns';
 import { nip19 } from 'nostr-tools';
 import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User } from 'lucide-react';
@@ -107,13 +107,18 @@ export function PostCard({ event, onClick }: PostCardProps) {
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isBookmarked) {
-      // If already bookmarked, remove it directly
-      toggleBookmark.mutate({ eventId: displayEvent.id, isPrivate: false });
-    } else {
-      // If not bookmarked, show dialog to choose public/private
-      setBookmarkDialogOpen(true);
+    
+    if (!user) {
+      toast({
+        title: 'Login required',
+        description: 'Please log in to bookmark posts',
+        variant: 'destructive',
+      });
+      return;
     }
+
+    // Always show the lists dialog to choose which list to add to
+    setBookmarkDialogOpen(true);
   };
 
   const handleBookmarkConfirm = (isPrivate: boolean) => {
@@ -324,11 +329,10 @@ export function PostCard({ event, onClick }: PostCardProps) {
       </CardContent>
 
       {/* Bookmark Dialog */}
-      <BookmarkDialog
+      <BookmarkListsDialog
         open={bookmarkDialogOpen}
         onOpenChange={setBookmarkDialogOpen}
-        onConfirm={handleBookmarkConfirm}
-        isBookmarked={!!isBookmarked}
+        eventId={event.id}
       />
     </Card>
   );
