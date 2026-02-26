@@ -65,6 +65,58 @@ export function useBookmarkPost() {
 
   // Toggle bookmark
   const toggleBookmark = useMutation({
+    onMutate: async ({ eventId, isPrivate = false }) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['is-bookmarked', eventId] });
+      await queryClient.cancelQueries({ queryKey: ['bookmarks'] });
+
+      // Snapshot the previous values
+      const previousIsBookmarked = queryClient.getQueryData(['is-bookmarked', eventId, user?.pubkey, config.relayMetadata.updatedAt]);
+      const previousBookmarks = queryClient.getQueryData(['bookmarks', user?.pubkey, config.relayMetadata.updatedAt]);
+
+      // Determine if adding or removing
+      const isCurrentlyBookmarked = previousIsBookmarked === true;
+      const newBookmarkState = !isCurrentlyBookmarked;
+
+      // Optimistically update is-bookmarked
+      queryClient.setQueryData(['is-bookmarked', eventId, user?.pubkey, config.relayMetadata.updatedAt], newBookmarkState);
+
+      // Optimistically update bookmarks list
+      if (user) {
+        queryClient.setQueryData(['bookmarks', user.pubkey, config.relayMetadata.updatedAt], (old: any) => {
+          if (!old) {
+            // If no previous data, create new structure
+            return {
+              items: newBookmarkState ? [{ type: 'event', id: eventId, isPrivate }] : [],
+              events: []
+            };
+          }
+
+          const newItems = [...(old.items || [])];
+          
+          if (newBookmarkState) {
+            // Adding bookmark - add if not already present
+            if (!newItems.some(item => item.id === eventId)) {
+              newItems.push({ type: 'event', id: eventId, isPrivate });
+            }
+          } else {
+            // Removing bookmark
+            const index = newItems.findIndex(item => item.id === eventId);
+            if (index !== -1) {
+              newItems.splice(index, 1);
+            }
+          }
+
+          return {
+            ...old,
+            items: newItems,
+          };
+        });
+      }
+
+      // Return context for rollback
+      return { previousIsBookmarked, previousBookmarks, eventId };
+    },
     mutationFn: async ({ eventId, isPrivate = false }: { eventId: string; isPrivate?: boolean }): Promise<{ action: 'added' | 'removed'; event: NostrEvent }> => {
       if (!user) {
         throw new Error('Must be logged in to bookmark');
@@ -180,7 +232,21 @@ export function useBookmarkPost() {
           : 'Post removed from bookmarks',
       });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // Rollback optimistic updates on error
+      if (context?.previousIsBookmarked !== undefined && user) {
+        queryClient.setQueryData(
+          ['is-bookmarked', context.eventId, user.pubkey, config.relayMetadata.updatedAt], 
+          context.previousIsBookmarked
+        );
+      }
+      if (context?.previousBookmarks && user) {
+        queryClient.setQueryData(
+          ['bookmarks', user.pubkey, config.relayMetadata.updatedAt], 
+          context.previousBookmarks
+        );
+      }
+
       console.error('Failed to toggle bookmark:', error);
       toast({
         title: 'Error',
