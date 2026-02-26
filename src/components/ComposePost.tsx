@@ -165,23 +165,19 @@ export function ComposePost() {
   return (
     <>
       <Card className="border-border/50 dark:border-transparent shadow-md bg-gradient-to-br from-card via-rose-50/30 to-pink-50/20 dark:from-card dark:via-card dark:to-card">
-        <CardContent className="pt-6">
+        <CardHeader className="pb-3">
+          <h3 className="text-lg font-semibold">Compose a new post!</h3>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit}>
-            <div className="flex gap-3">
-              <Avatar className="h-10 w-10 ring-2 ring-background shrink-0">
-                <AvatarImage src={profileImage} alt={displayName} />
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
-                  {displayName[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-3">
-                <Textarea
-                  placeholder="What's on your mind?"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[100px] resize-none border-border/50 focus-visible:ring-primary/50"
-                  disabled={isPending}
-                />
+            <div className="space-y-3">
+              <Textarea
+                placeholder="What's on your mind?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[100px] resize-none border-border/50 focus-visible:ring-primary/50"
+                disabled={isPending}
+              />
 
                 {/* Content Warning Input */}
                 {showContentWarning && (
@@ -323,7 +319,6 @@ export function ComposePost() {
                   </div>
                 </div>
               </div>
-            </div>
           </form>
         </CardContent>
       </Card>
