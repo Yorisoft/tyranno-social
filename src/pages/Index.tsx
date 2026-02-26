@@ -96,17 +96,17 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-amber-50/30 to-orange-50/40 dark:from-background dark:via-background dark:to-primary/5">
       {/* Hero Header - Sticky */}
       <header className="sticky top-0 z-40 relative border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-amber-500/5 to-primary/10 -z-10" />
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Logo and Title */}
             <div className="flex items-center gap-3 flex-1 sm:flex-initial">
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 via-red-900 to-yellow-700 blur-xl opacity-50 animate-pulse" />
-                <div className="relative p-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
+                <div className="relative p-1 bg-gradient-to-br from-amber-100/50 to-orange-100/30 rounded-full dark:from-transparent dark:to-transparent">
                   <TyrannoCoin className="h-12 w-12 sm:h-14 sm:w-14 drop-shadow-2xl filter brightness-110" />
                 </div>
               </div>
@@ -158,7 +158,7 @@ const Index = () => {
           {!searchQuery && (
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm py-1.5 px-3">
+                <Badge variant="secondary" className="text-sm py-1.5 px-3 bg-gradient-to-r from-primary/10 to-orange-100/50 text-primary border-primary/20 dark:from-primary/20 dark:to-primary/10">
                   <CategoryIcon className="h-4 w-4 mr-2" />
                   {categoryLabels[selectedCategory]}
                 </Badge>
@@ -176,7 +176,7 @@ const Index = () => {
           {searchQuery && (
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm py-1.5 px-3">
+                <Badge variant="secondary" className="text-sm py-1.5 px-3 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border-blue-200 dark:from-secondary dark:to-secondary dark:text-secondary-foreground dark:border-border">
                   Search Results
                 </Badge>
                 {posts && (
@@ -192,13 +192,16 @@ const Index = () => {
           {/* Posts */}
           <div className="space-y-4">
             {!user && !searchQuery && (
-              <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                <CardContent className="py-12 px-8 text-center">
+              <Card className="border-dashed border-2 border-primary/30 bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-yellow-50/30 dark:from-primary/5 dark:via-transparent dark:to-transparent relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 -z-10" />
+                <CardContent className="py-12 px-8 text-center relative">
                   <div className="max-w-md mx-auto space-y-4">
-                    <div className="inline-flex p-4 rounded-full bg-primary/10 mb-2">
-                      <Sparkles className="h-8 w-8 text-primary" />
+                    <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/15 mb-2 shadow-lg">
+                      <Sparkles className="h-8 w-8 text-primary drop-shadow-sm" />
                     </div>
-                    <h2 className="text-2xl font-bold">Welcome to Tyrannosocial</h2>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
+                      Welcome to Tyrannosocial
+                    </h2>
                     <p className="text-muted-foreground">
                       A beautiful way to experience Nostr. Log in to start sharing your moments with the world.
                     </p>
@@ -281,17 +284,17 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 bg-background/80 backdrop-blur-lg mt-16">
+      <footer className="border-t border-border/50 bg-gradient-to-r from-background/80 via-amber-50/30 to-background/80 backdrop-blur-lg mt-16 dark:from-background/80 dark:via-background/80 dark:to-background/80">
         <div className="px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
             <a
               href="https://shakespeare.diy"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-primary transition-colors inline-flex items-center gap-1"
+              className="hover:text-primary transition-all inline-flex items-center gap-1 hover:scale-105"
             >
               Vibed with Shakespeare
-              <Sparkles className="h-3 w-3" />
+              <Sparkles className="h-3 w-3 text-amber-500 dark:text-primary" />
             </a>
           </p>
         </div>

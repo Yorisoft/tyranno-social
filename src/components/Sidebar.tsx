@@ -83,7 +83,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
     <aside className="w-80 shrink-0 hidden lg:block">
       <div className="sticky top-4 space-y-4">
         {/* Theme Toggle */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-br from-card to-amber-50/30 dark:from-card dark:to-card">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -107,7 +107,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         </Card>
 
         {/* Feed Categories */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-br from-card to-orange-50/20 dark:from-card dark:to-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Hash className="h-5 w-5 text-primary" />
@@ -123,10 +123,10 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
                 <Button
                   key={category.id}
                   variant={isActive ? 'secondary' : 'ghost'}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start transition-all ${
                     isActive
-                      ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                      : 'hover:bg-muted'
+                      ? 'bg-gradient-to-r from-primary/15 to-primary/10 text-primary hover:from-primary/20 hover:to-primary/15 shadow-sm'
+                      : 'hover:bg-gradient-to-r hover:from-muted hover:to-accent/50'
                   }`}
                   onClick={() => onCategoryChange(category.id)}
                 >
@@ -140,14 +140,14 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         </Card>
 
         {/* Relays */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-br from-card to-blue-50/20 dark:from-card dark:to-card">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Wifi className="h-5 w-5 text-primary" />
                 Relays
               </CardTitle>
-              <Badge variant="secondary" className="font-mono text-xs">
+              <Badge variant="secondary" className="font-mono text-xs bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border-blue-200 dark:from-secondary dark:to-secondary dark:text-secondary-foreground dark:border-border">
                 {config.relayMetadata.relays.length}
               </Badge>
             </div>
@@ -157,7 +157,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
               <div className="text-sm text-muted-foreground space-y-1">
                 {config.relayMetadata.relays.slice(0, 2).map((relay) => (
                   <div key={relay.url} className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <div className="h-2 w-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 shadow-sm shadow-green-500/50 animate-pulse" />
                     <span className="text-xs font-mono truncate">
                       {relay.url.replace('wss://', '')}
                     </span>
@@ -196,7 +196,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         </Card>
 
         {/* Notifications */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-br from-card to-purple-50/20 dark:from-card dark:to-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bell className="h-5 w-5 text-primary" />
@@ -206,11 +206,11 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           <CardContent>
             <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  <Bell className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="w-full group">
+                  <Bell className="h-4 w-4 mr-2 group-hover:text-purple-500 transition-colors" />
                   View Notifications
                   {notifications && notifications.length > 0 && (
-                    <Badge variant="destructive" className="ml-auto">
+                    <Badge variant="destructive" className="ml-auto bg-gradient-to-r from-red-500 to-pink-500 shadow-sm">
                       {notifications.length > 99 ? '99+' : notifications.length}
                     </Badge>
                   )}
@@ -281,7 +281,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         </Card>
 
         {/* Bookmarks */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-br from-card to-pink-50/20 dark:from-card dark:to-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bookmark className="h-5 w-5 text-primary" />
@@ -291,10 +291,10 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           <CardContent>
             <Sheet open={bookmarksOpen} onOpenChange={setBookmarksOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  <Bookmark className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="w-full group">
+                  <Bookmark className="h-4 w-4 mr-2 group-hover:text-pink-500 transition-colors" />
                   Saved Posts
-                  <Badge variant="secondary" className="ml-auto">
+                  <Badge variant="secondary" className="ml-auto bg-gradient-to-r from-pink-100 to-rose-100 text-pink-700 border-pink-200 dark:from-secondary dark:to-secondary dark:text-secondary-foreground dark:border-border">
                     {bookmarksData?.events.length || 0}
                   </Badge>
                 </Button>

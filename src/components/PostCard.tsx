@@ -118,7 +118,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
 
   return (
     <Card 
-      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 cursor-pointer"
+      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 cursor-pointer bg-gradient-to-br from-card via-card to-amber-50/20 dark:from-card dark:via-card dark:to-card"
       onClick={handleCardClick}
     >
       {isRepost && repostedEvent && (
