@@ -15,13 +15,15 @@ import { ColumnSelector } from '@/components/ColumnSelector';
 import { ColorThemeSelector } from '@/components/ColorThemeSelector';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useUnreadDMCount } from '@/hooks/useUnreadDMCount';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle } from 'lucide-react';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +48,8 @@ const Index = () => {
 
   const { user } = useCurrentUser();
   const { config } = useAppContext();
+  const navigate = useNavigate();
+  const unreadDMCount = useUnreadDMCount();
   
   const { 
     data: infiniteData, 
@@ -160,12 +164,31 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Side - Search, Login and Mobile Menu */}
+            {/* Right Side - Search, DM Button, Login and Mobile Menu */}
             <div className="flex items-center gap-2 shrink-0">
               {/* Search Bar - Desktop */}
               <div className="hidden md:block w-64 lg:w-80">
                 <SearchBar onSearch={setSearchQuery} />
               </div>
+              
+              {/* DM Button with Unread Badge - Only show when logged in */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/messages')}
+                  className="relative h-10 w-10"
+                  aria-label={`Messages${unreadDMCount > 0 ? ` (${unreadDMCount} unread)` : ''}`}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {unreadDMCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 bg-red-500 hover:bg-red-500 text-white text-xs border-2 border-background">
+                      {unreadDMCount > 9 ? '9+' : unreadDMCount}
+                    </Badge>
+                  )}
+                </Button>
+              )}
+              
               <LoginArea className="max-w-60 hidden sm:flex" />
               <MobileSidebar
                 selectedCategory={selectedCategory}
