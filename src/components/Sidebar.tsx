@@ -32,6 +32,7 @@ import {
   Lock,
   Globe,
   FolderOpen,
+  RefreshCw,
 } from 'lucide-react';
 import {
   Sheet,
@@ -110,15 +111,22 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const { theme, setTheme } = useTheme();
   const { config } = useAppContext();
   const { user } = useCurrentUser();
-  const { data: bookmarkSets, isLoading: isLoadingBookmarks } = useBookmarkSets();
+  const { data: bookmarkSets, isLoading: isLoadingBookmarks, refetch: refetchBookmarks } = useBookmarkSets();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications();
   const [relaysOpen, setRelaysOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isDark = theme === 'dark';
 
   const totalBookmarks = bookmarkSets?.reduce((sum, set) => sum + set.itemCount, 0) || 0;
+
+  const handleRefreshBookmarks = async () => {
+    setIsRefreshing(true);
+    await refetchBookmarks();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText; kinds: number[] }> = [
     { id: 'following', label: 'My Feed', icon: Users, kinds: [1] },
@@ -355,13 +363,29 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:w-[540px]">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <Bookmark className="h-5 w-5 text-primary" />
-                    Bookmark Lists
-                  </SheetTitle>
-                  <SheetDescription>
-                    Organize your saved posts into custom lists
-                  </SheetDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <SheetTitle className="flex items-center gap-2">
+                        <Bookmark className="h-5 w-5 text-primary" />
+                        Bookmark Lists
+                      </SheetTitle>
+                      <SheetDescription>
+                        Organize your saved posts into custom lists
+                      </SheetDescription>
+                    </div>
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleRefreshBookmarks}
+                        disabled={isRefreshing || isLoadingBookmarks}
+                        className="shrink-0"
+                        title="Refresh bookmarks from relays"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      </Button>
+                    )}
+                  </div>
                 </SheetHeader>
                 <Separator className="my-4" />
                 <ScrollArea className="h-[calc(100vh-140px)] pr-4">
