@@ -66,25 +66,23 @@ export function ColorThemeSelector() {
 
     darkModeStyle.textContent = `
       .dark {
-        /* Apply custom hue to primary and accent colors only */
+        /* Apply custom hue to all elements with subtle saturation */
+        --background: ${darkHue} 8% 7%;
+        --card: ${darkHue} 12% 10%;
+        --popover: ${darkHue} 12% 10%;
         --primary: ${darkHue} 70% 60%;
         --ring: ${darkHue} 70% 60%;
+        --secondary: ${darkHue} 8% 15%;
+        --muted: ${darkHue} 8% 14%;
+        --accent: ${darkHue} 10% 16%;
+        --border: ${darkHue} 8% 18%;
+        --input: ${darkHue} 8% 18%;
         --destructive: ${darkHue === 0 ? '0' : darkHue} 70% 50%;
+        --sidebar-background: ${darkHue} 8% 8%;
         --sidebar-primary: ${darkHue} 70% 60%;
+        --sidebar-accent: ${darkHue} 8% 14%;
+        --sidebar-border: ${darkHue} 8% 16%;
         --sidebar-ring: ${darkHue} 70% 60%;
-        
-        /* Keep backgrounds, cards, and borders neutral gray */
-        --background: 0 0% 7%;
-        --card: 0 0% 10%;
-        --popover: 0 0% 10%;
-        --secondary: 0 0% 15%;
-        --muted: 0 0% 14%;
-        --accent: 0 0% 16%;
-        --border: 0 0% 18%;
-        --input: 0 0% 18%;
-        --sidebar-background: 0 0% 8%;
-        --sidebar-accent: 0 0% 14%;
-        --sidebar-border: 0 0% 16%;
       }
     `;
   }, [lightHue, darkHue]);
