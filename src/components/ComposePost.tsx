@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { NoteContent } from '@/components/NoteContent';
+import { MediaContent } from '@/components/MediaContent';
 import { genUserName } from '@/lib/genUserName';
 import { Send, Eye, ImagePlus, AlertTriangle, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
@@ -359,32 +360,10 @@ export function ComposePost() {
                 <NoteContent event={previewEvent} className="text-sm" />
               </div>
 
-              {/* Media Preview */}
-              {attachedMedia.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-                  {attachedMedia.map((media, index) => (
-                    <div key={index} className="aspect-video rounded-lg overflow-hidden bg-muted border border-border">
-                      {media.type.startsWith('image/') ? (
-                        <img
-                          src={media.url}
-                          alt="Attachment"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : media.type.startsWith('video/') ? (
-                        <video
-                          src={media.url}
-                          className="w-full h-full object-cover"
-                          controls
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <p className="text-xs text-muted-foreground">Media file</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Media Preview - Uses MediaContent to show images, videos, YouTube embeds, and link previews */}
+              <div className="mt-4">
+                <MediaContent event={previewEvent} />
+              </div>
             </CardContent>
           </Card>
 

@@ -3,13 +3,14 @@ import type { NostrEvent } from '@nostrify/nostrify';
 import { LinkPreview } from './LinkPreview';
 import { ImageGallery } from './ImageGallery';
 import { VideoPlayer } from './VideoPlayer';
+import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 
 interface MediaContentProps {
   event: NostrEvent;
 }
 
 interface MediaItem {
-  type: 'image' | 'video' | 'link';
+  type: 'image' | 'video' | 'youtube' | 'link';
   url: string;
 }
 
@@ -74,7 +75,12 @@ export function MediaContent({ event }: MediaContentProps) {
       const isNostr = url.includes('nostr:') || url.match(/\/(npub1|note1|nevent1|naddr1|nprofile1)/);
       
       if (!isMedia && !isNostr && !items.some(item => item.url === url)) {
-        items.push({ type: 'link', url });
+        // Check if it's a YouTube link
+        if (isYouTubeUrl(url)) {
+          items.push({ type: 'youtube', url });
+        } else {
+          items.push({ type: 'link', url });
+        }
       }
     }
 
@@ -83,6 +89,7 @@ export function MediaContent({ event }: MediaContentProps) {
 
   const images = media.filter(item => item.type === 'image');
   const videos = media.filter(item => item.type === 'video');
+  const youtubeVideos = media.filter(item => item.type === 'youtube');
   const links = media.filter(item => item.type === 'link');
 
   const imageUrls = images.map(img => img.url);
@@ -141,6 +148,18 @@ export function MediaContent({ event }: MediaContentProps) {
             <VideoPlayer
               key={`vid-${index}`}
               src={item.url}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* YouTube Videos */}
+      {youtubeVideos.length > 0 && (
+        <div className="space-y-3">
+          {youtubeVideos.map((item, index) => (
+            <YouTubeEmbed
+              key={`youtube-${index}`}
+              url={item.url}
             />
           ))}
         </div>
