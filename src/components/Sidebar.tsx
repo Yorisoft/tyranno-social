@@ -43,6 +43,7 @@ import {
   RefreshCw,
   CheckCheck,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 import {
   Sheet,
@@ -309,6 +310,27 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
                 </SheetContent>
               </Sheet>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Direct Messages */}
+        <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-indigo-50/20 dark:from-card dark:to-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              Direct Messages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full group"
+              onClick={() => navigate('/messages')}
+            >
+              <MessageCircle className="h-4 w-4 mr-2 group-hover:text-indigo-500 transition-colors" />
+              Open Messages
+            </Button>
           </CardContent>
         </Card>
 

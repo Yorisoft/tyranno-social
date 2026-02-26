@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -25,6 +26,7 @@ import {
   ChevronRight,
   Menu,
   Users,
+  MessageCircle,
 } from 'lucide-react';
 import {
   Sheet,
@@ -49,6 +51,7 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
   const { user } = useCurrentUser();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const isDark = theme === 'dark';
 
@@ -124,6 +127,23 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
                       );
                     })}
                   </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-3">Messages</h3>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      navigate('/messages');
+                      setOpen(false);
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-3" />
+                    Direct Messages
+                  </Button>
                 </div>
 
                 <Separator />
