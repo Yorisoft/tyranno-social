@@ -11,6 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RelayListManager } from '@/components/RelayListManager';
 import { PostCard } from '@/components/PostCard';
 import { PostDetailDialog } from '@/components/PostDetailDialog';
@@ -137,6 +144,9 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
     { id: 'videos', label: 'Videos', icon: Video, kinds: [34235] },
   ];
 
+  const selectedCategoryData = categories.find(c => c.id === selectedCategory) || categories[0];
+  const SelectedIcon = selectedCategoryData.icon;
+
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
@@ -173,31 +183,33 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Hash className="h-5 w-5 text-primary" />
-              Categories
+              Feed Category
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              const isActive = selectedCategory === category.id;
-
-              return (
-                <Button
-                  key={category.id}
-                  variant={isActive ? 'secondary' : 'ghost'}
-                  className={`w-full justify-start transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-primary/15 to-primary/10 text-primary hover:from-primary/20 hover:to-primary/15 shadow-sm'
-                      : 'hover:bg-gradient-to-r hover:from-muted hover:to-accent/50'
-                  }`}
-                  onClick={() => onCategoryChange(category.id)}
-                >
-                  <Icon className="h-4 w-4 mr-3" />
-                  {category.label}
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
-                </Button>
-              );
-            })}
+          <CardContent>
+            <Select value={selectedCategory} onValueChange={(value) => onCategoryChange(value as FeedCategory)}>
+              <SelectTrigger className="w-full bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <SelectedIcon className="h-4 w-4 text-primary" />
+                    <span className="font-medium">{selectedCategoryData.label}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        <span>{category.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
