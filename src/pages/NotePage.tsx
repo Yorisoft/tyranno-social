@@ -319,7 +319,7 @@ export function NotePage({ eventId }: NotePageProps) {
 
           {/* Comments Section */}
           <div className="mt-6">
-            <CommentsSection eventId={event.id} />
+            <CommentsSection root={event} />
           </div>
         </div>
       </div>
