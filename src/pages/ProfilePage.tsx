@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
+import { useFollowStats } from '@/hooks/useFollowers';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ColorThemeSelector } from '@/components/ColorThemeSelector';
+import { FollowListDialog } from '@/components/FollowListDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2, Edit, Copy } from 'lucide-react';
+import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2, Edit, Copy, MessageCircle, Users, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { EditProfileForm } from '@/components/EditProfileForm';
@@ -34,8 +36,11 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [followListOpen, setFollowListOpen] = useState(false);
+  const [followListTab, setFollowListTab] = useState<'followers' | 'following'>('followers');
   const { data: profileData, isLoading: isLoadingProfile } = useProfile(pubkey);
   const { data: posts, isLoading: isLoadingPosts } = useUserPosts(pubkey);
+  const { followersCount, followingCount, isLoading: isLoadingStats } = useFollowStats(pubkey);
 
   // Check if this is the current user's own profile
   const isOwnProfile = user?.pubkey === pubkey;
@@ -77,6 +82,28 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const handlePostClick = (event: NostrEvent) => {
     setSelectedPost(event);
     setDialogOpen(true);
+  };
+
+  const handleOpenFollowers = () => {
+    setFollowListTab('followers');
+    setFollowListOpen(true);
+  };
+
+  const handleOpenFollowing = () => {
+    setFollowListTab('following');
+    setFollowListOpen(true);
+  };
+
+  const handleSendDM = () => {
+    if (!user) {
+      toast({
+        title: 'Login required',
+        description: 'Please log in to send direct messages',
+        variant: 'destructive',
+      });
+      return;
+    }
+    navigate('/messages');
   };
 
   return (
@@ -147,6 +174,30 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                         </div>
                         
                         <p className="text-sm text-muted-foreground mb-3">@{username}</p>
+
+                        {/* Follower/Following Stats */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <button
+                            onClick={handleOpenFollowers}
+                            className="text-sm hover:underline cursor-pointer group"
+                          >
+                            <span className="font-semibold group-hover:text-primary transition-colors">
+                              {isLoadingStats ? '...' : followersCount}
+                            </span>{' '}
+                            <span className="text-muted-foreground">
+                              {followersCount === 1 ? 'Follower' : 'Followers'}
+                            </span>
+                          </button>
+                          <button
+                            onClick={handleOpenFollowing}
+                            className="text-sm hover:underline cursor-pointer group"
+                          >
+                            <span className="font-semibold group-hover:text-primary transition-colors">
+                              {isLoadingStats ? '...' : followingCount}
+                            </span>{' '}
+                            <span className="text-muted-foreground">Following</span>
+                          </button>
+                        </div>
                         
                         {bio && (
                           <p className="text-sm mb-4 whitespace-pre-wrap break-words leading-relaxed">{bio}</p>
@@ -197,17 +248,28 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                         </div>
                       </div>
                       
-                      {/* Edit Profile Button - only show on own profile */}
-                      {isOwnProfile && (
-                        <Button
-                          onClick={() => setEditProfileOpen(true)}
-                          variant="outline"
-                          className="gap-2 shrink-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit Profile
-                        </Button>
-                      )}
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 shrink-0">
+                        {isOwnProfile ? (
+                          <Button
+                            onClick={() => setEditProfileOpen(true)}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Profile
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleSendDM}
+                            variant="default"
+                            className="gap-2"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Message
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -273,6 +335,14 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
           <EditProfileForm onSuccess={() => setEditProfileOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Follow List Dialog */}
+      <FollowListDialog
+        pubkey={pubkey}
+        open={followListOpen}
+        onOpenChange={setFollowListOpen}
+        defaultTab={followListTab}
+      />
     </div>
   );
 }
