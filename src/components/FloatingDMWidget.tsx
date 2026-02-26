@@ -139,6 +139,7 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   const metadata: NostrMetadata | undefined = author.data?.metadata;
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const scrollAreaRef = useState<HTMLDivElement | null>(null)[0];
 
   const displayName = metadata?.display_name || metadata?.name || genUserName(pubkey);
   const profileImage = metadata?.picture;
@@ -146,19 +147,45 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   const conversationData = messages.get(pubkey);
   const conversationMessages = conversationData?.messages || [];
 
+  // Auto-scroll to bottom when messages change
+  const scrollToBottom = () => {
+    const scrollArea = document.querySelector(`[data-conversation="${pubkey}"] [data-radix-scroll-area-viewport]`);
+    if (scrollArea) {
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  };
+
+  // Scroll when messages change
+  useState(() => {
+    if (!isMinimized && conversationMessages.length > 0) {
+      setTimeout(scrollToBottom, 100);
+    }
+  });
+
   const handleSendMessage = async () => {
     if (!messageText.trim() || !user) return;
 
+    const content = messageText.trim();
+    console.log('[FloatingDM] Attempting to send message');
+    console.log('[FloatingDM] Recipient:', pubkey);
+    console.log('[FloatingDM] Content:', content);
+    console.log('[FloatingDM] User has NIP-44:', !!user.signer.nip44);
+    
+    setMessageText('');
     setIsSending(true);
+
     try {
       await sendMessage({
         recipientPubkey: pubkey,
-        content: messageText.trim(),
+        content: content,
         protocol: 'nip17', // Use NIP-17 by default
       });
-      setMessageText('');
+      console.log('[FloatingDM] Message sent successfully');
+      console.log('[FloatingDM] Current messages in state:', conversationMessages.length);
+      setTimeout(scrollToBottom, 200);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('[FloatingDM] Failed to send message:', error);
+      setMessageText(content); // Restore message on error
     } finally {
       setIsSending(false);
     }
@@ -215,20 +242,20 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
       {/* Message Area - Only show when not minimized */}
       {!isMinimized && (
         <>
-          <ScrollArea className="h-[calc(100%-120px)] p-3">
+          <ScrollArea className="h-[calc(100%-120px)] p-3" data-conversation={pubkey}>
             {conversationMessages.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No messages yet. Start the conversation!
               </div>
             ) : (
               <div className="space-y-3">
-                {conversationMessages.map((msg) => {
+                {conversationMessages.map((msg, index) => {
                   const isFromUser = msg.pubkey === user?.pubkey;
                   const content = msg.decryptedContent || msg.content;
 
                   return (
                     <div
-                      key={msg.id}
+                      key={msg.id || `msg-${index}`}
                       className={cn(
                         "flex",
                         isFromUser ? "justify-end" : "justify-start"
