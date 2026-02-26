@@ -124,7 +124,10 @@ export function BookmarkListsDialog({
               Create New List
             </Button>
           ) : (
-            <div className="border rounded-lg p-4 mb-4 space-y-3 bg-accent/10">
+            <div 
+              className="border rounded-lg p-4 mb-4 space-y-3 bg-accent/10"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="space-y-2">
                 <Label htmlFor="list-title">List Name *</Label>
                 <Input
@@ -132,6 +135,8 @@ export function BookmarkListsDialog({
                   placeholder="e.g., Read Later, Favorites, Tech Articles"
                   value={newListTitle}
                   onChange={(e) => setNewListTitle(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                   disabled={isCreating}
                 />
               </div>
@@ -143,6 +148,8 @@ export function BookmarkListsDialog({
                   placeholder="What's this list for?"
                   value={newListDescription}
                   onChange={(e) => setNewListDescription(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                   disabled={isCreating}
                   rows={2}
                 />
