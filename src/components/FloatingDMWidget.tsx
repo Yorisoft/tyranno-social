@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Minimize2, Maximize2, Send, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -144,11 +144,10 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [optimisticMessages, setOptimisticMessages] = useState<Array<{ content: string; timestamp: number }>>([]);
-  const scrollAreaRef = useState<HTMLDivElement | null>(null)[0];
 
   const displayName = metadata?.display_name || metadata?.name || genUserName(pubkey);
   const profileImage = metadata?.picture;
-  const hasDMRelays = config.dmInboxRelays && config.dmInboxRelays.relays.length > 0;
+  const hasDMRelays = config?.dmInboxRelays && config.dmInboxRelays.relays.length > 0;
 
   const conversationData = messages.get(pubkey);
   const conversationMessages = conversationData?.messages || [];
@@ -167,11 +166,11 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   };
 
   // Scroll when messages change
-  useState(() => {
+  useEffect(() => {
     if (!isMinimized && conversationMessages.length > 0) {
       setTimeout(scrollToBottom, 100);
     }
-  });
+  }, [isMinimized, conversationMessages.length]);
 
   const handleSendMessage = async () => {
     if (!messageText.trim() || !user) return;
