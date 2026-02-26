@@ -5,6 +5,7 @@ import { SmilePlus } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmojiReactionPickerProps {
   eventId: string;
@@ -17,6 +18,7 @@ export function EmojiReactionPicker({ eventId, className }: EmojiReactionPickerP
   const { user } = useCurrentUser();
   const { mutate: publishEvent } = useNostrPublish();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const handleReaction = (emoji: string) => {
@@ -29,6 +31,31 @@ export function EmojiReactionPicker({ eventId, className }: EmojiReactionPickerP
       return;
     }
 
+    // Optimistically update the UI before publishing
+    const previousData = queryClient.getQueryData(['reactions', eventId]);
+    
+    // Optimistic update
+    queryClient.setQueryData(['reactions', eventId], (old: any) => {
+      if (!old) {
+        return { [emoji]: { count: 1, pubkeys: [user.pubkey] } };
+      }
+      
+      const newData = { ...old };
+      if (newData[emoji]) {
+        // Check if user already reacted with this emoji
+        if (!newData[emoji].pubkeys.includes(user.pubkey)) {
+          newData[emoji] = {
+            count: newData[emoji].count + 1,
+            pubkeys: [...newData[emoji].pubkeys, user.pubkey]
+          };
+        }
+      } else {
+        newData[emoji] = { count: 1, pubkeys: [user.pubkey] };
+      }
+      
+      return newData;
+    });
+
     publishEvent(
       {
         kind: 7,
@@ -38,12 +65,19 @@ export function EmojiReactionPicker({ eventId, className }: EmojiReactionPickerP
       {
         onSuccess: () => {
           setOpen(false);
+          
+          // Invalidate reactions query to trigger refetch and confirm the optimistic update
+          queryClient.invalidateQueries({ queryKey: ['reactions', eventId] });
+          
           toast({
             title: 'Reaction added!',
             description: `You reacted with ${emoji}`,
           });
         },
         onError: () => {
+          // Rollback optimistic update on error
+          queryClient.setQueryData(['reactions', eventId], previousData);
+          
           toast({
             title: 'Failed to react',
             description: 'There was an error adding your reaction.',
