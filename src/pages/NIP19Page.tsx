@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import NotFound from './NotFound';
 import { ProfilePage } from './ProfilePage';
 import { NotePage } from './NotePage';
+import { AddressableEventPage } from './AddressableEventPage';
 
 export function NIP19Page() {
   const { nip19: identifier } = useParams<{ nip19: string }>();
@@ -34,8 +35,13 @@ export function NIP19Page() {
       return <NotePage eventId={(data as { id: string }).id} />;
 
     case 'naddr':
-      // For addressable events, show as a note for now
-      return <div>Addressable event placeholder</div>;
+      return (
+        <AddressableEventPage 
+          kind={(data as { kind: number; pubkey: string; identifier: string }).kind}
+          pubkey={(data as { kind: number; pubkey: string; identifier: string }).pubkey}
+          identifier={(data as { kind: number; pubkey: string; identifier: string }).identifier}
+        />
+      );
 
     default:
       return <NotFound />;

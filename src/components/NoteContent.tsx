@@ -6,6 +6,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { genUserName } from '@/lib/genUserName';
 import { cn } from '@/lib/utils';
 import { EmbeddedNote } from '@/components/EmbeddedNote';
+import { EmbeddedAddressableEvent } from '@/components/EmbeddedAddressableEvent';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 
@@ -111,6 +112,18 @@ export function NoteContent({
             parts.push(
               <div key={`embed-${keyCounter++}`} className="my-3">
                 <EmbeddedNote eventId={eventId} />
+              </div>
+            );
+          } else if (decoded.type === 'naddr') {
+            // Embed addressable events inline
+            const { kind, pubkey, identifier } = decoded.data;
+            parts.push(
+              <div key={`embed-${keyCounter++}`} className="my-3">
+                <EmbeddedAddressableEvent 
+                  kind={kind} 
+                  pubkey={pubkey} 
+                  identifier={identifier} 
+                />
               </div>
             );
           } else {
