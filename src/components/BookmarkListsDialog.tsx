@@ -22,11 +22,15 @@ import {
   FolderPlus,
   Check,
   Loader2,
+  Cloud,
+  CloudOff,
+  RefreshCw,
 } from 'lucide-react';
 import {
   useBookmarkSets,
   useCreateBookmarkSet,
   useAddToBookmarkSet,
+  useRetryFailedSyncs,
 } from '@/hooks/useBookmarkSets';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -45,6 +49,9 @@ export function BookmarkListsDialog({
   const { data: sets, isLoading } = useBookmarkSets();
   const { mutate: createSet, isPending: isCreating } = useCreateBookmarkSet();
   const { mutate: addToSet, isPending: isAdding } = useAddToBookmarkSet();
+  
+  // Automatically retry failed syncs
+  useRetryFailedSyncs();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
@@ -219,7 +226,18 @@ export function BookmarkListsDialog({
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{set.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium truncate">{set.title}</h4>
+                            {set.syncStatus === 'pending' && (
+                              <RefreshCw className="h-3 w-3 text-blue-500 animate-spin" />
+                            )}
+                            {set.syncStatus === 'failed' && (
+                              <CloudOff className="h-3 w-3 text-red-500" />
+                            )}
+                            {set.syncStatus === 'synced' && !set.isLocal && (
+                              <Cloud className="h-3 w-3 text-green-500" />
+                            )}
+                          </div>
                           {set.description && (
                             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                               {set.description}
@@ -239,6 +257,11 @@ export function BookmarkListsDialog({
                               <Badge variant="outline" className="text-xs">
                                 <Lock className="h-3 w-3 mr-1" />
                                 {set.privateItems.length} private
+                              </Badge>
+                            )}
+                            {set.isLocal && (
+                              <Badge variant="outline" className="text-xs">
+                                Local only
                               </Badge>
                             )}
                           </div>

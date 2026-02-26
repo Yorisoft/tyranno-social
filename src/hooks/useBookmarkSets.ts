@@ -3,17 +3,33 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { NostrEvent } from '@nostrify/nostrify';
+import { useEffect } from 'react';
 
 export interface BookmarkSet {
   id: string; // d tag value
-  event: NostrEvent;
+  event?: NostrEvent; // Optional - local-only sets won't have this
   title: string;
   description?: string;
   image?: string;
   publicItems: string[][]; // Public bookmark tags
   privateItems: string[][]; // Private bookmark tags (decrypted)
   itemCount: number;
+  isLocal?: boolean; // True if only saved locally, not yet synced to Nostr
+  syncStatus?: 'synced' | 'pending' | 'failed'; // Sync status
+  createdAt: number; // Timestamp for sorting
+}
+
+interface LocalBookmarkSet {
+  id: string;
+  title: string;
+  description?: string;
+  image?: string;
+  publicItems: string[][];
+  privateItems: string[][];
+  createdAt: number;
+  syncStatus: 'synced' | 'pending' | 'failed';
 }
 
 async function parseBookmarkSet(
@@ -48,7 +64,13 @@ async function parseBookmarkSet(
     publicItems,
     privateItems,
     itemCount: publicItems.length + privateItems.length,
+    syncStatus: 'synced',
+    createdAt: event.created_at,
   };
+}
+
+function getLocalStorageKey(pubkey: string): string {
+  return `nostr:bookmark-sets:${pubkey}`;
 }
 
 export function useBookmarkSets() {
@@ -56,38 +78,92 @@ export function useBookmarkSets() {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
 
+  // Get local bookmark sets from localStorage
+  const [localSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
+    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
+    {}
+  );
+
   return useQuery({
-    queryKey: ['bookmark-sets', user?.pubkey, config.relayMetadata.updatedAt],
+    queryKey: ['bookmark-sets', user?.pubkey, config.relayMetadata.updatedAt, localSets],
     queryFn: async () => {
       if (!user) {
         return [];
       }
 
-      const relayUrls = config.relayMetadata.relays
-        .filter(r => r.read || r.write)
-        .map(r => r.url);
+      // Get remote bookmark sets from Nostr
+      let remoteSets: BookmarkSet[] = [];
+      
+      try {
+        const relayUrls = config.relayMetadata.relays
+          .filter(r => r.read || r.write)
+          .map(r => r.url);
 
-      const relayGroup = relayUrls.length > 0 ? nostr.group(relayUrls) : nostr;
+        if (relayUrls.length > 0) {
+          const relayGroup = nostr.group(relayUrls);
 
-      // Fetch all bookmark sets (kind 30003)
-      const events = await relayGroup.query([
-        {
-          kinds: [30003],
-          authors: [user.pubkey],
-        },
-      ]);
+          // Fetch all bookmark sets (kind 30003) with timeout
+          const queryPromise = relayGroup.query([
+            {
+              kinds: [30003],
+              authors: [user.pubkey],
+            },
+          ]);
 
-      console.log('Found', events.length, 'bookmark sets');
+          const timeoutPromise = new Promise<NostrEvent[]>((resolve) => {
+            setTimeout(() => resolve([]), 5000); // 5 second timeout for queries
+          });
 
-      // Parse all bookmark sets
-      const sets = await Promise.all(
-        events.map(event => parseBookmarkSet(event, user))
-      );
+          const events = await Promise.race([queryPromise, timeoutPromise]);
+
+          console.log('Found', events.length, 'remote bookmark sets');
+
+          // Parse all bookmark sets
+          remoteSets = await Promise.all(
+            events.map(event => parseBookmarkSet(event, user))
+          );
+        }
+      } catch (error) {
+        console.warn('Failed to fetch remote bookmark sets:', error);
+      }
+
+      // Merge local and remote sets
+      const mergedSetsMap = new Map<string, BookmarkSet>();
+
+      // Add remote sets first
+      for (const set of remoteSets) {
+        mergedSetsMap.set(set.id, set);
+      }
+
+      // Add or update with local sets
+      for (const [id, localSet] of Object.entries(localSets)) {
+        const existingSet = mergedSetsMap.get(id);
+        
+        if (!existingSet || localSet.syncStatus === 'pending' || localSet.syncStatus === 'failed') {
+          // Use local version if it doesn't exist remotely or if it's pending/failed sync
+          mergedSetsMap.set(id, {
+            id,
+            title: localSet.title,
+            description: localSet.description,
+            image: localSet.image,
+            publicItems: localSet.publicItems,
+            privateItems: localSet.privateItems,
+            itemCount: localSet.publicItems.length + localSet.privateItems.length,
+            isLocal: localSet.syncStatus !== 'synced',
+            syncStatus: localSet.syncStatus,
+            createdAt: localSet.createdAt,
+          });
+        }
+      }
+
+      const allSets = Array.from(mergedSetsMap.values());
 
       // Sort by most recent
-      sets.sort((a, b) => b.event.created_at - a.event.created_at);
+      allSets.sort((a, b) => b.createdAt - a.createdAt);
 
-      return sets;
+      console.log('Total bookmark sets (local + remote):', allSets.length);
+
+      return allSets;
     },
     enabled: !!user,
     staleTime: 0,
@@ -143,47 +219,114 @@ export function useCreateBookmarkSet() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [localSets, setLocalSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
+    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
+    {}
+  );
+
   return useMutation({
     mutationFn: async ({ title, description, image }: { title: string; description?: string; image?: string }) => {
       if (!user) throw new Error('Must be logged in');
 
-      const writeRelayUrls = config.relayMetadata.relays
-        .filter(r => r.write)
-        .map(r => r.url);
-
-      const writeRelayGroup = writeRelayUrls.length > 0 ? nostr.group(writeRelayUrls) : nostr;
-
       // Generate a random d tag
       const dTag = Date.now().toString(36) + Math.random().toString(36).substring(2);
 
-      const tags: string[][] = [
-        ['d', dTag],
-        ['title', title],
-      ];
+      // Save to localStorage immediately
+      const newLocalSet: LocalBookmarkSet = {
+        id: dTag,
+        title,
+        description,
+        image,
+        publicItems: [],
+        privateItems: [],
+        createdAt: Math.floor(Date.now() / 1000),
+        syncStatus: 'pending',
+      };
 
-      if (description) tags.push(['description', description]);
-      if (image) tags.push(['image', image]);
-
-      const event = await writeRelayGroup.event({
-        kind: 30003,
-        content: '',
-        tags,
+      setLocalSets({
+        ...localSets,
+        [dTag]: newLocalSet,
       });
 
-      return event;
+      // Try to publish to Nostr in the background (non-blocking)
+      setTimeout(async () => {
+        try {
+          const writeRelayUrls = config.relayMetadata.relays
+            .filter(r => r.write)
+            .map(r => r.url);
+
+          console.log('Background sync: Creating bookmark set with write relays:', writeRelayUrls);
+
+          if (writeRelayUrls.length === 0) {
+            console.warn('No write relays configured, keeping local only');
+            return;
+          }
+
+          const writeRelayGroup = nostr.group(writeRelayUrls);
+
+          const tags: string[][] = [
+            ['d', dTag],
+            ['title', title],
+          ];
+
+          if (description) tags.push(['description', description]);
+          if (image) tags.push(['image', image]);
+
+          console.log('Background sync: Publishing bookmark set event...');
+
+          // Add timeout to prevent hanging
+          const publishPromise = writeRelayGroup.event({
+            kind: 30003,
+            content: '',
+            tags,
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Publishing timeout')), 15000); // 15 second timeout
+          });
+
+          const event = await Promise.race([publishPromise, timeoutPromise]);
+
+          console.log('Background sync: Bookmark set created successfully:', event.id);
+
+          // Update local storage to mark as synced
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[dTag]) {
+            currentSets[dTag].syncStatus = 'synced';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          // Invalidate queries to refresh UI
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        } catch (error) {
+          console.error('Background sync failed:', error);
+          
+          // Update local storage to mark as failed
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[dTag]) {
+            currentSets[dTag].syncStatus = 'failed';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          // Invalidate queries to refresh UI
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        }
+      }, 100);
+
+      return { id: dTag };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
       toast({
         title: 'List created!',
-        description: 'Your new bookmark list has been created',
+        description: 'Your bookmark list has been saved locally',
       });
     },
     onError: (error) => {
       console.error('Failed to create bookmark set:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create bookmark list',
+        description: error instanceof Error ? error.message : 'Failed to create bookmark list',
         variant: 'destructive',
       });
     },
@@ -197,26 +340,57 @@ export function useDeleteBookmarkSet() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [localSets, setLocalSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
+    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
+    {}
+  );
+
   return useMutation({
     mutationFn: async (setId: string) => {
       if (!user) throw new Error('Must be logged in');
 
-      const writeRelayUrls = config.relayMetadata.relays
-        .filter(r => r.write)
-        .map(r => r.url);
+      // Delete from localStorage immediately
+      const updatedSets = { ...localSets };
+      delete updatedSets[setId];
+      setLocalSets(updatedSets);
 
-      const writeRelayGroup = writeRelayUrls.length > 0 ? nostr.group(writeRelayUrls) : nostr;
+      // Try to publish deletion to Nostr in the background
+      setTimeout(async () => {
+        try {
+          const writeRelayUrls = config.relayMetadata.relays
+            .filter(r => r.write)
+            .map(r => r.url);
 
-      // Publish deletion event (kind 5)
-      const event = await writeRelayGroup.event({
-        kind: 5,
-        content: 'Deleted bookmark list',
-        tags: [
-          ['a', `30003:${user.pubkey}:${setId}`],
-        ],
-      });
+          if (writeRelayUrls.length === 0) {
+            console.warn('No write relays configured, deletion only local');
+            return;
+          }
 
-      return event;
+          const writeRelayGroup = nostr.group(writeRelayUrls);
+
+          console.log('Background sync: Publishing deletion event...');
+
+          const publishPromise = writeRelayGroup.event({
+            kind: 5,
+            content: 'Deleted bookmark list',
+            tags: [
+              ['a', `30003:${user.pubkey}:${setId}`],
+            ],
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Publishing timeout')), 15000);
+          });
+
+          const event = await Promise.race([publishPromise, timeoutPromise]);
+
+          console.log('Background sync: Deletion event published successfully:', event.id);
+        } catch (error) {
+          console.error('Background sync (deletion) failed:', error);
+        }
+      }, 100);
+
+      return setId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
@@ -244,18 +418,17 @@ export function useAddToBookmarkSet() {
   const queryClient = useQueryClient();
   const { data: sets } = useBookmarkSets();
 
+  const [localSets, setLocalSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
+    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
+    {}
+  );
+
   return useMutation({
     mutationFn: async ({ setId, eventId, isPrivate = false }: { setId: string; eventId: string; isPrivate?: boolean }) => {
       if (!user) throw new Error('Must be logged in');
 
       const set = sets?.find(s => s.id === setId);
       if (!set) throw new Error('Bookmark set not found');
-
-      const writeRelayUrls = config.relayMetadata.relays
-        .filter(r => r.write)
-        .map(r => r.url);
-
-      const writeRelayGroup = writeRelayUrls.length > 0 ? nostr.group(writeRelayUrls) : nostr;
 
       // Prepare new tags
       const newTag = ['e', eventId];
@@ -277,30 +450,93 @@ export function useAddToBookmarkSet() {
         publicItems.push(newTag);
       }
 
-      // Prepare tags for the event (metadata + public items)
-      const tags: string[][] = [
-        ['d', set.id],
-        ['title', set.title],
-      ];
+      // Save to localStorage immediately
+      const updatedLocalSet: LocalBookmarkSet = {
+        id: set.id,
+        title: set.title,
+        description: set.description,
+        image: set.image,
+        publicItems,
+        privateItems,
+        createdAt: set.createdAt,
+        syncStatus: 'pending',
+      };
 
-      if (set.description) tags.push(['description', set.description]);
-      if (set.image) tags.push(['image', set.image]);
-
-      tags.push(...publicItems);
-
-      // Encrypt private items if any
-      let content = '';
-      if (privateItems.length > 0 && user.signer.nip44) {
-        content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(privateItems));
-      }
-
-      const event = await writeRelayGroup.event({
-        kind: 30003,
-        content,
-        tags,
+      setLocalSets({
+        ...localSets,
+        [set.id]: updatedLocalSet,
       });
 
-      return event;
+      // Try to publish to Nostr in the background
+      setTimeout(async () => {
+        try {
+          const writeRelayUrls = config.relayMetadata.relays
+            .filter(r => r.write)
+            .map(r => r.url);
+
+          if (writeRelayUrls.length === 0) {
+            console.warn('No write relays configured, keeping local only');
+            return;
+          }
+
+          const writeRelayGroup = nostr.group(writeRelayUrls);
+
+          // Prepare tags for the event (metadata + public items)
+          const tags: string[][] = [
+            ['d', set.id],
+            ['title', set.title],
+          ];
+
+          if (set.description) tags.push(['description', set.description]);
+          if (set.image) tags.push(['image', set.image]);
+
+          tags.push(...publicItems);
+
+          // Encrypt private items if any
+          let content = '';
+          if (privateItems.length > 0 && user.signer.nip44) {
+            content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(privateItems));
+          }
+
+          console.log('Background sync: Publishing updated bookmark set...');
+
+          const publishPromise = writeRelayGroup.event({
+            kind: 30003,
+            content,
+            tags,
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Publishing timeout')), 15000);
+          });
+
+          const event = await Promise.race([publishPromise, timeoutPromise]);
+
+          console.log('Background sync: Bookmark set updated successfully:', event.id);
+
+          // Update local storage to mark as synced
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[set.id]) {
+            currentSets[set.id].syncStatus = 'synced';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        } catch (error) {
+          console.error('Background sync (add to set) failed:', error);
+
+          // Update local storage to mark as failed
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[set.id]) {
+            currentSets[set.id].syncStatus = 'failed';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        }
+      }, 100);
+
+      return { setId, eventId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
@@ -329,6 +565,11 @@ export function useRemoveFromBookmarkSet() {
   const queryClient = useQueryClient();
   const { data: sets } = useBookmarkSets();
 
+  const [localSets, setLocalSets] = useLocalStorage<Record<string, LocalBookmarkSet>>(
+    user ? getLocalStorageKey(user.pubkey) : 'nostr:bookmark-sets:default',
+    {}
+  );
+
   return useMutation({
     mutationFn: async ({ setId, eventId }: { setId: string; eventId: string }) => {
       if (!user) throw new Error('Must be logged in');
@@ -336,40 +577,97 @@ export function useRemoveFromBookmarkSet() {
       const set = sets?.find(s => s.id === setId);
       if (!set) throw new Error('Bookmark set not found');
 
-      const writeRelayUrls = config.relayMetadata.relays
-        .filter(r => r.write)
-        .map(r => r.url);
-
-      const writeRelayGroup = writeRelayUrls.length > 0 ? nostr.group(writeRelayUrls) : nostr;
-
       // Remove from both lists
       const publicItems = set.publicItems.filter(([t, id]) => !(t === 'e' && id === eventId));
       const privateItems = set.privateItems.filter(([t, id]) => !(t === 'e' && id === eventId));
 
-      // Prepare tags
-      const tags: string[][] = [
-        ['d', set.id],
-        ['title', set.title],
-      ];
+      // Save to localStorage immediately
+      const updatedLocalSet: LocalBookmarkSet = {
+        id: set.id,
+        title: set.title,
+        description: set.description,
+        image: set.image,
+        publicItems,
+        privateItems,
+        createdAt: set.createdAt,
+        syncStatus: 'pending',
+      };
 
-      if (set.description) tags.push(['description', set.description]);
-      if (set.image) tags.push(['image', set.image]);
-
-      tags.push(...publicItems);
-
-      // Encrypt private items
-      let content = '';
-      if (privateItems.length > 0 && user.signer.nip44) {
-        content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(privateItems));
-      }
-
-      const event = await writeRelayGroup.event({
-        kind: 30003,
-        content,
-        tags,
+      setLocalSets({
+        ...localSets,
+        [set.id]: updatedLocalSet,
       });
 
-      return event;
+      // Try to publish to Nostr in the background
+      setTimeout(async () => {
+        try {
+          const writeRelayUrls = config.relayMetadata.relays
+            .filter(r => r.write)
+            .map(r => r.url);
+
+          if (writeRelayUrls.length === 0) {
+            console.warn('No write relays configured, keeping local only');
+            return;
+          }
+
+          const writeRelayGroup = nostr.group(writeRelayUrls);
+
+          // Prepare tags
+          const tags: string[][] = [
+            ['d', set.id],
+            ['title', set.title],
+          ];
+
+          if (set.description) tags.push(['description', set.description]);
+          if (set.image) tags.push(['image', set.image]);
+
+          tags.push(...publicItems);
+
+          // Encrypt private items
+          let content = '';
+          if (privateItems.length > 0 && user.signer.nip44) {
+            content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(privateItems));
+          }
+
+          console.log('Background sync: Publishing updated bookmark set (remove)...');
+
+          const publishPromise = writeRelayGroup.event({
+            kind: 30003,
+            content,
+            tags,
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Publishing timeout')), 15000);
+          });
+
+          const event = await Promise.race([publishPromise, timeoutPromise]);
+
+          console.log('Background sync: Bookmark set updated (removed item) successfully:', event.id);
+
+          // Update local storage to mark as synced
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[set.id]) {
+            currentSets[set.id].syncStatus = 'synced';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        } catch (error) {
+          console.error('Background sync (remove from set) failed:', error);
+
+          // Update local storage to mark as failed
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[set.id]) {
+            currentSets[set.id].syncStatus = 'failed';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+        }
+      }, 100);
+
+      return { setId, eventId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
@@ -388,4 +686,78 @@ export function useRemoveFromBookmarkSet() {
       });
     },
   });
+}
+
+// Hook to retry failed syncs
+export function useRetryFailedSyncs() {
+  const { user } = useCurrentUser();
+  const { data: sets } = useBookmarkSets();
+  const queryClient = useQueryClient();
+  const { nostr } = useNostr();
+  const { config } = useAppContext();
+
+  useEffect(() => {
+    if (!user || !sets) return;
+
+    const failedSets = sets.filter(s => s.syncStatus === 'failed');
+    
+    if (failedSets.length === 0) return;
+
+    console.log(`Found ${failedSets.length} failed syncs, will retry...`);
+
+    // Retry each failed set
+    for (const set of failedSets) {
+      setTimeout(async () => {
+        try {
+          const writeRelayUrls = config.relayMetadata.relays
+            .filter(r => r.write)
+            .map(r => r.url);
+
+          if (writeRelayUrls.length === 0) return;
+
+          const writeRelayGroup = nostr.group(writeRelayUrls);
+
+          const tags: string[][] = [
+            ['d', set.id],
+            ['title', set.title],
+          ];
+
+          if (set.description) tags.push(['description', set.description]);
+          if (set.image) tags.push(['image', set.image]);
+          tags.push(...set.publicItems);
+
+          let content = '';
+          if (set.privateItems.length > 0 && user.signer.nip44) {
+            content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(set.privateItems));
+          }
+
+          console.log('Retrying sync for set:', set.id);
+
+          const publishPromise = writeRelayGroup.event({
+            kind: 30003,
+            content,
+            tags,
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Publishing timeout')), 15000);
+          });
+
+          await Promise.race([publishPromise, timeoutPromise]);
+
+          // Mark as synced
+          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
+          if (currentSets[set.id]) {
+            currentSets[set.id].syncStatus = 'synced';
+            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
+          console.log('Retry successful for set:', set.id);
+        } catch (error) {
+          console.error('Retry failed for set:', set.id, error);
+        }
+      }, 2000);
+    }
+  }, [sets, user, nostr, config, queryClient]);
 }
