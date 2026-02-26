@@ -66,6 +66,8 @@ export function ColorThemeSelector() {
 
     darkModeStyle.textContent = `
       .dark {
+        --background: ${darkHue} 0% 13%;
+        --card: ${darkHue} 0% 9%;
         --primary: ${darkHue} 60% 55%;
         --ring: ${darkHue} 60% 55%;
         --accent: ${darkHue} 50% 20%;

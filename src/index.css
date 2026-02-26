@@ -52,10 +52,10 @@
   }
 
   .dark {
-    --background: 0 20% 8%;
+    --background: 0 0% 13%;
     --foreground: 0 10% 95%;
 
-    --card: 0 20% 10%;
+    --card: 0 0% 9%;
     --card-foreground: 0 10% 95%;
 
     --popover: 0 20% 10%;
