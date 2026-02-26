@@ -4,7 +4,6 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
 import type { NostrEvent } from '@nostrify/nostrify';
-import { useEffect, useRef } from 'react';
 
 export interface BookmarkSet {
   id: string; // d tag value
@@ -56,10 +55,8 @@ export function useBookmarkSets() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
-  const queryClient = useQueryClient();
-  const subscriptionRef = useRef<{ close: () => void } | null>(null);
 
-  const query = useQuery({
+  return useQuery({
     queryKey: ['bookmark-sets', user?.pubkey, config.relayMetadata.updatedAt],
     queryFn: async () => {
       if (!user) {
@@ -94,59 +91,9 @@ export function useBookmarkSets() {
     },
     enabled: !!user,
     staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
-
-  // Set up realtime subscription
-  useEffect(() => {
-    if (!user) return;
-
-    const relayUrls = config.relayMetadata.relays
-      .filter(r => r.read || r.write)
-      .map(r => r.url);
-
-    const relayGroup = relayUrls.length > 0 ? nostr.group(relayUrls) : nostr;
-
-    console.log('Setting up realtime bookmark sets subscription');
-
-    const sub = relayGroup.req(
-      [
-        {
-          kinds: [30003],
-          authors: [user.pubkey],
-        },
-      ],
-      {
-        onevent: async (event: NostrEvent) => {
-          console.log('Received realtime bookmark set update:', event.id);
-
-          const set = await parseBookmarkSet(event, user);
-
-          // Update query cache
-          queryClient.setQueryData(
-            ['bookmark-sets', user.pubkey, config.relayMetadata.updatedAt],
-            (old: BookmarkSet[] | undefined) => {
-              if (!old) return [set];
-
-              // Replace existing set with same id or add new
-              const filtered = old.filter(s => s.id !== set.id);
-              return [set, ...filtered].sort((a, b) => b.event.created_at - a.event.created_at);
-            }
-          );
-        },
-      }
-    );
-
-    subscriptionRef.current = sub;
-
-    return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.close();
-        subscriptionRef.current = null;
-      }
-    };
-  }, [user?.pubkey, config.relayMetadata.updatedAt, nostr, queryClient]);
-
-  return query;
 }
 
 export function useBookmarkSetItems(setId: string) {
