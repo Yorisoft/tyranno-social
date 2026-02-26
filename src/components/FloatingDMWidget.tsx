@@ -138,7 +138,8 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const { messages, sendMessage } = useDMContext();
-  const author = useAuthor(pubkey || '');
+  // Pass undefined instead of empty string to useAuthor
+  const author = useAuthor(pubkey || undefined);
   const metadata: NostrMetadata | undefined = author.data?.metadata;
   const navigate = useNavigate();
   const [messageText, setMessageText] = useState('');
