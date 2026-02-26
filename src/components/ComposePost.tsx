@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/useToast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 export function ComposePost() {
-  const { user } = useCurrentUser();
+  const { user, metadata } = useCurrentUser();
   const { mutate: createEvent, isPending } = useNostrPublish();
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { toast } = useToast();
@@ -27,9 +27,9 @@ export function ComposePost() {
   const [showContentWarning, setShowContentWarning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const displayName = user?.metadata?.display_name || user?.metadata?.name || genUserName(user?.pubkey || '');
-  const username = user?.metadata?.name || genUserName(user?.pubkey || '');
-  const profileImage = user?.metadata?.picture;
+  const displayName = metadata?.display_name || metadata?.name || genUserName(user?.pubkey || '');
+  const username = metadata?.name || genUserName(user?.pubkey || '');
+  const profileImage = metadata?.picture;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
