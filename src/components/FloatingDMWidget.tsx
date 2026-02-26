@@ -135,16 +135,10 @@ interface ConversationWindowProps {
 }
 
 function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: ConversationWindowProps) {
-  // Early return if no pubkey
-  if (!pubkey) {
-    console.error('[FloatingDM] ConversationWindow rendered with invalid pubkey');
-    return null;
-  }
-
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const { messages, sendMessage } = useDMContext();
-  const author = useAuthor(pubkey);
+  const author = useAuthor(pubkey || '');
   const metadata: NostrMetadata | undefined = author.data?.metadata;
   const navigate = useNavigate();
   const [messageText, setMessageText] = useState('');
