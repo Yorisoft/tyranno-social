@@ -62,8 +62,8 @@ export function NoteContent({
   const processedContent = useMemo(() => {
     const text = event.content;
     
-    // Regex to find URLs, Nostr references, hashtags, and indexed mentions (#[0], #[1], etc.)
-    const regex = /(https?:\/\/[^\s]+)|nostr:(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)|(#\[(\d+)\])/g;
+    // Regex to find URLs, Nostr references (with or without nostr: prefix), hashtags, and indexed mentions (#[0], #[1], etc.)
+    const regex = /(https?:\/\/[^\s]+)|(?:nostr:)?(npub1|note1|nprofile1|nevent1|naddr1)([023456789acdefghjklmnpqrstuvwxyz]+)|(#\w+)|(#\[(\d+)\])/g;
     
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
