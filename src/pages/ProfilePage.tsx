@@ -167,10 +167,10 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           {(lud16 || lud06) && (
                             <button
                               onClick={() => copyToClipboard(lud16 || lud06 || '', 'Lightning address')}
-                              className="flex items-center gap-1.5 text-muted-foreground hover:text-amber-500 transition-colors group cursor-pointer"
+                              className="flex items-center gap-1.5 text-muted-foreground hover:text-yellow-500 transition-colors group cursor-pointer"
                               title="Click to copy Lightning address"
                             >
-                              <Zap className="h-4 w-4 text-amber-500" />
+                              <Zap className="h-4 w-4 text-yellow-500" />
                               <span className="truncate max-w-xs font-mono text-xs">
                                 {lud16 || lud06}
                               </span>

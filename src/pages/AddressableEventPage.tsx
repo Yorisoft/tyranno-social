@@ -328,7 +328,7 @@ export function AddressableEventPage({ kind, pubkey, identifier }: AddressableEv
                   </Button>
                   <EmojiReactionPicker
                     eventId={event.id}
-                    className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                    className="h-8 px-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
                   />
                 </div>
               </div>

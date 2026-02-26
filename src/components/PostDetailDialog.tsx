@@ -300,7 +300,7 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                   </Button>
                   <EmojiReactionPicker
                     eventId={displayEvent.id}
-                    className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                    className="h-8 px-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
                   />
                 </div>
 

@@ -99,17 +99,17 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-amber-50/30 to-orange-50/40 dark:from-background dark:via-background dark:to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-rose-50/30 to-pink-50/40 dark:from-background dark:via-background dark:to-primary/5">
       {/* Hero Header - Sticky */}
       <header className="sticky top-0 z-40 relative border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-amber-500/5 to-primary/10 -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Logo and Title */}
             <div className="flex items-center gap-3 flex-1 sm:flex-initial">
               <div className="relative shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
-                <div className="relative p-1 bg-gradient-to-br from-amber-100/50 to-orange-100/30 rounded-full dark:from-transparent dark:to-transparent">
+                <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
                   <TyrannoCoin className="h-12 w-12 sm:h-14 sm:w-14 drop-shadow-2xl filter brightness-110" />
                 </div>
               </div>
@@ -195,7 +195,7 @@ const Index = () => {
           {/* Posts */}
           <div className="space-y-4">
             {!user && !searchQuery && (
-              <Card className="border-dashed border-2 border-primary/30 bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-yellow-50/30 dark:from-primary/5 dark:via-transparent dark:to-transparent relative overflow-hidden">
+              <Card className="border-dashed border-2 border-primary/30 bg-gradient-to-br from-rose-50/80 via-pink-50/50 to-red-50/30 dark:from-primary/5 dark:via-transparent dark:to-transparent relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 -z-10" />
                 <CardContent className="py-12 px-8 text-center relative">
                   <div className="max-w-md mx-auto space-y-4">
@@ -287,7 +287,7 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 bg-gradient-to-r from-background/80 via-amber-50/30 to-background/80 backdrop-blur-lg mt-16 dark:from-background/80 dark:via-background/80 dark:to-background/80">
+      <footer className="border-t border-border/50 bg-gradient-to-r from-background/80 via-rose-50/30 to-background/80 backdrop-blur-lg mt-16 dark:from-background/80 dark:via-background/80 dark:to-background/80">
         <div className="px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
             <a
@@ -297,7 +297,7 @@ const Index = () => {
               className="hover:text-primary transition-all inline-flex items-center gap-1 hover:scale-105"
             >
               Vibed with Shakespeare
-              <Sparkles className="h-3 w-3 text-amber-500 dark:text-primary" />
+              <Sparkles className="h-3 w-3 text-rose-600 dark:text-primary" />
             </a>
           </p>
         </div>

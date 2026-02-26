@@ -139,7 +139,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
 
   return (
     <Card 
-      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 cursor-pointer bg-gradient-to-br from-card via-card to-amber-50/20 dark:from-card dark:via-card dark:to-card"
+      className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 cursor-pointer bg-gradient-to-br from-card via-card to-rose-50/20 dark:from-card dark:via-card dark:to-card"
       onClick={handleCardClick}
     >
       {isRepost && repostedEvent && (
@@ -260,7 +260,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
             </Button>
             <EmojiReactionPicker
               eventId={displayEvent.id}
-              className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+              className="h-8 px-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
             />
           </div>
 
