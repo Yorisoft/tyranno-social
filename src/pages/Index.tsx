@@ -3,6 +3,7 @@ import { useSeoMeta } from '@unhead/react';
 import { type FeedCategory } from '@/hooks/usePosts';
 import { useInfinitePosts } from '@/hooks/useInfinitePosts';
 import { useSearchPosts } from '@/hooks/useSearchPosts';
+import { useRelayFirehose } from '@/hooks/useRelayFirehose';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { ComposePost } from '@/components/ComposePost';
 import { PostDetailDialog } from '@/components/PostDetailDialog';
@@ -18,8 +19,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2 } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi } from 'lucide-react';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
+import { useAppContext } from '@/hooks/useAppContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 const Index = () => {
@@ -28,6 +37,7 @@ const Index = () => {
   const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRelay, setSelectedRelay] = useState<string | null>(null);
 
   useSeoMeta({
     title: 'Tyrannosocial - A Beautiful Nostr Experience',
@@ -35,21 +45,46 @@ const Index = () => {
   });
 
   const { user } = useCurrentUser();
+  const { config } = useAppContext();
+  
   const { 
     data: infiniteData, 
     isLoading: isLoadingFeed, 
-    fetchNextPage, 
-    hasNextPage,
-    isFetchingNextPage 
+    fetchNextPage: fetchNextFeedPage, 
+    hasNextPage: hasNextFeedPage,
+    isFetchingNextPage: isFetchingNextFeedPage 
   } = useInfinitePosts(selectedCategory);
+  
+  const { 
+    data: relayData, 
+    isLoading: isLoadingRelay,
+    fetchNextPage: fetchNextRelayPage,
+    hasNextPage: hasNextRelayPage,
+    isFetchingNextPage: isFetchingNextRelayPage
+  } = useRelayFirehose(selectedRelay);
+  
   const { data: searchPosts, isLoading: isLoadingSearch } = useSearchPosts(searchQuery);
 
   // Flatten infinite query pages
   const feedPosts = infiniteData?.pages.flat() ?? [];
+  const relayPosts = relayData?.pages.flat() ?? [];
 
-  // Use search results if searching, otherwise use feed
-  const posts = searchQuery.trim() ? searchPosts : feedPosts;
-  const isLoading = searchQuery.trim() ? isLoadingSearch : isLoadingFeed;
+  // Use search results if searching, relay posts if relay selected, otherwise use feed
+  const posts = searchQuery.trim() 
+    ? searchPosts 
+    : selectedRelay 
+      ? relayPosts 
+      : feedPosts;
+  
+  const isLoading = searchQuery.trim() 
+    ? isLoadingSearch 
+    : selectedRelay 
+      ? isLoadingRelay 
+      : isLoadingFeed;
+
+  const fetchNextPage = selectedRelay ? fetchNextRelayPage : fetchNextFeedPage;
+  const hasNextPage = selectedRelay ? hasNextRelayPage : hasNextFeedPage;
+  const isFetchingNextPage = selectedRelay ? isFetchingNextRelayPage : isFetchingNextFeedPage;
 
   // Intersection observer for infinite scroll
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -158,14 +193,57 @@ const Index = () => {
             </div>
           )}
 
-          {/* Category Badge and Column Selector */}
+          {/* Feed Selector and Column Selector */}
           {!searchQuery && (
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm py-1.5 px-3 bg-gradient-to-r from-primary/10 to-orange-100/50 text-primary border-primary/20 dark:from-primary/20 dark:to-primary/10">
-                  <CategoryIcon className="h-4 w-4 mr-2" />
-                  {categoryLabels[selectedCategory]}
-                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="sm" className="gap-2 bg-gradient-to-r from-primary/10 to-orange-100/50 text-primary border-primary/20 dark:from-primary/20 dark:to-primary/10">
+                      {selectedRelay ? (
+                        <>
+                          <Wifi className="h-4 w-4" />
+                          {selectedRelay.replace('wss://', '').split('/')[0]}
+                        </>
+                      ) : (
+                        <>
+                          <CategoryIcon className="h-4 w-4" />
+                          {categoryLabels[selectedCategory]}
+                        </>
+                      )}
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedRelay(null);
+                        setSelectedCategory('following');
+                      }}
+                      className={`cursor-pointer ${!selectedRelay && selectedCategory === 'following' ? 'bg-accent' : ''}`}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      My Feed (Following)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Relay Firehose
+                    </div>
+                    {config.relayMetadata.relays.map((relay) => (
+                      <DropdownMenuItem
+                        key={relay.url}
+                        onClick={() => {
+                          setSelectedRelay(relay.url);
+                          setSelectedCategory('following'); // Reset category when switching to relay
+                        }}
+                        className={`cursor-pointer ${selectedRelay === relay.url ? 'bg-accent' : ''}`}
+                      >
+                        <Wifi className="h-4 w-4 mr-2" />
+                        <span className="truncate">{relay.url.replace('wss://', '')}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {posts && (
                   <span className="text-sm text-muted-foreground">
                     {posts.length} {posts.length === 1 ? 'post' : 'posts'}
