@@ -207,7 +207,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 <Badge
                   key={emoji}
                   variant={isUserReaction ? "default" : "secondary"}
-                  className={`text-xs px-2 py-0.5 cursor-default ${
+                  className={`text-xs px-2 py-0.5 cursor-default dark:bg-card dark:text-foreground dark:border dark:border-border/30 ${
                     isUserReaction ? 'ring-2 ring-primary/50' : ''
                   }`}
                 >
