@@ -136,7 +136,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   };
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText; kinds: number[] }> = [
-    { id: 'following', label: 'My Feed', icon: Users, kinds: [1] },
+    { id: 'following', label: 'All Notes', icon: Users, kinds: [1] },
     { id: 'text', label: 'Text Notes', icon: FileText, kinds: [1] },
     { id: 'articles', label: 'Articles', icon: FileText, kinds: [30023] },
     { id: 'photos', label: 'Photos', icon: Image, kinds: [1] },
