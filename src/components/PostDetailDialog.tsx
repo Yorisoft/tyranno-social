@@ -37,6 +37,7 @@ import { MessageCircle, Repeat2, Send, Bookmark, MoreHorizontal, Copy, User } fr
 import { formatDistanceToNow } from 'date-fns';
 import { nip19 } from 'nostr-tools';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface PostDetailDialogProps {
   event: NostrEvent | null;
@@ -210,22 +211,22 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
               )}
               
               <div className="flex items-start gap-3">
-                <a href={`/${npub}`} className="shrink-0">
+                <Link to={`/${npub}`} className="shrink-0">
                   <Avatar className="h-12 w-12 ring-2 ring-background">
                     <AvatarImage src={profileImage} alt={displayName} />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
                       {displayName[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                </a>
+                </Link>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <a
-                      href={`/${npub}`}
+                    <Link
+                      to={`/${npub}`}
                       className="font-semibold hover:text-primary transition-colors"
                     >
                       {displayName}
-                    </a>
+                    </Link>
                     <span className="text-sm text-muted-foreground">@{username}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{timeAgo}</p>
