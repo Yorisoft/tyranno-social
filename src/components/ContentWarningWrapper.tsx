@@ -49,12 +49,12 @@ export function ContentWarningWrapper({ event, children, mediaOnly = false }: Co
 
       {/* Blurred/hidden content */}
       <div className="relative">
-        <div className={mediaOnly ? '' : 'blur-md pointer-events-none select-none'}>
+        <div className="blur-3xl pointer-events-none select-none opacity-50">
           {children}
         </div>
         
         {/* Overlay with show button */}
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/95 backdrop-blur-xl">
           <Button
             onClick={() => setShowContent(true)}
             className="gap-2 shadow-lg"
