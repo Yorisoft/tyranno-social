@@ -62,7 +62,7 @@ export function App() {
                       <Suspense>
                         <AppRouter />
                       </Suspense>
-                      <FloatingDMWidget />
+                      {/* <FloatingDMWidget /> */}
                     </TooltipProvider>
                   </FloatingDMProvider>
                 </DMProvider>
