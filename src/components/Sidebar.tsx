@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useBookmarkSets, useBookmarkSetItems } from '@/hooks/useBookmarkSets';
@@ -40,6 +41,7 @@ import {
   Globe,
   FolderOpen,
   RefreshCw,
+  CheckCheck,
 } from 'lucide-react';
 import {
   Sheet,
@@ -56,6 +58,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { nip19 } from 'nostr-tools';
 
 export type FeedCategory = 'following' | 'text' | 'articles' | 'photos' | 'music' | 'videos';
 
@@ -124,6 +127,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigate = useNavigate();
 
   const isDark = theme === 'dark';
 
@@ -133,6 +137,23 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
     setIsRefreshing(true);
     await refetchBookmarks();
     setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    // Get the event ID that the notification references
+    const eventTag = notification.tags.find(([name]: string[]) => name === 'e');
+    if (eventTag && eventTag[1]) {
+      // Close the notifications panel and navigate to the event
+      setNotificationsOpen(false);
+      const noteId = nip19.noteEncode(eventTag[1]);
+      navigate(`/${noteId}`);
+    }
+  };
+
+  const handleMarkAllAsRead = () => {
+    // In a real implementation, this would mark notifications as read in storage
+    // For now, we'll just close the panel as a visual indication
+    setNotificationsOpen(false);
   };
 
   const categories: Array<{ id: FeedCategory; label: string; icon: typeof FileText; kinds: number[] }> = [
@@ -292,13 +313,28 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:w-[540px]">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-primary" />
-                    Notifications
-                  </SheetTitle>
-                  <SheetDescription>
-                    Stay updated with mentions, replies, and reactions
-                  </SheetDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <SheetTitle className="flex items-center gap-2">
+                        <Bell className="h-5 w-5 text-primary" />
+                        Notifications
+                      </SheetTitle>
+                      <SheetDescription>
+                        Stay updated with mentions, replies, and reactions
+                      </SheetDescription>
+                    </div>
+                    {user && notifications && notifications.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleMarkAllAsRead}
+                        className="gap-2 shrink-0"
+                      >
+                        <CheckCheck className="h-4 w-4" />
+                        <span className="hidden sm:inline">Mark all read</span>
+                      </Button>
+                    )}
+                  </div>
                 </SheetHeader>
                 <Separator className="my-4" />
                 <ScrollArea className="h-[calc(100vh-140px)] pr-4">
@@ -334,6 +370,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
                         <NotificationItem
                           key={notification.id}
                           notification={notification}
+                          onClick={() => handleNotificationClick(notification)}
                         />
                       ))}
                     </div>

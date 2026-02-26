@@ -82,7 +82,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-sm truncate">{displayName}</span>
-              <Badge variant="secondary" className="text-xs gap-1 shrink-0">
+              <Badge variant="secondary" className="text-xs gap-1 shrink-0 dark:bg-card dark:text-foreground dark:border dark:border-border/30">
                 <Icon className={`h-3 w-3 ${iconColor}`} />
                 {label}
               </Badge>
