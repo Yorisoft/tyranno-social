@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
 import { useFollowStats } from '@/hooks/useFollowers';
@@ -9,6 +9,7 @@ import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ColorThemeSelector } from '@/components/ColorThemeSelector';
 import { FollowListDialog } from '@/components/FollowListDialog';
+import { ZapDialog } from '@/components/ZapDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +24,7 @@ import { EditProfileForm } from '@/components/EditProfileForm';
 import type { NostrMetadata, NostrEvent } from '@nostrify/nostrify';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import type { Event } from 'nostr-tools';
 
 interface ProfilePageProps {
   pubkey: string;
@@ -106,6 +108,21 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
     navigate('/messages');
   };
 
+  // Create a profile event for zapping
+  const profileEvent = useMemo((): Event | null => {
+    if (!profileData?.event) return null;
+    
+    return {
+      id: profileData.event.id,
+      pubkey: profileData.event.pubkey,
+      created_at: profileData.event.created_at,
+      kind: profileData.event.kind,
+      tags: profileData.event.tags,
+      content: profileData.event.content,
+      sig: profileData.event.sig,
+    };
+  }, [profileData]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Banner */}
@@ -167,7 +184,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           </div>
                           {nip05 && (
                             <Badge variant="secondary" className="gap-1 mt-1">
-                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                              <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-500" />
                               <span className="text-xs">{nip05}</span>
                             </Badge>
                           )}
@@ -249,25 +266,38 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto sm:min-w-[160px]">
                         {isOwnProfile ? (
                           <Button
                             onClick={() => setEditProfileOpen(true)}
                             variant="outline"
-                            className="gap-2"
+                            className="gap-2 w-full"
                           >
                             <Edit className="h-4 w-4" />
                             Edit Profile
                           </Button>
                         ) : (
-                          <Button
-                            onClick={handleSendDM}
-                            variant="default"
-                            className="gap-2"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            Message
-                          </Button>
+                          <>
+                            <Button
+                              onClick={handleSendDM}
+                              variant="default"
+                              className="gap-2 w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              Send Message
+                            </Button>
+                            {(lud16 || lud06) && profileEvent && user && (
+                              <ZapDialog target={profileEvent}>
+                                <Button
+                                  variant="outline"
+                                  className="gap-2 w-full bg-gradient-to-r from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border-yellow-500/20 hover:border-yellow-500/40"
+                                >
+                                  <Zap className="h-4 w-4 text-yellow-500" />
+                                  Zap Sats
+                                </Button>
+                              </ZapDialog>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
