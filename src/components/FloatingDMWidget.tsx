@@ -139,6 +139,7 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
   const metadata: NostrMetadata | undefined = author.data?.metadata;
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [optimisticMessages, setOptimisticMessages] = useState<Array<{ content: string; timestamp: number }>>([]);
   const scrollAreaRef = useState<HTMLDivElement | null>(null)[0];
 
   const displayName = metadata?.display_name || metadata?.name || genUserName(pubkey);
@@ -146,6 +147,10 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
 
   const conversationData = messages.get(pubkey);
   const conversationMessages = conversationData?.messages || [];
+  
+  console.log('[FloatingDM] Rendering conversation with', pubkey);
+  console.log('[FloatingDM] Messages in state:', conversationMessages.length);
+  console.log('[FloatingDM] Optimistic messages:', optimisticMessages.length);
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -166,11 +171,15 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
     if (!messageText.trim() || !user) return;
 
     const content = messageText.trim();
+    const timestamp = Date.now();
+    
     console.log('[FloatingDM] Attempting to send message');
     console.log('[FloatingDM] Recipient:', pubkey);
     console.log('[FloatingDM] Content:', content);
     console.log('[FloatingDM] User has NIP-44:', !!user.signer.nip44);
     
+    // Add optimistic message immediately
+    setOptimisticMessages(prev => [...prev, { content, timestamp }]);
     setMessageText('');
     setIsSending(true);
 
@@ -181,10 +190,17 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
         protocol: 'nip17', // Use NIP-17 by default
       });
       console.log('[FloatingDM] Message sent successfully');
-      console.log('[FloatingDM] Current messages in state:', conversationMessages.length);
+      
+      // Remove optimistic message after 5 seconds (real message should arrive by then)
+      setTimeout(() => {
+        setOptimisticMessages(prev => prev.filter(m => m.timestamp !== timestamp));
+      }, 5000);
+      
       setTimeout(scrollToBottom, 200);
     } catch (error) {
       console.error('[FloatingDM] Failed to send message:', error);
+      // Remove failed optimistic message
+      setOptimisticMessages(prev => prev.filter(m => m.timestamp !== timestamp));
       setMessageText(content); // Restore message on error
     } finally {
       setIsSending(false);
@@ -243,12 +259,13 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
       {!isMinimized && (
         <>
           <ScrollArea className="h-[calc(100%-120px)] p-3" data-conversation={pubkey}>
-            {conversationMessages.length === 0 ? (
+            {conversationMessages.length === 0 && optimisticMessages.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No messages yet. Start the conversation!
               </div>
             ) : (
               <div className="space-y-3">
+                {/* Real messages from DM context */}
                 {conversationMessages.map((msg, index) => {
                   const isFromUser = msg.pubkey === user?.pubkey;
                   const content = msg.decryptedContent || msg.content;
@@ -280,6 +297,21 @@ function ConversationWindow({ pubkey, isMinimized, onClose, onToggleMinimize }: 
                     </div>
                   );
                 })}
+                
+                {/* Optimistic messages (showing while sending) */}
+                {optimisticMessages.map((msg) => (
+                  <div
+                    key={`optimistic-${msg.timestamp}`}
+                    className="flex justify-end"
+                  >
+                    <div className="max-w-[80%] rounded-lg px-3 py-2 text-sm break-words bg-primary/60 text-primary-foreground opacity-70">
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      <p className="text-xs mt-1 opacity-70 text-right">
+                        Sending...
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </ScrollArea>
