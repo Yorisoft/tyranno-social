@@ -692,76 +692,9 @@ export function useRemoveFromBookmarkSet() {
   });
 }
 
-// Hook to retry failed syncs
+// Hook to retry failed syncs (disabled by default to prevent spam)
+// This can be manually triggered when needed
 export function useRetryFailedSyncs() {
-  const { user } = useCurrentUser();
-  const { data: sets } = useBookmarkSets();
-  const queryClient = useQueryClient();
-  const { nostr } = useNostr();
-  const { config } = useAppContext();
-
-  useEffect(() => {
-    if (!user || !sets) return;
-
-    const failedSets = sets.filter(s => s.syncStatus === 'failed');
-    
-    if (failedSets.length === 0) return;
-
-    console.log(`Found ${failedSets.length} failed syncs, will retry...`);
-
-    // Retry each failed set
-    for (const set of failedSets) {
-      setTimeout(async () => {
-        try {
-          const writeRelayUrls = config.relayMetadata.relays
-            .filter(r => r.write)
-            .map(r => r.url);
-
-          if (writeRelayUrls.length === 0) return;
-
-          const writeRelayGroup = nostr.group(writeRelayUrls);
-
-          const tags: string[][] = [
-            ['d', set.id],
-            ['title', set.title],
-          ];
-
-          if (set.description) tags.push(['description', set.description]);
-          if (set.image) tags.push(['image', set.image]);
-          tags.push(...set.publicItems);
-
-          let content = '';
-          if (set.privateItems.length > 0 && user.signer.nip44) {
-            content = await user.signer.nip44.encrypt(user.pubkey, JSON.stringify(set.privateItems));
-          }
-
-          console.log('Retrying sync for set:', set.id);
-
-          const publishPromise = writeRelayGroup.event({
-            kind: 30003,
-            content,
-            tags,
-          });
-
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('Publishing timeout')), 15000);
-          });
-
-          await Promise.race([publishPromise, timeoutPromise]);
-
-          // Mark as synced
-          const currentSets = JSON.parse(localStorage.getItem(getLocalStorageKey(user.pubkey)) || '{}');
-          if (currentSets[set.id]) {
-            currentSets[set.id].syncStatus = 'synced';
-            localStorage.setItem(getLocalStorageKey(user.pubkey), JSON.stringify(currentSets));
-          }
-
-          queryClient.invalidateQueries({ queryKey: ['bookmark-sets'] });
-          console.log('Retry successful for set:', set.id);
-        } catch (error) {
-          console.error('Retry failed for set:', set.id, error);
-        }
-      }, 2000);
-    }
-  }, [sets, user, nostr, config, queryClient]);
+  // Disabled for now - automatic retries were causing infinite loops
+  // Users can manually retry by refreshing the page or we can add a manual retry button
 }
