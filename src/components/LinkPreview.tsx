@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExternalLink, Globe } from 'lucide-react';
+import { TwitterEmbed } from './TwitterEmbed';
 
 interface LinkPreviewProps {
   url: string;
@@ -18,6 +19,19 @@ export function LinkPreview({ url }: LinkPreviewProps) {
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Check if this is a Twitter/X link
+  const isTwitterLink = useMemo(() => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname === 'twitter.com' || 
+             urlObj.hostname === 'www.twitter.com' || 
+             urlObj.hostname === 'x.com' || 
+             urlObj.hostname === 'www.x.com';
+    } catch {
+      return false;
+    }
+  }, [url]);
 
   useEffect(() => {
     const fetchPreview = async () => {
@@ -109,6 +123,11 @@ export function LinkPreview({ url }: LinkPreviewProps) {
     e.stopPropagation();
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  // If it's a Twitter/X link, use the special Twitter embed component
+  if (isTwitterLink) {
+    return <TwitterEmbed url={url} />;
+  }
 
   if (isLoading) {
     return (
