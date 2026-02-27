@@ -20,7 +20,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +41,7 @@ const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRelay, setSelectedRelay] = useState<string | null>(null);
+  const [nsfwInfoOpen, setNsfwInfoOpen] = useState(false);
 
   useSeoMeta({
     title: 'Tyrannosocial - A Beautiful Nostr Experience',
@@ -314,11 +316,15 @@ const Index = () => {
                       A beautiful way to experience Nostr. Log in to start sharing your moments with the world.
                     </p>
                     {shouldFilter && (
-                      <div className="mt-4 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
-                        <p className="text-xs text-blue-700 dark:text-blue-400">
-                          🛡️ Safe browsing mode active - NSFW content is automatically filtered
+                      <button
+                        onClick={() => setNsfwInfoOpen(true)}
+                        className="mt-4 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30 hover:bg-blue-100/50 dark:hover:bg-blue-950/30 transition-colors cursor-pointer w-full"
+                      >
+                        <p className="text-xs text-blue-700 dark:text-blue-400 flex items-center justify-center gap-2">
+                          <ShieldCheck className="h-4 w-4" />
+                          Safe browsing mode active - NSFW content is automatically filtered
                         </p>
-                      </div>
+                      </button>
                     )}
                   </div>
                 </CardContent>
@@ -421,6 +427,111 @@ const Index = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
+
+      {/* NSFW Filter Info Dialog */}
+      <Dialog open={nsfwInfoOpen} onOpenChange={setNsfwInfoOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <ShieldCheck className="h-6 w-6 text-primary" />
+              NSFW Content Filtering
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              How we keep your browsing experience safe
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 pt-4">
+            {/* Overview */}
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Safe Browsing Protection
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Tyrannosocial automatically filters NSFW (Not Safe For Work) content to provide a safe browsing experience. 
+                For users who aren't logged in, this filtering is always active and cannot be disabled.
+              </p>
+            </div>
+
+            {/* What We Filter */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                What Gets Filtered
+              </h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Our intelligent filtering system detects and removes:</p>
+                <ul className="space-y-2 ml-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Content warnings:</strong> Posts marked with NSFW or content-warning tags</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Explicit hashtags:</strong> Posts tagged with adult or explicit content markers</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Image-only spam:</strong> Posts containing only image URLs with no meaningful text</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Generic promotional posts:</strong> Short phrases with images (e.g., "Bitcoin Summer is year round")</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Spam patterns:</strong> Posts with promotional keywords like "premium content", "DM me", "subscribe"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Known spam domains:</strong> Links to adult content platforms and services</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span><strong>Suspicious accounts:</strong> Posts from known spam or NSFW-only accounts</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* For Logged-In Users */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                For Logged-In Users
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Once you log in, you can control the NSFW filter from the sidebar settings. 
+                The filter is enabled by default, but you can toggle it off if you prefer to see unfiltered content.
+              </p>
+            </div>
+
+            {/* Not Perfect */}
+            <div className="rounded-lg border border-orange-200/50 bg-orange-50/30 dark:bg-orange-950/10 dark:border-orange-900/30 p-4 space-y-2">
+              <h3 className="font-semibold flex items-center gap-2 text-orange-900 dark:text-orange-400">
+                <AlertTriangle className="h-5 w-5" />
+                Content Filter Limitations
+              </h3>
+              <p className="text-sm text-orange-900/70 dark:text-orange-400/70">
+                While our filter is designed to catch most inappropriate content, no automated system is perfect. 
+                Some NSFW content may occasionally slip through, and some legitimate posts may be filtered. 
+                We're continuously improving our detection algorithms to provide the best experience.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t">
+              <Button 
+                onClick={() => setNsfwInfoOpen(false)}
+                className="w-full"
+              >
+                Got it, thanks!
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
