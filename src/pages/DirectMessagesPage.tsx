@@ -1,9 +1,12 @@
 import { useSeoMeta } from '@unhead/react';
+import { useState } from 'react';
 import { DMMessagingInterface } from '@/components/dm/DMMessagingInterface';
+import { GroupMessagingInterface } from '@/components/groups/GroupMessagingInterface';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { MessageCircle, Lock, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MessageCircle, Lock, Shield, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -11,6 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 export function DirectMessagesPage() {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'dms' | 'groups'>('dms');
 
   useSeoMeta({
     title: 'Direct Messages - Tyrannosocial',
@@ -114,20 +118,44 @@ export function DirectMessagesPage() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <MessageCircle className="h-6 w-6 text-primary" />
-                  Direct Messages
+                  {activeTab === 'dms' ? (
+                    <MessageCircle className="h-6 w-6 text-primary" />
+                  ) : (
+                    <Hash className="h-6 w-6 text-primary" />
+                  )}
+                  {activeTab === 'dms' ? 'Direct Messages' : 'Group Chats'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Private, encrypted conversations
+                  {activeTab === 'dms' 
+                    ? 'Private, encrypted conversations' 
+                    : 'Public group channels'
+                  }
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="h-[calc(100vh-12rem)]">
-          <DMMessagingInterface className="h-full" />
-        </div>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'dms' | 'groups')} className="h-[calc(100vh-12rem)] flex flex-col">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+            <TabsTrigger value="dms" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Direct Messages
+            </TabsTrigger>
+            <TabsTrigger value="groups" className="gap-2">
+              <Hash className="h-4 w-4" />
+              Group Chats
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dms" className="flex-1 mt-0">
+            <DMMessagingInterface className="h-full" />
+          </TabsContent>
+
+          <TabsContent value="groups" className="flex-1 mt-0">
+            <GroupMessagingInterface className="h-full" />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
