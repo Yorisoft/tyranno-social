@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ChevronLeft, ChevronRight, Download, FolderDown, ExternalLink } from 'lucide-react';
-import { useToast } from '@/hooks/useToast';
+import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
 interface ImageGalleryNewProps {
   images: string[];
@@ -12,8 +11,6 @@ interface ImageGalleryNewProps {
 
 export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: ImageGalleryNewProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
-  const { toast } = useToast();
 
   // Reset index when opening
   useEffect(() => {
@@ -48,40 +45,6 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const handleDownloadCurrent = () => {
-    const url = images[currentIndex];
-    
-    // Simply open the image in a new tab - user can right-click to save
-    // This is the most reliable cross-browser approach
-    window.open(url, '_blank', 'noopener,noreferrer');
-    
-    toast({
-      title: 'Image opened',
-      description: 'Right-click the image and select "Save Image As..." to download',
-    });
-  };
-
-  const handleDownloadAll = () => {
-    if (images.length === 0) return;
-
-    setIsDownloadingAll(true);
-
-    // Open all images in new tabs with slight delay
-    // User can then save each one via right-click
-    images.forEach((url, index) => {
-      setTimeout(() => {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }, index * 300); // 300ms delay between each tab
-    });
-
-    setIsDownloadingAll(false);
-    
-    toast({
-      title: 'Images opened!',
-      description: `Opened ${images.length} ${images.length === 1 ? 'image' : 'images'} in new tabs. Right-click each to save.`,
-    });
-  };
-
   if (!open) return null;
 
   const currentImage = images[currentIndex];
@@ -110,33 +73,6 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
 
       {/* Action Buttons */}
       <div className="absolute top-4 left-4 z-50 flex gap-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDownloadCurrent();
-          }}
-          className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center"
-          title="Download current image"
-        >
-          <Download className="h-5 w-5" />
-        </button>
-        {images.length > 1 && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownloadAll();
-            }}
-            disabled={isDownloadingAll}
-            className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center disabled:opacity-50"
-            title="Download all images"
-          >
-            {isDownloadingAll ? (
-              <Download className="h-5 w-5 animate-pulse" />
-            ) : (
-              <FolderDown className="h-5 w-5" />
-            )}
-          </button>
-        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
