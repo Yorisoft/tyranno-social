@@ -18,7 +18,6 @@ import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { PersonalizedThemeManager } from '@/components/PersonalizedThemeManager';
 import { LoginArea } from '@/components/auth/LoginArea';
 import LoginDialog from '@/components/auth/LoginDialog';
-import { TyrannoCoin } from '@/components/TyrannoCoin';
 import { ColorThemeSelector } from '@/components/ColorThemeSelector';
 import {
   Select,
@@ -177,11 +176,15 @@ export default function SettingsPage() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
                   <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
-                    <TyrannoCoin className="h-10 w-10 drop-shadow-2xl filter brightness-110" />
+                    <img 
+                      src="/icon-512.png" 
+                      alt="Tyrannosocial Logo" 
+                      className="h-10 w-10 drop-shadow-2xl filter brightness-110 rounded-full"
+                    />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  <h1 className="text-xl font-bold text-foreground">
                     Settings
                   </h1>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
