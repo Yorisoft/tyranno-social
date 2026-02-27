@@ -77,9 +77,9 @@ export default function SettingsPage() {
   const [relaysExpanded, setRelaysExpanded] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
-  // Get metadata for current user
-  const currentUserProfile = useAuthor(currentUser?.pubkey || '');
-  const currentMetadata: NostrMetadata | undefined = currentUserProfile.data?.metadata;
+  // Get metadata for current user (only if user exists)
+  const currentUserProfile = useAuthor(currentUser?.pubkey ?? '');
+  const currentMetadata: NostrMetadata | undefined = currentUser ? currentUserProfile.data?.metadata : undefined;
 
   useSeoMeta({
     title: 'Settings - Tyrannosocial',

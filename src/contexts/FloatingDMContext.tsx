@@ -49,7 +49,14 @@ export function FloatingDMProvider({ children }: { children: ReactNode }) {
 export function useFloatingDM() {
   const context = useContext(FloatingDMContext);
   if (!context) {
-    throw new Error('useFloatingDM must be used within FloatingDMProvider');
+    // Return a no-op implementation instead of throwing
+    // This allows components to gracefully handle the absence of the provider
+    return {
+      openConversations: [],
+      openConversation: () => {},
+      closeConversation: () => {},
+      toggleMinimize: () => {},
+    };
   }
   return context;
 }
