@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Plus, X, Hash, Type, Smile, AlertTriangle, Lightbulb } from 'lucide-react';
+import { Plus, X, Hash, Type, Smile, AlertTriangle, Lightbulb, Filter, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
 import { getSuggestedEmojis } from '@/lib/topicFilter';
@@ -22,6 +23,7 @@ export function TopicFilterManager() {
   const [newHashtag, setNewHashtag] = useState('');
   const [newEmoji, setNewEmoji] = useState('');
   const [suggestedEmojis, setSuggestedEmojis] = useState<string[]>([]);
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
 
   const topicFilter = config.topicFilter || { keywords: [], hashtags: [], emojis: [] };
 
@@ -205,19 +207,192 @@ export function TopicFilterManager() {
 
   return (
     <div className="space-y-8">
-      {/* Info Section */}
-      <div className="rounded-lg border border-blue-200/50 bg-blue-50/30 dark:bg-blue-950/10 dark:border-blue-900/30 p-4 space-y-2">
+      {/* Info Section - Clickable */}
+      <button
+        onClick={() => setInfoDialogOpen(true)}
+        className="w-full rounded-lg border border-blue-200/50 bg-blue-50/30 dark:bg-blue-950/10 dark:border-blue-900/30 hover:bg-blue-100/40 dark:hover:bg-blue-950/20 p-4 transition-colors cursor-pointer text-left"
+      >
         <div className="flex items-start gap-2">
           <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1">
             <h4 className="font-semibold text-blue-900 dark:text-blue-400">Topic Filtering</h4>
             <p className="text-sm text-blue-900/70 dark:text-blue-400/70">
               Filter out posts by keywords, hashtags, and emojis. This helps you avoid topics you don't want to see.
               The filter also detects common evasion tactics like character substitutions and spaced letters.
             </p>
           </div>
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
         </div>
-      </div>
+      </button>
+
+      {/* Info Dialog */}
+      <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Filter className="h-6 w-6 text-primary" />
+              How Topic Filtering Works
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Advanced content filtering to block unwanted topics
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 pt-4">
+            {/* Overview */}
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                What is Topic Filtering?
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Topic filtering lets you block posts about specific subjects you don't want to see. 
+                Unlike simple word matching, our system is designed to catch posts even when people 
+                try to evade filters using tricks like emoji substitutions, character replacements, 
+                or spaced letters.
+              </p>
+            </div>
+
+            {/* Filter Types */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Type className="h-5 w-5 text-primary" />
+                Filter Types
+              </h3>
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Type className="h-4 w-4 text-primary" />
+                    <span>Keywords</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Blocks posts containing specific words or phrases in the post content. 
+                    Example: Adding "politics" will block posts discussing political topics.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Hash className="h-4 w-4 text-primary" />
+                    <span>Hashtags</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Blocks posts tagged with specific hashtags. 
+                    Example: Adding "bitcoin" will block posts tagged with #bitcoin.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Smile className="h-4 w-4 text-primary" />
+                    <span>Emojis</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Blocks posts containing specific emojis that are commonly used as code words. 
+                    Example: Adding 🍉 will block posts about Palestine (watermelon emoji is often used as a symbol).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Anti-Evasion */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                Anti-Evasion Detection
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                People often try to bypass filters using various tricks. Our system detects these common evasion tactics:
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="rounded-lg border bg-amber-50/30 dark:bg-amber-950/10 p-3 space-y-1">
+                  <p className="font-medium text-amber-900 dark:text-amber-400">Character Substitutions</p>
+                  <p className="text-amber-900/70 dark:text-amber-400/70">
+                    Detects: "p4lestine", "pal3stin3", "p0litics", "1srael"
+                  </p>
+                  <p className="text-xs text-amber-900/60 dark:text-amber-400/60">
+                    Converts: 3→e, 4→a, 0→o, 1/l→i, 5→s, 7→t, @→a
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-purple-50/30 dark:bg-purple-950/10 p-3 space-y-1">
+                  <p className="font-medium text-purple-900 dark:text-purple-400">Spaced Letters</p>
+                  <p className="text-purple-900/70 dark:text-purple-400/70">
+                    Detects: "p a l e s t i n e", "i-s-r-a-e-l", "p.o.l.i.t.i.c.s"
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-green-50/30 dark:bg-green-950/10 p-3 space-y-1">
+                  <p className="font-medium text-green-900 dark:text-green-400">Diacritics Removal</p>
+                  <p className="text-green-900/70 dark:text-green-400/70">
+                    Detects: "pàlëstíne", "ìsrâél", "pólïtîcs"
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-blue-50/30 dark:bg-blue-950/10 p-3 space-y-1">
+                  <p className="font-medium text-blue-900 dark:text-blue-400">Emoji Substitutions</p>
+                  <p className="text-blue-900/70 dark:text-blue-400/70">
+                    Knows common emoji codes: 🍉 (Palestine), 🐘 (Republican), 🐴 (Democrat)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Common Examples */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Smile className="h-5 w-5 text-primary" />
+                Common Emoji Substitutions
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                  <p className="text-sm font-medium">Political</p>
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    <p>🍉 = Palestine / Palestinian cause</p>
+                    <p>🇵🇸 = Palestine flag</p>
+                    <p>🇮🇱 = Israel flag</p>
+                    <p>🐘 = Republican / GOP</p>
+                    <p>🐴 = Democrat / Democratic Party</p>
+                    <p>🏴 = Anarchism</p>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                  <p className="text-sm font-medium">Crypto</p>
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    <p>🚀 = "To the moon" / bullish</p>
+                    <p>💎 = Diamond hands / HODL</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* How to Use */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                How to Use
+              </h3>
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p><strong>1. Add Keywords:</strong> Type words like "israel" or "palestine" to block posts containing those terms</p>
+                <p><strong>2. Add Suggested Emojis:</strong> When you add a keyword, related emojis will be suggested - click to add them</p>
+                <p><strong>3. Add Hashtags:</strong> Block posts tagged with specific topics like #gaza or #politics</p>
+                <p><strong>4. Add Manual Emojis:</strong> Paste any emoji (like 🍉) to block posts containing it</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t">
+              <Button 
+                onClick={() => setInfoDialogOpen(false)}
+                className="w-full"
+              >
+                Got it, thanks!
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Keywords Section */}
       <div className="space-y-4">
