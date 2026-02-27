@@ -7,6 +7,7 @@ import { useBookmarkPost } from '@/hooks/useBookmarkPost';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 import { genUserName } from '@/lib/genUserName';
+import { formatEventTime } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,6 @@ import { MediaContent } from '@/components/MediaContent';
 import { ZapButton } from '@/components/ZapButton';
 import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
 import { ContentWarningWrapper } from '@/components/ContentWarningWrapper';
-import { formatDistanceToNow } from 'date-fns';
 import { nip19 } from 'nostr-tools';
 import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -65,9 +65,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
   const npub = nip19.npubEncode(displayEvent.pubkey);
   const noteId = nip19.noteEncode(displayEvent.id);
 
-  const timeAgo = formatDistanceToNow(new Date(displayEvent.created_at * 1000), {
-    addSuffix: true,
-  });
+  const timeAgo = formatEventTime(displayEvent.created_at);
 
   // Reposter info
   const reposterMetadata: NostrMetadata | undefined = reposter.data?.metadata;

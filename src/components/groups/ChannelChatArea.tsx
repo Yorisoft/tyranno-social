@@ -4,6 +4,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { genUserName } from '@/lib/genUserName';
+import { formatEventTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,8 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Send, Hash, Loader2 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import type { NostrMetadata } from '@nostrify/nostrify';
+import type { NostrMetadata, NostrEvent } from '@nostrify/nostrify';
 
 interface ChannelChatAreaProps {
   channelId: string;
@@ -184,9 +184,7 @@ function ChannelMessage({ message }: ChannelMessageProps) {
   const profileImage = metadata?.picture;
   const isOwnMessage = user?.pubkey === message.pubkey;
 
-  const timeAgo = formatDistanceToNow(new Date(message.created_at * 1000), {
-    addSuffix: true,
-  });
+  const timeAgo = formatEventTime(message.created_at);
 
   return (
     <div className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}>

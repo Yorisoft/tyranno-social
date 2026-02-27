@@ -1,11 +1,11 @@
 import { useChannels, type Channel } from '@/hooks/useChannels';
 import { useAuthor } from '@/hooks/useAuthor';
 import { genUserName } from '@/lib/genUserName';
+import { formatEventTime } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Hash, Users } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 
 interface ChannelListProps {
   selectedChannelId: string | null;
@@ -75,9 +75,7 @@ function ChannelItem({ channel, isSelected, onClick }: ChannelItemProps) {
   const channelPicture = channel.metadata.picture;
   const about = channel.metadata.about;
 
-  const timeAgo = formatDistanceToNow(new Date(channel.createdAt * 1000), {
-    addSuffix: true,
-  });
+  const timeAgo = formatEventTime(channel.createdAt);
 
   return (
     <Card

@@ -1,5 +1,5 @@
 import { useAuthor } from '@/hooks/useAuthor';
-import { formatDistanceToNow } from 'date-fns';
+import { formatEventTime } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
 
   const displayName = metadata?.name ?? genUserName(notification.pubkey);
   const profileImage = metadata?.picture;
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at * 1000), { addSuffix: true });
+  const timeAgo = formatEventTime(notification.created_at);
 
   const Icon = notificationIcons[notification.notificationType];
   const label = notificationLabels[notification.notificationType];
