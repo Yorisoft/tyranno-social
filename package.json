@@ -1,12 +1,54 @@
 {
-  "name": "mkstack",
+  "name": "tyrannosocial",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.js",
+  "author": "Azazer",
+  "description": "A beautiful Nostr social experience with stunning masonry grid layout",
+  "homepage": "https://Azazer.com",
   "scripts": {
     "dev": "npm i --silent && vite",
     "build": "npm i --silent && vite build -l error && cp dist/index.html dist/404.html && echo 'Project built successfully!'",
-    "test": "npm i --silent && tsc --noEmit && eslint && vitest run --reporter=dot --silent && vite build -l error && cp dist/index.html dist/404.html && echo 'All tests passed!'"
+    "test": "npm i --silent && tsc --noEmit && eslint && vitest run --reporter=dot --silent && vite build -l error && cp dist/index.html dist/404.html && echo 'All tests passed!'",
+    "electron:dev": "npm i --silent && NODE_ENV=development electron .",
+    "electron:build": "npm i --silent && vite build -l error && electron-builder",
+    "electron:build:win": "npm i --silent && vite build -l error && electron-builder --win",
+    "electron:build:mac": "npm i --silent && vite build -l error && electron-builder --mac",
+    "electron:build:linux": "npm i --silent && vite build -l error && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.azazer.tyrannosocial",
+    "productName": "Tyrannosocial",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "public/icon-*.png",
+      "public/apple-touch-icon.png"
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "public/icon-512.png"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "public/icon-512.png",
+      "category": "public.app-category.social-networking"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "public/icon-512.png",
+      "category": "Network"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.6",
@@ -89,6 +131,8 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "@webbtc/webln-types": "^3.0.0",
     "autoprefixer": "^10.4.20",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
@@ -99,6 +143,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^6.3.5",
+    "vite-plugin-electron": "^0.29.0",
     "vitest": "^3.1.4"
   }
 }
