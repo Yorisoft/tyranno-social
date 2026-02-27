@@ -6,25 +6,21 @@ interface ZapstrEmbedProps {
 }
 
 export function isZapstrUrl(url: string): boolean {
-  return /zapstr\.live\/[a-zA-Z0-9-_]+/.test(url) || 
-         /zapstr\.live\/(track|naddr1)\/[a-zA-Z0-9-_]+/.test(url);
+  return /zapstr\.live\/t\/naddr1[a-z0-9]+/.test(url);
 }
 
 export function getZapstrEmbedUrl(url: string): string | null {
-  // Extract the track identifier from various Zapstr URL patterns
-  // Common patterns:
-  // - https://zapstr.live/<track-id>
-  // - https://zapstr.live/track/<track-id>
-  // - https://zapstr.live/naddr1<identifier>
+  // Extract the naddr identifier from Zapstr URL patterns
+  // Common pattern: https://zapstr.live/t/naddr1<identifier>
   
-  const match = url.match(/zapstr\.live\/(?:track\/)?([a-zA-Z0-9-_]+)/);
+  const match = url.match(/zapstr\.live\/t\/(naddr1[a-z0-9]+)/);
   
   if (!match) return null;
   
-  const trackId = match[1];
+  const naddr = match[1];
   
-  // Zapstr uses iframe embeds at /embed/<track-id>
-  return `https://zapstr.live/embed/${trackId}`;
+  // Zapstr uses iframe embeds at /e/<naddr>
+  return `https://zapstr.live/e/${naddr}`;
 }
 
 export function ZapstrEmbed({ url, className = '' }: ZapstrEmbedProps) {
