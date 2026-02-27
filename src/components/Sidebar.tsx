@@ -132,6 +132,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const { config, updateConfig } = useAppContext();
   const { user } = useCurrentUser();
   const { data: bookmarkSets, isLoading: isLoadingBookmarks, refetch: refetchBookmarks } = useBookmarkSets();
+  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(10); // Fetch small amount for badge
   const { shouldFilter, filterEnabled, setFilterEnabled, canToggle } = useNSFWFilter();
   const { isActive: wotActive, wotEnabled, setWotEnabled, canUseWoT } = useWebOfTrust();
   const [relaysOpen, setRelaysOpen] = useState(false);
@@ -140,9 +141,6 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>('sidebar-collapsed', false);
   const navigate = useNavigate();
-  
-  // Only fetch notifications when the notifications section is open
-  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50, notificationsOpen);
 
   const isDark = theme === 'dark';
 

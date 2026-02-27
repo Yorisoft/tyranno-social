@@ -52,10 +52,7 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('categories');
   const navigate = useNavigate();
-  
-  // Only fetch notifications when the sheet is open AND on the notifications tab
-  const shouldFetchNotifications = open && activeTab === 'notifications';
-  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50, shouldFetchNotifications);
+  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(10); // Fetch small amount
 
   const isDark = theme === 'dark';
 
