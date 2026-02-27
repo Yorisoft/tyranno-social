@@ -3,8 +3,14 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
 
-// Default relay for logged-out users
-const DEFAULT_RELAY = { url: 'wss://relay.primal.net', read: true, write: true };
+// Default relays for logged-out users and users without NIP-65 relay list
+const DEFAULT_RELAYS = [
+  { url: 'wss://relay.ditto.pub', read: true, write: true },
+  { url: 'wss://relay.primal.net', read: true, write: true },
+  { url: 'wss://relay.damus.io', read: true, write: true },
+  { url: 'wss://nos.lol', read: true, write: true },
+  { url: 'wss://relay.nostr.band', read: true, write: true },
+];
 
 /**
  * NostrSync - Syncs user's Nostr data
@@ -12,39 +18,28 @@ const DEFAULT_RELAY = { url: 'wss://relay.primal.net', read: true, write: true }
  * This component runs globally to sync various Nostr data when the user logs in.
  * Currently syncs:
  * - NIP-65 relay list (kind 10002)
- * - Resets to default relay when user logs out
+ * - Falls back to default relays when user doesn't have a relay list
  */
 export function NostrSync() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { config, updateConfig } = useAppContext();
   const previousUserRef = useRef<string | null>(null);
-
-  // Initialize: ensure logged-out users only use primal relay
-  useEffect(() => {
-    if (!user && config.relayMetadata.relays.length > 1) {
-      console.log('No user logged in and multiple relays detected, resetting to relay.primal.net only');
-      updateConfig((current) => ({
-        ...current,
-        relayMetadata: {
-          relays: [DEFAULT_RELAY],
-          updatedAt: 0,
-        },
-      }));
-    }
-  }, []); // Run only once on mount
+  const hasAttemptedSync = useRef<boolean>(false);
 
   useEffect(() => {
     // Check if user logged out
     if (previousUserRef.current && !user) {
-      console.log('User logged out, resetting to default relay (relay.primal.net)');
+      console.log('User logged out, resetting to default relays');
       updateConfig(() => ({
         theme: config.theme, // Preserve theme
+        showContentWarnings: config.showContentWarnings, // Preserve content warnings setting
         relayMetadata: {
-          relays: [DEFAULT_RELAY],
+          relays: DEFAULT_RELAYS,
           updatedAt: 0,
         },
       }));
+      hasAttemptedSync.current = false;
     }
 
     // Update the ref to track login state
@@ -52,13 +47,18 @@ export function NostrSync() {
 
     if (!user) return;
 
+    // Only sync once per login session
+    if (hasAttemptedSync.current) return;
+
     const syncRelaysFromNostr = async () => {
       try {
         console.log('User logged in, fetching relay list from Nostr...');
+        hasAttemptedSync.current = true;
         
+        // Query multiple relays to find the user's relay list
         const events = await nostr.query(
           [{ kinds: [10002], authors: [user.pubkey], limit: 1 }],
-          { signal: AbortSignal.timeout(5000) }
+          { signal: AbortSignal.timeout(10000) }
         );
 
         if (events.length > 0) {
@@ -75,7 +75,7 @@ export function NostrSync() {
               }));
 
             if (fetchedRelays.length > 0) {
-              console.log('Syncing relay list from Nostr:', fetchedRelays);
+              console.log('✅ Found user relay list from Nostr:', fetchedRelays);
               updateConfig((current) => ({
                 ...current,
                 relayMetadata: {
@@ -84,21 +84,44 @@ export function NostrSync() {
                 },
               }));
             } else {
-              console.log('No relays found in user relay list, keeping current relays');
+              console.log('⚠️ Relay list found but empty, using default relays');
+              updateConfig((current) => ({
+                ...current,
+                relayMetadata: {
+                  relays: DEFAULT_RELAYS,
+                  updatedAt: 0,
+                },
+              }));
             }
           } else {
-            console.log('Stored relay list is already up to date');
+            console.log('✅ Stored relay list is already up to date');
           }
         } else {
-          console.log('No relay list found for user, using default relay');
+          console.log('⚠️ No NIP-65 relay list found for user, using default relays');
+          // User doesn't have a relay list published, use defaults
+          updateConfig((current) => ({
+            ...current,
+            relayMetadata: {
+              relays: DEFAULT_RELAYS,
+              updatedAt: 0,
+            },
+          }));
         }
       } catch (error) {
-        console.error('Failed to sync relays from Nostr:', error);
+        console.error('❌ Failed to sync relays from Nostr:', error);
+        // On error, ensure we have default relays
+        updateConfig((current) => ({
+          ...current,
+          relayMetadata: {
+            relays: DEFAULT_RELAYS,
+            updatedAt: 0,
+          },
+        }));
       }
     };
 
     syncRelaysFromNostr();
-  }, [user?.pubkey, nostr, updateConfig]);
+  }, [user?.pubkey, nostr, updateConfig, config.relayMetadata.updatedAt]);
 
   return null;
 }
