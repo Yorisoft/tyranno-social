@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useToast } from '@/hooks/useToast';
 import { extractColorsFromImage, hexToHSL } from '@/lib/colorExtraction';
-import { Upload, X, Loader2, ImagePlus } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus, Droplet } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export function PersonalizedThemeManager() {
   const { config, updateConfig } = useAppContext();
@@ -14,6 +16,7 @@ export function PersonalizedThemeManager() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const hasPersonalizedTheme = !!config.personalizedTheme;
+  const cardOpacity = config.personalizedTheme?.cardOpacity ?? 85;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,7 +57,7 @@ export function PersonalizedThemeManager() {
           const colors = await extractColorsFromImage(dataUrl);
           
           // Apply colors to CSS variables
-          applyPersonalizedTheme(colors, dataUrl);
+          applyPersonalizedTheme(colors, dataUrl, cardOpacity);
           
           // Save to config
           updateConfig((current) => ({
@@ -66,6 +69,7 @@ export function PersonalizedThemeManager() {
               accentColor: colors.accent,
               backgroundColor: colors.background,
               foregroundColor: colors.foreground,
+              cardOpacity: cardOpacity,
             },
           }));
           
@@ -128,10 +132,27 @@ export function PersonalizedThemeManager() {
     });
   };
 
+  const handleOpacityChange = (value: number[]) => {
+    const newOpacity = value[0];
+    
+    // Update config
+    updateConfig((current) => ({
+      ...current,
+      personalizedTheme: current.personalizedTheme ? {
+        ...current.personalizedTheme,
+        cardOpacity: newOpacity,
+      } : undefined,
+    }));
+
+    // Apply to CSS immediately
+    const root = document.documentElement;
+    root.style.setProperty('--card-opacity', (newOpacity / 100).toString());
+  };
+
   return (
     <div className="space-y-4">
       {hasPersonalizedTheme ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Preview */}
           <Card className="overflow-hidden border-2 border-primary/20">
             <div 
@@ -157,6 +178,36 @@ export function PersonalizedThemeManager() {
               </div>
             </div>
           </Card>
+          
+          {/* Opacity Slider */}
+          <div className="space-y-3 p-4 rounded-lg border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 font-medium">
+                <Droplet className="h-4 w-4 text-primary" />
+                Card Transparency
+              </Label>
+              <span className="text-sm text-muted-foreground font-mono">
+                {cardOpacity}%
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Adjust how much of your wallpaper shows through cards
+            </p>
+            <Slider
+              value={[cardOpacity]}
+              onValueChange={handleOpacityChange}
+              min={20}
+              max={100}
+              step={5}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>More wallpaper</span>
+              <span>Less wallpaper</span>
+            </div>
+          </div>
+
+          <Separator />
           
           {/* Actions */}
           <div className="flex gap-2">
@@ -240,7 +291,7 @@ function applyPersonalizedTheme(colors: {
   accent: string;
   background: string;
   foreground: string;
-}, wallpaperUrl: string) {
+}, wallpaperUrl: string, cardOpacity: number = 85) {
   const root = document.documentElement;
   
   // Convert colors to HSL for CSS variables
@@ -255,8 +306,9 @@ function applyPersonalizedTheme(colors: {
   root.style.setProperty('--background', `${bgHSL.h} ${bgHSL.s}% ${bgHSL.l}%`);
   root.style.setProperty('--foreground', `${fgHSL.h} ${fgHSL.s}% ${fgHSL.l}%`);
   
-  // Set wallpaper
+  // Set wallpaper and opacity
   root.style.setProperty('--wallpaper-url', `url(${wallpaperUrl})`);
+  root.style.setProperty('--card-opacity', (cardOpacity / 100).toString());
   root.classList.add('personalized-theme');
   
   // Determine if dark or light based on background
@@ -292,6 +344,7 @@ export function initializePersonalizedTheme(personalizedTheme?: {
   accentColor: string;
   backgroundColor: string;
   foregroundColor: string;
+  cardOpacity?: number;
 }) {
   if (personalizedTheme) {
     applyPersonalizedTheme(
@@ -302,7 +355,8 @@ export function initializePersonalizedTheme(personalizedTheme?: {
         background: personalizedTheme.backgroundColor,
         foreground: personalizedTheme.foregroundColor,
       },
-      personalizedTheme.wallpaperUrl
+      personalizedTheme.wallpaperUrl,
+      personalizedTheme.cardOpacity ?? 85
     );
   } else {
     removePersonalizedTheme();

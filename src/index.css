@@ -177,6 +177,7 @@
   /* Personalized Theme - Custom Wallpaper Background */
   .personalized-theme {
     --wallpaper-url: none;
+    --card-opacity: 0.85;
   }
 
   .personalized-theme body {
@@ -206,11 +207,17 @@
     z-index: 1;
   }
 
-  /* Enhance card backgrounds in personalized mode */
+  /* Enhance card backgrounds in personalized mode with adjustable opacity */
   .personalized-theme [class*="card"],
   .personalized-theme header,
   .personalized-theme footer {
     backdrop-filter: blur(20px) saturate(150%);
-    background: hsl(var(--background) / 0.85);
+    background: hsl(var(--background) / var(--card-opacity));
+  }
+
+  /* More transparent backgrounds for better wallpaper visibility */
+  .personalized-theme .bg-gradient-to-br,
+  .personalized-theme .bg-gradient-to-r {
+    background: hsl(var(--background) / calc(var(--card-opacity) * 0.9));
   }
 }

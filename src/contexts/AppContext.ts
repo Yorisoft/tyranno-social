@@ -45,6 +45,8 @@ export interface PersonalizedTheme {
   backgroundColor: string;
   /** Foreground/text color */
   foregroundColor: string;
+  /** Card transparency (0-100, default 85) */
+  cardOpacity?: number;
 }
 
 export interface AppConfig {
