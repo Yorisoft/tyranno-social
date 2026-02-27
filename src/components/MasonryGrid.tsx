@@ -14,6 +14,8 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
   const columnRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [columnPosts, setColumnPosts] = useState<NostrEvent[][]>([]);
   const redistributeTimeoutRef = useRef<number>();
+  const imageLoadCountRef = useRef<number>(0);
+  const totalImagesRef = useRef<number>(0);
 
   // Initialize column refs array
   useEffect(() => {
@@ -28,7 +30,36 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
     });
   }, [columns]);
 
-  // Distribute posts across columns based on actual rendered heights
+  // Estimate height more accurately based on content
+  const estimatePostHeight = useCallback((post: NostrEvent): number => {
+    let height = 150; // Base height for card chrome (header, footer, padding)
+    
+    // Add height for text content
+    const textLines = Math.ceil(post.content.length / 50); // Rough estimate of lines
+    height += Math.min(textLines * 20, 300); // Cap text height at 300px
+    
+    // Check for images in content
+    const imageUrlPattern = /https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp)/gi;
+    const imageUrls = post.content.match(imageUrlPattern) || [];
+    const hasImeta = post.tags.some(([name]) => name === 'imeta');
+    
+    if (imageUrls.length > 0 || hasImeta) {
+      // Images typically add significant height
+      height += 300; // Average image height in card
+    }
+    
+    // Check for video
+    const videoUrlPattern = /https?:\/\/[^\s]+\.(mp4|webm|mov)/gi;
+    const hasVideo = videoUrlPattern.test(post.content);
+    
+    if (hasVideo) {
+      height += 300; // Video player height
+    }
+    
+    return height;
+  }, []);
+
+  // Distribute posts across columns based on estimated heights
   const distributePostsWithHeights = useCallback(() => {
     const newColumnPosts: NostrEvent[][] = Array.from({ length: columns }, () => []);
     const columnHeights: number[] = Array.from({ length: columns }, () => 0);
@@ -37,74 +68,35 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
       // For the first few posts, distribute one per column
       if (index < columns) {
         newColumnPosts[index].push(post);
-        // Estimate initial height (will be refined after render)
-        columnHeights[index] = 300;
+        columnHeights[index] = estimatePostHeight(post);
       } else {
         // Find the shortest column
         const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
         newColumnPosts[shortestColumnIndex].push(post);
         
-        // Estimate post height based on content length
-        const estimatedHeight = Math.min(800, 200 + (post.content.length * 0.5));
+        // Add estimated height to this column
+        const estimatedHeight = estimatePostHeight(post);
         columnHeights[shortestColumnIndex] += estimatedHeight + 16; // +16 for gap
       }
     });
 
     setColumnPosts(newColumnPosts);
-
-    // After render, check actual heights and redistribute if needed
-    if (redistributeTimeoutRef.current) {
-      clearTimeout(redistributeTimeoutRef.current);
-    }
-    
-    redistributeTimeoutRef.current = window.setTimeout(() => {
-      const actualHeights = getColumnHeights();
-      const maxHeight = Math.max(...actualHeights);
-      const minHeight = Math.min(...actualHeights);
-      
-      // If columns are very unbalanced (>20% difference), redistribute
-      if (maxHeight > 0 && (maxHeight - minHeight) / maxHeight > 0.2) {
-        console.log('Columns unbalanced, redistributing...', { actualHeights });
-        redistributeWithActualHeights();
-      }
-    }, 500);
-  }, [posts, columns, getColumnHeights]);
-
-  // More accurate redistribution using actual DOM heights
-  const redistributeWithActualHeights = useCallback(() => {
-    const newColumnPosts: NostrEvent[][] = Array.from({ length: columns }, () => []);
-    const actualHeights = getColumnHeights();
-
-    posts.forEach((post) => {
-      // Find the shortest column by actual height
-      const shortestColumnIndex = actualHeights.indexOf(Math.min(...actualHeights));
-      newColumnPosts[shortestColumnIndex].push(post);
-      
-      // Update height estimate (rough approximation)
-      actualHeights[shortestColumnIndex] += 300;
-    });
-
-    setColumnPosts(newColumnPosts);
-  }, [posts, columns, getColumnHeights]);
+  }, [posts, columns, estimatePostHeight]);
 
   // Distribute posts when posts or columns change
   useEffect(() => {
     distributePostsWithHeights();
-
-    return () => {
-      if (redistributeTimeoutRef.current) {
-        clearTimeout(redistributeTimeoutRef.current);
-      }
-    };
   }, [posts, columns, distributePostsWithHeights]);
 
-  // Handle window resize
+  // Handle window resize with debounce
   useEffect(() => {
     const handleResize = () => {
       if (redistributeTimeoutRef.current) {
         clearTimeout(redistributeTimeoutRef.current);
       }
-      redistributeTimeoutRef.current = window.setTimeout(distributePostsWithHeights, 200);
+      redistributeTimeoutRef.current = window.setTimeout(() => {
+        distributePostsWithHeights();
+      }, 300);
     };
 
     window.addEventListener('resize', handleResize);
