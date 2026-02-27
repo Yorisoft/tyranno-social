@@ -1,0 +1,349 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
+import { useAppContext } from '@/hooks/useAppContext';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { RelayListManager } from '@/components/RelayListManager';
+import { LoginArea } from '@/components/auth/LoginArea';
+import { TyrannoCoin } from '@/components/TyrannoCoin';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Moon,
+  Sun,
+  Wifi,
+  AlertTriangle,
+  ArrowLeft,
+  Type,
+  Sparkles,
+  User,
+} from 'lucide-react';
+import { useSeoMeta } from '@unhead/react';
+
+const fontOptions = [
+  { value: 'inter', label: 'Inter (Default)', family: 'Inter Variable, Inter, system-ui, sans-serif' },
+  { value: 'system', label: 'System', family: 'system-ui, -apple-system, sans-serif' },
+  { value: 'serif', label: 'Serif', family: 'Georgia, serif' },
+  { value: 'mono', label: 'Monospace', family: 'ui-monospace, monospace' },
+];
+
+const fontSizes = [
+  { value: 'xs', label: 'Extra Small', size: '12px' },
+  { value: 'sm', label: 'Small', size: '14px' },
+  { value: 'base', label: 'Medium (Default)', size: '16px' },
+  { value: 'lg', label: 'Large', size: '18px' },
+  { value: 'xl', label: 'Extra Large', size: '20px' },
+  { value: '2xl', label: 'Huge', size: '24px' },
+];
+
+export default function SettingsPage() {
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const { config, updateConfig } = useAppContext();
+  const { user } = useCurrentUser();
+  const [relaysExpanded, setRelaysExpanded] = useState(false);
+
+  useSeoMeta({
+    title: 'Settings - Tyrannosocial',
+    description: 'Customize your Tyrannosocial experience',
+  });
+
+  const isDark = theme === 'dark';
+
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
+
+  const toggleContentWarnings = () => {
+    updateConfig((current) => ({
+      ...current,
+      showContentWarnings: !config.showContentWarnings,
+    }));
+  };
+
+  const handleFontChange = (fontValue: string) => {
+    const font = fontOptions.find(f => f.value === fontValue);
+    if (font) {
+      updateConfig((current) => ({
+        ...current,
+        fontFamily: font.family,
+      }));
+      // Apply to document
+      document.documentElement.style.fontFamily = font.family;
+    }
+  };
+
+  const handleFontSizeChange = (sizeValue: string) => {
+    const size = fontSizes.find(s => s.value === sizeValue);
+    if (size) {
+      updateConfig((current) => ({
+        ...current,
+        fontSize: size.size,
+      }));
+      // Apply to document
+      document.documentElement.style.fontSize = size.size;
+    }
+  };
+
+  // Get current font and size
+  const currentFont = fontOptions.find(f => f.family === config.fontFamily)?.value || 'inter';
+  const currentSize = fontSizes.find(s => s.size === config.fontSize)?.value || 'base';
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-rose-50/30 to-pink-50/40 dark:from-background dark:via-background dark:to-primary/5">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Back Button and Title */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/')}
+                className="shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
+                  <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
+                    <TyrannoCoin className="h-10 w-10 drop-shadow-2xl filter brightness-110" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Settings
+                  </h1>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    Customize your experience
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Login Area */}
+            <LoginArea className="max-w-60 hidden sm:flex" />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="px-4 py-8 max-w-4xl mx-auto">
+        <div className="space-y-6">
+          {/* Account Section */}
+          <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-purple-50/20 dark:from-card dark:to-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Account
+              </CardTitle>
+              <CardDescription>
+                Manage your Nostr account and profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {user ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Logged in as:</p>
+                    <p className="text-sm font-medium">{user.pubkey.substring(0, 16)}...</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/profile/edit')}
+                  >
+                    Edit Profile
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    Log in to access account settings
+                  </p>
+                  <LoginArea className="max-w-60 mx-auto" />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Appearance Section */}
+          <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-rose-50/30 dark:from-card dark:to-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {isDark ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
+                Appearance
+              </CardTitle>
+              <CardDescription>
+                Customize the look and feel of your interface
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Theme Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="theme-toggle" className="cursor-pointer font-medium">
+                    Dark Mode
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Switch between light and dark themes
+                  </p>
+                </div>
+                <Switch
+                  id="theme-toggle"
+                  checked={isDark}
+                  onCheckedChange={toggleTheme}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              <Separator />
+
+              {/* Font Family */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Type className="h-4 w-4 text-primary" />
+                  Font Type
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Choose your preferred font family
+                </p>
+                <Select value={currentFont} onValueChange={handleFontChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map((font) => (
+                      <SelectItem key={font.value} value={font.value}>
+                        <span style={{ fontFamily: font.family }}>
+                          {font.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              {/* Font Size */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Type className="h-4 w-4 text-primary" />
+                  Font Size
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Adjust the base text size
+                </p>
+                <Select value={currentSize} onValueChange={handleFontSizeChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontSizes.map((size) => (
+                      <SelectItem key={size.value} value={size.value}>
+                        {size.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Content Section */}
+          <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-orange-50/20 dark:from-card dark:to-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                Content
+              </CardTitle>
+              <CardDescription>
+                Manage content filtering and warnings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="content-warnings-toggle" className="cursor-pointer font-medium">
+                    Content Warnings
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show warnings for sensitive content
+                  </p>
+                </div>
+                <Switch
+                  id="content-warnings-toggle"
+                  checked={config.showContentWarnings}
+                  onCheckedChange={toggleContentWarnings}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Relays Section */}
+          <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-blue-50/20 dark:from-card dark:to-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wifi className="h-5 w-5 text-primary" />
+                    Relays
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your Nostr relay connections
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRelaysExpanded(!relaysExpanded)}
+                >
+                  {relaysExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </CardHeader>
+            {relaysExpanded && (
+              <CardContent>
+                <RelayListManager />
+              </CardContent>
+            )}
+            {!relaysExpanded && (
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {config.relayMetadata.relays.length} {config.relayMetadata.relays.length === 1 ? 'relay' : 'relays'} configured
+                  </p>
+                  <div className="space-y-1">
+                    {config.relayMetadata.relays.slice(0, 3).map((relay) => (
+                      <div key={relay.url} className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 shadow-sm shadow-green-500/50 animate-pulse" />
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {relay.url.replace('wss://', '')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

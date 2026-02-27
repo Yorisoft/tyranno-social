@@ -40,6 +40,8 @@ const AppConfigSchema = z.object({
   dmInboxRelays: DMInboxRelaysSchema.optional(),
   privateHomeRelays: PrivateHomeRelaysSchema.optional(),
   showContentWarnings: z.boolean().optional().default(true),
+  fontFamily: z.string().optional(),
+  fontSize: z.string().optional(),
 }) satisfies z.ZodType<AppConfig>;
 
 export function AppProvider(props: AppProviderProps) {
@@ -76,6 +78,9 @@ export function AppProvider(props: AppProviderProps) {
 
   // Apply theme effects to document
   useApplyTheme(config.theme);
+
+  // Apply font settings to document
+  useApplyFontSettings(config.fontFamily, config.fontSize);
 
   return (
     <AppContext.Provider value={appContextValue}>
@@ -123,4 +128,21 @@ function useApplyTheme(theme: Theme) {
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
+}
+
+/**
+ * Hook to apply font settings to the document root
+ */
+function useApplyFontSettings(fontFamily?: string, fontSize?: string) {
+  useEffect(() => {
+    const root = window.document.documentElement;
+
+    if (fontFamily) {
+      root.style.fontFamily = fontFamily;
+    }
+
+    if (fontSize) {
+      root.style.fontSize = fontSize;
+    }
+  }, [fontFamily, fontSize]);
 }

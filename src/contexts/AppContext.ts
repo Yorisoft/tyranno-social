@@ -34,6 +34,10 @@ export interface AppConfig {
   privateHomeRelays?: PrivateHomeRelays;
   /** Show content warnings (true = blur/hide, false = always show) */
   showContentWarnings: boolean;
+  /** Font family */
+  fontFamily?: string;
+  /** Font size */
+  fontSize?: string;
 }
 
 export interface AppContextType {
