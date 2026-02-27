@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { RelayListManager } from '@/components/RelayListManager';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
+import { ColorThemeSelector } from '@/components/ColorThemeSelector';
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ const fontOptions = [
   { value: 'pacifico', label: 'Pacifico (Playful)', family: 'Pacifico, cursive' },
   { value: 'kalam', label: 'Kalam (Casual)', family: 'Kalam, cursive' },
   { value: 'indie-flower', label: 'Indie Flower (Quirky)', family: 'Indie Flower, cursive' },
+  { value: 'permanent-marker', label: 'Permanent Marker (Bold)', family: 'Permanent Marker, cursive' },
 ];
 
 const fontSizes = [
@@ -213,6 +215,20 @@ export default function SettingsPage() {
                   onCheckedChange={toggleTheme}
                   className="data-[state=checked]:bg-primary"
                 />
+              </div>
+
+              <Separator />
+
+              {/* Theme Colors */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Theme Colors
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Customize the color scheme of the app
+                </p>
+                <ColorThemeSelector />
               </div>
 
               <Separator />

@@ -13,6 +13,7 @@ import '@fontsource/dancing-script';
 import '@fontsource/pacifico';
 import '@fontsource/kalam';
 import '@fontsource/indie-flower';
+import '@fontsource/permanent-marker';
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>

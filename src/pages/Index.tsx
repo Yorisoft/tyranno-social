@@ -12,7 +12,6 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileSidebar } from '@/components/MobileSidebar';
 import { ColumnSelector } from '@/components/ColumnSelector';
-import { ColorThemeSelector } from '@/components/ColorThemeSelector';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useUnreadDMCount } from '@/hooks/useUnreadDMCount';
@@ -272,7 +271,6 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <ColorThemeSelector />
                 <ColumnSelector columns={columns} onColumnsChange={setColumns} />
               </div>
             </div>
@@ -292,7 +290,6 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <ColorThemeSelector />
                 <ColumnSelector columns={columns} onColumnsChange={setColumns} />
               </div>
             </div>
