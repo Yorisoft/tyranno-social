@@ -14,6 +14,7 @@ import '@fontsource/pacifico';
 import '@fontsource/kalam';
 import '@fontsource/indie-flower';
 import '@fontsource/permanent-marker';
+import '@fontsource/patrick-hand-sc';
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>

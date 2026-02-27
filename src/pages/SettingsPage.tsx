@@ -56,6 +56,7 @@ const fontOptions = [
   { value: 'kalam', label: 'Kalam (Casual)', family: 'Kalam, cursive' },
   { value: 'indie-flower', label: 'Indie Flower (Quirky)', family: 'Indie Flower, cursive' },
   { value: 'permanent-marker', label: 'Permanent Marker (Bold)', family: 'Permanent Marker, cursive' },
+  { value: 'patrick-hand-sc', label: 'Patrick Hand SC (Comic)', family: 'Patrick Hand SC, cursive' },
 ];
 
 const fontSizes = [
