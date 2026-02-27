@@ -173,4 +173,44 @@
   input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
+
+  /* Personalized Theme - Custom Wallpaper Background */
+  .personalized-theme {
+    --wallpaper-url: none;
+  }
+
+  .personalized-theme body {
+    background-image: var(--wallpaper-url);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Add overlay to improve readability over wallpaper */
+  .personalized-theme body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ensure content is above the overlay */
+  .personalized-theme body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Enhance card backgrounds in personalized mode */
+  .personalized-theme [class*="card"],
+  .personalized-theme header,
+  .personalized-theme footer {
+    backdrop-filter: blur(20px) saturate(150%);
+    background: hsl(var(--background) / 0.85);
+  }
 }

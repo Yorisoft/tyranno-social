@@ -32,6 +32,21 @@ export interface TopicFilter {
   emojis: string[];
 }
 
+export interface PersonalizedTheme {
+  /** Wallpaper image URL (data URL or blob URL) */
+  wallpaperUrl: string;
+  /** Extracted primary color */
+  primaryColor: string;
+  /** Extracted secondary color */
+  secondaryColor: string;
+  /** Extracted accent color */
+  accentColor: string;
+  /** Background color (light or dark based on image) */
+  backgroundColor: string;
+  /** Foreground/text color */
+  foregroundColor: string;
+}
+
 export interface AppConfig {
   /** Current theme */
   theme: Theme;
@@ -45,6 +60,8 @@ export interface AppConfig {
   showContentWarnings: boolean;
   /** Topic filter for blocking posts by keywords, hashtags, and emojis */
   topicFilter?: TopicFilter;
+  /** Personalized theme with custom wallpaper */
+  personalizedTheme?: PersonalizedTheme;
   /** Font family */
   fontFamily?: string;
   /** Font size */

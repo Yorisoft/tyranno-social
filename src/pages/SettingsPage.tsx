@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RelayListManager } from '@/components/RelayListManager';
 import { TopicFilterManager } from '@/components/TopicFilterManager';
+import { PersonalizedThemeManager } from '@/components/PersonalizedThemeManager';
 import { LoginArea } from '@/components/auth/LoginArea';
 import LoginDialog from '@/components/auth/LoginDialog';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
@@ -42,6 +43,7 @@ import {
   UserPlus,
   LogOut,
   Filter,
+  Palette,
 } from 'lucide-react';
 import { useSeoMeta } from '@unhead/react';
 import { nip19 } from 'nostr-tools';
@@ -90,6 +92,7 @@ export default function SettingsPage() {
   });
 
   const isDark = theme === 'dark';
+  const hasPersonalizedTheme = !!config.personalizedTheme;
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
@@ -100,6 +103,23 @@ export default function SettingsPage() {
       ...current,
       showContentWarnings: !config.showContentWarnings,
     }));
+  };
+
+  const togglePersonalizedMode = () => {
+    if (hasPersonalizedTheme) {
+      // Remove personalized theme
+      updateConfig((current) => {
+        const newConfig = { ...current };
+        delete newConfig.personalizedTheme;
+        return newConfig;
+      });
+      
+      // Remove wallpaper from DOM
+      const root = document.documentElement;
+      root.classList.remove('personalized-theme');
+      root.style.removeProperty('--wallpaper-url');
+    }
+    // If turning on, do nothing - user needs to upload a wallpaper
   };
 
   const handleFontChange = (fontValue: string) => {
@@ -347,36 +367,90 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Theme Toggle */}
+              {/* Personalized Mode Toggle */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="theme-toggle" className="cursor-pointer font-medium">
+                  <Label htmlFor="personalized-toggle" className="cursor-pointer font-medium flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-primary" />
+                    Personalized
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Use a custom wallpaper with auto-generated colors
+                  </p>
+                </div>
+                <Switch
+                  id="personalized-toggle"
+                  checked={hasPersonalizedTheme}
+                  onCheckedChange={togglePersonalizedMode}
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              {/* Personalized Theme Manager - only show when enabled */}
+              {hasPersonalizedTheme && (
+                <>
+                  <PersonalizedThemeManager />
+                  <Separator />
+                </>
+              )}
+
+              {/* Theme Toggle - disabled when personalized */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="theme-toggle" 
+                    className={`cursor-pointer font-medium ${hasPersonalizedTheme ? 'opacity-50' : ''}`}
+                  >
                     Dark Mode
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Switch between light and dark themes
+                    {hasPersonalizedTheme 
+                      ? 'Disabled in personalized mode' 
+                      : 'Switch between light and dark themes'
+                    }
                   </p>
                 </div>
                 <Switch
                   id="theme-toggle"
                   checked={isDark}
                   onCheckedChange={toggleTheme}
+                  disabled={hasPersonalizedTheme}
                   className="data-[state=checked]:bg-primary"
                 />
               </div>
 
               <Separator />
 
-              {/* Theme Colors */}
+              {/* Theme Colors - disabled when personalized */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
+                <Label className={`flex items-center gap-2 ${hasPersonalizedTheme ? 'opacity-50' : ''}`}>
                   <Sparkles className="h-4 w-4 text-primary" />
                   Theme Colors
                 </Label>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Customize the color scheme of the app
+                  {hasPersonalizedTheme
+                    ? 'Colors are auto-generated from your wallpaper'
+                    : 'Customize the color scheme of the app'
+                  }
                 </p>
-                <ColorThemeSelector />
+                {hasPersonalizedTheme ? (
+                  <div className="flex gap-2 p-3 rounded-md border bg-muted/20">
+                    <div
+                      className="h-8 w-8 rounded-md border-2 border-border"
+                      style={{ backgroundColor: config.personalizedTheme!.primaryColor }}
+                    />
+                    <div
+                      className="h-8 w-8 rounded-md border-2 border-border"
+                      style={{ backgroundColor: config.personalizedTheme!.secondaryColor }}
+                    />
+                    <div
+                      className="h-8 w-8 rounded-md border-2 border-border"
+                      style={{ backgroundColor: config.personalizedTheme!.accentColor }}
+                    />
+                  </div>
+                ) : (
+                  <ColorThemeSelector />
+                )}
               </div>
 
               <Separator />
