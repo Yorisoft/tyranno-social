@@ -8,7 +8,7 @@ const categoryKinds: Record<FeedCategory, number[]> = {
   text: [1, 6, 16],
   articles: [30023],
   photos: [1, 6, 16],
-  music: [31337],
+  music: [1, 6, 16, 31337],
   videos: [34235],
 };
 
@@ -38,13 +38,47 @@ export function useRelayFirehose(relayUrl: string | null, category: FeedCategory
       // For photos, filter text notes (kind 1) that have image URLs
       if (category === 'photos') {
         filteredEvents = events.filter((event) => {
-          if (event.kind !== 1) return false;
+          // Keep non-kind 1 events
+          if (event.kind !== 1) return true;
           
           // Check for image URLs in content or imeta tags
           const hasImageUrl = /https?:\/\/.*\.(jpg|jpeg|png|gif|webp|bmp|svg)/i.test(event.content);
           const hasImetaTag = event.tags.some(([name]) => name === 'imeta');
           
           return hasImageUrl || hasImetaTag;
+        });
+      }
+
+      // For music, filter text notes (kind 1) that have music URLs or keep kind 31337
+      if (category === 'music') {
+        filteredEvents = events.filter((event) => {
+          // Keep kind 31337 (music events)
+          if (event.kind === 31337) return true;
+          
+          // Keep reposts
+          if (event.kind === 6 || event.kind === 16) return true;
+          
+          // For kind 1, check for music content
+          if (event.kind === 1) {
+            // Check for audio file URLs
+            const hasAudioUrl = /https?:\/\/.*\.(mp3|wav|ogg|m4a|aac|flac|opus)/i.test(event.content);
+            
+            // Check for music streaming service URLs
+            const hasSpotify = /spotify\.com\/(track|album|playlist|episode|show)/i.test(event.content);
+            const hasSoundCloud = /soundcloud\.com\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+/i.test(event.content);
+            const hasZapstr = /zapstr\.live\/t\/naddr1[a-z0-9]+/i.test(event.content);
+            
+            // Check for audio imeta tags
+            const hasAudioImeta = event.tags.some(([name, ...values]) => {
+              if (name !== 'imeta') return false;
+              const mimeTag = values.find(v => v.startsWith('m ') || v.startsWith('type '));
+              return mimeTag && /audio\//i.test(mimeTag);
+            });
+            
+            return hasAudioUrl || hasSpotify || hasSoundCloud || hasZapstr || hasAudioImeta;
+          }
+          
+          return false;
         });
       }
 
