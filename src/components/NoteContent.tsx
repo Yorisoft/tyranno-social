@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { EmbeddedNote } from '@/components/EmbeddedNote';
 import { EmbeddedAddressableEvent } from '@/components/EmbeddedAddressableEvent';
 import { MovieCard } from '@/components/MovieCard';
+import { ProfileCard } from '@/components/ProfileCard';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 
@@ -41,6 +42,15 @@ export function NoteContent({
     return (
       <div className={className}>
         <MovieCard data={jsonData} />
+      </div>
+    );
+  }
+
+  // If it's profile/metadata data, render as a profile card
+  if (jsonData && (jsonData.name || jsonData.display_name) && (jsonData.about || jsonData.capabilities)) {
+    return (
+      <div className={className}>
+        <ProfileCard data={jsonData} />
       </div>
     );
   }
