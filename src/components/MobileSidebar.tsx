@@ -49,9 +49,13 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
   const { theme, setTheme } = useTheme();
   const { config } = useAppContext();
   const { user } = useCurrentUser();
-  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications();
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('categories');
   const navigate = useNavigate();
+  
+  // Only fetch notifications when the sheet is open AND on the notifications tab
+  const shouldFetchNotifications = open && activeTab === 'notifications';
+  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50, shouldFetchNotifications);
 
   const isDark = theme === 'dark';
 
@@ -87,7 +91,7 @@ export function MobileSidebar({ selectedCategory, onCategoryChange }: MobileSide
             <SheetDescription>Customize your feed and settings</SheetDescription>
           </SheetHeader>
 
-          <Tabs defaultValue="categories" className="flex-1 flex flex-col">
+          <Tabs defaultValue="categories" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="mx-6 grid w-auto grid-cols-3 mb-4">
               <TabsTrigger value="categories">
                 <Hash className="h-4 w-4" />

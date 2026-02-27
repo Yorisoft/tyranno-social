@@ -8,7 +8,7 @@ export interface NotificationEvent extends NostrEvent {
   notificationType: 'mention' | 'reply' | 'reaction' | 'repost' | 'zap';
 }
 
-export function useNotifications(limit: number = 50) {
+export function useNotifications(limit: number = 50, enabled: boolean = true) {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
   const { config } = useAppContext();
@@ -67,6 +67,6 @@ export function useNotifications(limit: number = 50) {
       // Filter out notifications from self
       return notifications.filter(notification => notification.pubkey !== user.pubkey);
     },
-    enabled: !!user?.pubkey,
+    enabled: !!user?.pubkey && enabled,
   });
 }
