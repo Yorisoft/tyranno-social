@@ -193,7 +193,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   };
 
   return (
-    <aside className={`${isCollapsed ? 'w-12' : 'w-80'} shrink-0 hidden lg:block transition-all duration-300 relative`}>
+    <aside className={`${isCollapsed ? 'w-12' : 'w-80'} shrink-0 hidden xl:block transition-all duration-300 relative`}>
       {/* Collapse/Expand Button */}
       <Button
         variant="outline"

@@ -10,10 +10,10 @@ import { PostDetailDialog } from '@/components/PostDetailDialog';
 import { SearchBar } from '@/components/SearchBar';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Sidebar } from '@/components/Sidebar';
-import { MobileSidebar } from '@/components/MobileSidebar';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { InstallPWA } from '@/components/InstallPWA';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useUnreadDMCount } from '@/hooks/useUnreadDMCount';
@@ -222,10 +222,6 @@ const Index = () => {
               )}
               
               <LoginArea className="max-w-60 hidden sm:flex" />
-              <MobileSidebar
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-              />
             </div>
           </div>
 
@@ -237,7 +233,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-8">
+      <main className="px-4 py-8 pb-24 lg:pb-8">
         <div className="flex gap-6">
           {/* Feed Section */}
           <div className="flex-1 min-w-0 space-y-6">
@@ -473,6 +469,9 @@ const Index = () => {
 
       {/* PWA Install Prompt */}
       <InstallPWA />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* NSFW Filter Info Dialog */}
       <Dialog open={nsfwInfoOpen} onOpenChange={setNsfwInfoOpen}>
