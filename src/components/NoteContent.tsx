@@ -7,6 +7,7 @@ import { genUserName } from '@/lib/genUserName';
 import { cn } from '@/lib/utils';
 import { EmbeddedNote } from '@/components/EmbeddedNote';
 import { EmbeddedAddressableEvent } from '@/components/EmbeddedAddressableEvent';
+import { MovieCard } from '@/components/MovieCard';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 
@@ -21,6 +22,28 @@ export function NoteContent({
   className, 
 }: NoteContentProps) {
   const [showHiddenLinks, setShowHiddenLinks] = useState(false);
+
+  // Check if content is JSON and try to parse it
+  const jsonData = useMemo(() => {
+    const trimmed = event.content.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [event.content]);
+
+  // If it's movie data, render as a movie card
+  if (jsonData && (jsonData.yts_data || (jsonData.title && jsonData.year))) {
+    return (
+      <div className={className}>
+        <MovieCard data={jsonData} />
+      </div>
+    );
+  }
 
   // Get mentioned pubkeys from p tags for replacements
   const mentionedPubkeys = useMemo(() => {
