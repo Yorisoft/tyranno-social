@@ -48,18 +48,36 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const handleDownloadCurrent = () => {
+  const handleDownloadCurrent = async () => {
     const url = images[currentIndex];
     const filename = url.split('/').pop()?.split('?')[0] || `image-${currentIndex + 1}.jpg`;
     
-    // Simple download link - just like right-click save
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Use CORS proxy to fetch the image
+      const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        throw new Error('Proxy fetch failed');
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: 'Download failed',
+        description: 'Right-click the image and select "Save Image As..." to download.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDownloadAll = async () => {
@@ -72,18 +90,36 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
       description: `Starting download of ${images.length} ${images.length === 1 ? 'image' : 'images'}`,
     });
 
+    let successCount = 0;
+
     // Download all images with slight delay between each
     for (let i = 0; i < images.length; i++) {
       const url = images[i];
       const filename = url.split('/').pop()?.split('?')[0] || `image-${i + 1}.jpg`;
       
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        // Use CORS proxy to fetch the image
+        const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+          throw new Error('Proxy fetch failed');
+        }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to download image ${i + 1}:`, error);
+      }
       
       // Small delay between downloads
       if (i < images.length - 1) {
@@ -94,8 +130,8 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
     setIsDownloadingAll(false);
     
     toast({
-      title: 'Downloads started!',
-      description: `Initiated download of ${images.length} ${images.length === 1 ? 'image' : 'images'}`,
+      title: 'Downloads complete!',
+      description: `Downloaded ${successCount} of ${images.length} ${images.length === 1 ? 'image' : 'images'}`,
     });
   };
 
