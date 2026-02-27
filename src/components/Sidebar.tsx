@@ -5,6 +5,7 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useBookmarkSets, useBookmarkSetItems } from '@/hooks/useBookmarkSets';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -44,6 +45,8 @@ import {
   CheckCheck,
   AlertTriangle,
   MessageCircle,
+  ChevronLeft,
+  ChevronRightIcon,
 } from 'lucide-react';
 import {
   Sheet,
@@ -129,6 +132,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>('sidebar-collapsed', false);
   const navigate = useNavigate();
 
   const isDark = theme === 'dark';
@@ -182,8 +186,28 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   };
 
   return (
-    <aside className="w-80 shrink-0 hidden lg:block">
-      <div className="sticky top-4 space-y-4">
+    <aside className={`${isCollapsed ? 'w-12' : 'w-80'} shrink-0 hidden lg:block transition-all duration-300 relative`}>
+      {/* Collapse/Expand Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -left-4 top-4 z-50 h-8 w-8 rounded-full shadow-lg bg-background border-2 border-primary/20 hover:border-primary/40"
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {isCollapsed ? (
+          <ChevronRightIcon className="h-4 w-4" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
+      </Button>
+
+      {isCollapsed ? (
+        // Collapsed state - just show the toggle button
+        <div className="sticky top-4" />
+      ) : (
+        <ScrollArea className="h-[calc(100vh-2rem)] sticky top-4">
+          <div className="space-y-4 pr-4 pb-4">
         {/* Theme Toggle */}
         <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-rose-50/30 dark:from-card dark:to-card">
           <CardContent className="pt-6 space-y-4">
@@ -568,7 +592,9 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           </CardContent>
         </Card>
 
-      </div>
+          </div>
+        </ScrollArea>
+      )}
     </aside>
   );
 }
