@@ -1,27 +1,64 @@
 import { useNostr } from '@nostrify/react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { NostrEvent } from '@nostrify/nostrify';
+import type { FeedCategory } from './usePosts';
 
-export function useRelayFirehose(relayUrl: string | null) {
+const categoryKinds: Record<FeedCategory, number[]> = {
+  following: [1, 6, 16, 30023, 31337, 34235],
+  text: [1, 6, 16],
+  articles: [30023],
+  photos: [1, 6, 16],
+  music: [31337],
+  videos: [34235],
+};
+
+export function useRelayFirehose(relayUrl: string | null, category: FeedCategory = 'following') {
   const { nostr } = useNostr();
 
   return useInfiniteQuery({
-    queryKey: ['relay-firehose', relayUrl],
+    queryKey: ['relay-firehose', relayUrl, category],
     queryFn: async ({ pageParam }) => {
       if (!relayUrl) return [];
 
       const relay = nostr.relay(relayUrl);
+      const kinds = categoryKinds[category];
       
       // Fetch latest posts from this specific relay
       const events = await relay.query([
         {
-          kinds: [1], // Text notes only for firehose
-          limit: 20,
+          kinds,
+          limit: 100,
           until: pageParam,
         },
       ]);
 
-      return events;
+      // Filter logic based on category
+      let filteredEvents = events;
+
+      // For photos, filter text notes (kind 1) that have image URLs
+      if (category === 'photos') {
+        filteredEvents = events.filter((event) => {
+          if (event.kind !== 1) return false;
+          
+          // Check for image URLs in content or imeta tags
+          const hasImageUrl = /https?:\/\/.*\.(jpg|jpeg|png|gif|webp|bmp|svg)/i.test(event.content);
+          const hasImetaTag = event.tags.some(([name]) => name === 'imeta');
+          
+          return hasImageUrl || hasImetaTag;
+        });
+      }
+
+      // Filter out replies from all categories (but keep reposts which also have 'e' tags)
+      filteredEvents = filteredEvents.filter((event) => {
+        // Keep reposts (kind 6 and 16)
+        if (event.kind === 6 || event.kind === 16) {
+          return true;
+        }
+        // Filter out replies (events with 'e' tags)
+        return !event.tags.some(([name]) => name === 'e');
+      });
+
+      return filteredEvents;
     },
     enabled: !!relayUrl,
     initialPageParam: undefined as number | undefined,

@@ -65,7 +65,7 @@ const Index = () => {
     fetchNextPage: fetchNextRelayPage,
     hasNextPage: hasNextRelayPage,
     isFetchingNextPage: isFetchingNextRelayPage
-  } = useRelayFirehose(selectedRelay);
+  } = useRelayFirehose(selectedRelay, selectedCategory);
   
   const { data: searchPosts, isLoading: isLoadingSearch } = useSearchPosts(searchQuery);
 
@@ -241,9 +241,8 @@ const Index = () => {
                     <DropdownMenuItem
                       onClick={() => {
                         setSelectedRelay(null);
-                        setSelectedCategory('following');
                       }}
-                      className={`cursor-pointer ${!selectedRelay && selectedCategory === 'following' ? 'bg-accent' : ''}`}
+                      className={`cursor-pointer ${!selectedRelay ? 'bg-accent' : ''}`}
                     >
                       <Users className="h-4 w-4 mr-2" />
                       My Feed (Following)
@@ -257,7 +256,6 @@ const Index = () => {
                         key={relay.url}
                         onClick={() => {
                           setSelectedRelay(relay.url);
-                          setSelectedCategory('following'); // Reset category when switching to relay
                         }}
                         className={`cursor-pointer ${selectedRelay === relay.url ? 'bg-accent' : ''}`}
                       >
