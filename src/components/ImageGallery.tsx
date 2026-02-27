@@ -71,20 +71,11 @@ export function ImageGallery({ images, initialIndex, open, onOpenChange }: Image
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95 border-0">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95 border-0 [&>button]:text-white [&>button]:hover:bg-white/20 [&>button]:rounded-full [&>button]:h-10 [&>button]:w-10">
         <VisuallyHidden>
           <DialogTitle>Image Gallery</DialogTitle>
         </VisuallyHidden>
         <div className="relative w-full h-full flex items-center justify-center">
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20 rounded-full"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-6 w-6" />
-          </Button>
 
           {/* Image Counter */}
           {images.length > 1 && (
