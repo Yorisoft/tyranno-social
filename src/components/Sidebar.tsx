@@ -6,6 +6,7 @@ import { useBookmarkSets, useBookmarkSetItems } from '@/hooks/useBookmarkSets';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -47,6 +48,8 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRightIcon,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   Sheet,
@@ -128,6 +131,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
   const { user } = useCurrentUser();
   const { data: bookmarkSets, isLoading: isLoadingBookmarks, refetch: refetchBookmarks } = useBookmarkSets();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications();
+  const { shouldFilter, filterEnabled, setFilterEnabled, canToggle } = useNSFWFilter();
   const [relaysOpen, setRelaysOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
@@ -240,6 +244,33 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
                 id="content-warnings-toggle"
                 checked={config.showContentWarnings}
                 onCheckedChange={toggleContentWarnings}
+                className="data-[state=checked]:bg-primary"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {shouldFilter ? (
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                ) : (
+                  <ShieldAlert className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div className="flex flex-col">
+                  <Label 
+                    htmlFor="nsfw-filter-toggle" 
+                    className={`cursor-pointer font-medium ${!canToggle ? 'opacity-50' : ''}`}
+                  >
+                    NSFW Filter
+                  </Label>
+                  {!canToggle && (
+                    <span className="text-xs text-muted-foreground">Login to toggle</span>
+                  )}
+                </div>
+              </div>
+              <Switch
+                id="nsfw-filter-toggle"
+                checked={filterEnabled}
+                onCheckedChange={setFilterEnabled}
+                disabled={!canToggle}
                 className="data-[state=checked]:bg-primary"
               />
             </div>

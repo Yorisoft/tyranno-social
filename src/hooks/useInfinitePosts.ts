@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useFollows } from '@/hooks/useFollows';
+import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { filterNSFWContent } from '@/lib/nsfwDetection';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { FeedCategory } from './usePosts';
@@ -23,9 +24,10 @@ export function useInfinitePosts(category: FeedCategory = 'following') {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const { data: followPubkeys = [] } = useFollows(user?.pubkey);
+  const { shouldFilter } = useNSFWFilter();
 
   return useInfiniteQuery({
-    queryKey: ['posts-infinite', category, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length],
+    queryKey: ['posts-infinite', category, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter],
     queryFn: async ({ pageParam }) => {
       const kinds = categoryKinds[category];
       
@@ -115,8 +117,8 @@ export function useInfinitePosts(category: FeedCategory = 'following') {
         return !event.tags.some(([name]) => name === 'e');
       });
 
-      // Filter NSFW content for non-logged-in users
-      if (!user) {
+      // Filter NSFW content based on user preference
+      if (shouldFilter) {
         filteredEvents = filterNSFWContent(filteredEvents);
       }
 

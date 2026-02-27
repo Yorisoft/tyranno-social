@@ -11,6 +11,13 @@ export function isLikelyNSFW(event: NostrEvent): boolean {
   // Check for content-warning tag (NIP-36)
   const hasContentWarning = event.tags.some(([name]) => name === 'content-warning');
   if (hasContentWarning) return true;
+  
+  // Check pubkey against known spam/NSFW accounts
+  // This list should be maintained and updated with confirmed spam pubkeys
+  const knownSpamPubkeys = [
+    // Add known spam pubkeys here as they are identified
+  ];
+  if (knownSpamPubkeys.includes(event.pubkey)) return true;
 
   // Check for NSFW-related hashtags
   const nsfwHashtags = [
@@ -124,6 +131,61 @@ export function isLikelyNSFW(event: NostrEvent): boolean {
     const alphanumericText = textWithoutUrls.replace(/[^\w\s]/g, '').trim();
     if (alphanumericText.length < 5) {
       return true; // Likely spam/promotional
+    }
+  }
+
+  // Enhanced image-only spam detection
+  // Filter posts that ONLY contain an image URL with no other text
+  // This catches most pornographic spam which is just an image link
+  if (hasImages && textWithoutUrls.length === 0) {
+    return true; // Image-only posts are highly likely to be spam
+  }
+
+  // Filter posts with images and only 1-2 generic words
+  // Common pattern: "Bitcoin" + explicit image, "Summer" + explicit image, etc.
+  if (hasImages && textWithoutUrls.length > 0 && textWithoutUrls.length <= 50) {
+    const words = textWithoutUrls.split(/\s+/).filter(w => w.length > 0);
+    
+    // If it's just 1-5 words with an image, be very suspicious
+    if (words.length <= 5) {
+      // Check if any word is a common spam keyword
+      const spamWords = [
+        'bitcoin', 'crypto', 'summer', 'hot', 'live', 'new', 'free', 'exclusive', 
+        'premium', 'year', 'round', 'standard', 'gold', 'btc', 'eth', 'nft'
+      ];
+      const hasSpamWord = words.some(word => 
+        spamWords.includes(word.toLowerCase())
+      );
+      
+      // Also check for posts with just capitalized single words (common in spam)
+      const allCaps = words.every(word => word === word.toUpperCase() && word.length > 1);
+      const mixedCase = words.some(word => /[A-Z]/.test(word) && /[a-z]/.test(word));
+      
+      // Check for "word is word word" pattern like "Bitcoin Summer is year round"
+      const hasGenericPattern = /^[A-Z][a-z]+\s+[A-Z][a-z]+\s+is\s+/i.test(textWithoutUrls) ||
+                               /^[A-Z][a-z]+\s+is\s+/i.test(textWithoutUrls);
+      
+      if (hasSpamWord || allCaps || (words.length <= 3 && mixedCase) || hasGenericPattern) {
+        return true;
+      }
+    }
+    
+    // Additional check: if post has image and text is suspiciously promotional
+    // Common patterns: "X is Y" or "Check this out" type phrases with images
+    const promotionalPhrases = [
+      /is\s+(year|all|the|always|everywhere)/i,
+      /check\s+(this|it|out)/i,
+      /look\s+at\s+this/i,
+      /amazing/i,
+      /^wow/i,
+    ];
+    
+    const hasPromotionalPhrase = promotionalPhrases.some(pattern => 
+      pattern.test(textWithoutUrls)
+    );
+    
+    if (hasPromotionalPhrase && words.length <= 6) {
+      return true;
     }
   }
 

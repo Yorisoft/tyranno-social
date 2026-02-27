@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useFollows } from '@/hooks/useFollows';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { filterNSFWContent } from '@/lib/nsfwDetection';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -11,9 +12,10 @@ export function useSearchPosts(searchQuery: string, limit: number = 100) {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const { data: followPubkeys = [] } = useFollows(user?.pubkey);
+  const { shouldFilter } = useNSFWFilter();
 
   return useQuery({
-    queryKey: ['search-posts', searchQuery, limit, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length],
+    queryKey: ['search-posts', searchQuery, limit, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter],
     queryFn: async () => {
       if (!searchQuery.trim()) {
         return [];
@@ -63,8 +65,8 @@ export function useSearchPosts(searchQuery: string, limit: number = 100) {
         (event) => !event.tags.some(([name]) => name === 'e')
       );
 
-      // Filter NSFW content for non-logged-in users
-      if (!user) {
+      // Filter NSFW content based on user preference
+      if (shouldFilter) {
         results = filterNSFWContent(results);
       }
 
