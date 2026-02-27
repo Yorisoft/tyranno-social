@@ -13,49 +13,91 @@ export function isLikelyNSFW(event: NostrEvent): boolean {
   if (hasContentWarning) return true;
 
   // Check for NSFW-related hashtags
-  const nsfwHashtags = ['nsfw', 'porn', 'xxx', 'adult', 'nude', 'nudity', 'sex', 'sexual', 'explicit', '18+', 'nudes'];
+  const nsfwHashtags = [
+    'nsfw', 'porn', 'xxx', 'adult', 'nude', 'nudity', 'sex', 'sexual', 'explicit', '18+', 'nudes',
+    'tits', 'ass', 'boobs', 'pussy', 'dick', 'cock', 'cum', 'sexy', 'hot', 'horny', 'fetish',
+    'onlyfans', 'premium', 'premium content', 'dm me', 'dm for', 'paywall', 'subscribe',
+  ];
   const hasnsfwHashtag = event.tags.some(([name, value]) => 
     name === 't' && value && nsfwHashtags.includes(value.toLowerCase())
   );
   if (hasnsfwHashtag) return true;
 
-  // Check content text for NSFW keywords
   const contentLower = event.content.toLowerCase();
+
+  // Check for spam/promotional patterns common in NSFW posts
+  const spamPatterns = [
+    /premium\s+(content|money|access)/i,
+    /dm\s+(me|for|to)/i,
+    /subscribe\s+(to|for|now)/i,
+    /only\s*fans/i,
+    /tip\s+me/i,
+    /send\s+(sats|bitcoin|btc)/i,
+    /\$\s*\d+/,  // Dollar amounts
+    /💰|💵|💸|🔞|🍆|🍑|🔥/,  // Suggestive emojis
+  ];
+
+  const hasSpamPattern = spamPatterns.some(pattern => pattern.test(event.content));
+  if (hasSpamPattern) return true;
+
+  // Check content text for NSFW keywords
   const nsfwKeywords = [
-    'nsfw',
-    'porn',
-    'xxx',
-    'nude',
-    'naked',
-    'sex',
-    'explicit',
-    '18+',
-    'adult content',
-    'not safe for work',
+    'nsfw', 'porn', 'xxx', 'nude', 'naked', 'sex', 'explicit', '18+', 'adult content',
+    'not safe for work', 'tits', 'boobs', 'ass', 'pussy', 'dick', 'cock', 'cum',
+    'sexy', 'horny', 'fetish', 'amateur', 'milf', 'teen sex', 'only fans', 'onlyfans',
+    'premium content', 'premium snap', 'premium vid',
   ];
   
   const hasNSFWKeyword = nsfwKeywords.some(keyword => {
-    // Use word boundaries to avoid false positives
-    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+    // Use word boundaries for most, but also check for common variations
+    const escapedKeyword = keyword.replace(/\s+/g, '\\s*');
+    const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'i');
     return regex.test(contentLower);
   });
   
   if (hasNSFWKeyword) return true;
 
-  // Check for common NSFW image hosting domains
+  // Check for common NSFW image hosting domains and platforms
   const nsfwDomains = [
-    'imgur.com/a/',  // Imgur albums often contain NSFW
+    'imgur.com/a/',
     'redgifs.com',
     'pornhub.com',
     'xvideos.com',
     'onlyfans.com',
+    'fansly.com',
+    'manyvids.com',
+    'clips4sale.com',
+    'chaturbate.com',
+    'stripchat.com',
   ];
 
   const hasNSFWDomain = nsfwDomains.some(domain => 
     contentLower.includes(domain)
   );
 
-  return hasNSFWDomain;
+  if (hasNSFWDomain) return true;
+
+  // Check for suspicious image URLs with NSFW-related filenames
+  const imageUrlPattern = /https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+  const imageUrls = event.content.match(imageUrlPattern) || [];
+  
+  const hasNSFWImageName = imageUrls.some(url => {
+    const urlLower = url.toLowerCase();
+    return nsfwKeywords.some(keyword => urlLower.includes(keyword));
+  });
+
+  if (hasNSFWImageName) return true;
+
+  // For posts with images but minimal text, be more cautious
+  const hasImages = imageUrls.length > 0 || event.tags.some(([name]) => name === 'imeta');
+  const hasMinimalText = event.content.replace(/https?:\/\/[^\s]+/g, '').trim().length < 20;
+  
+  // If post is mostly just an image with "premium" or "money" mentions, likely NSFW spam
+  if (hasImages && hasMinimalText && /premium|money|💰|dm me|subscribe/i.test(event.content)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
