@@ -1,8 +1,10 @@
 import { useNostr } from '@nostrify/react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAppContext } from '@/hooks/useAppContext';
 import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { filterNSFWContent } from '@/lib/nsfwDetection';
+import { filterEventsByTopic } from '@/lib/topicFilter';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { FeedCategory } from './usePosts';
 
@@ -18,10 +20,11 @@ const categoryKinds: Record<FeedCategory, number[]> = {
 export function useRelayFirehose(relayUrl: string | null, category: FeedCategory = 'following') {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
+  const { config } = useAppContext();
   const { shouldFilter } = useNSFWFilter();
 
   return useInfiniteQuery({
-    queryKey: ['relay-firehose', relayUrl, category, shouldFilter],
+    queryKey: ['relay-firehose', relayUrl, category, shouldFilter, config.topicFilter],
     queryFn: async ({ pageParam }) => {
       if (!relayUrl) return [];
 
@@ -100,6 +103,11 @@ export function useRelayFirehose(relayUrl: string | null, category: FeedCategory
       // Filter NSFW content based on user preference
       if (shouldFilter) {
         filteredEvents = filterNSFWContent(filteredEvents);
+      }
+
+      // Apply topic filter
+      if (config.topicFilter) {
+        filteredEvents = filterEventsByTopic(filteredEvents, config.topicFilter);
       }
 
       return filteredEvents;

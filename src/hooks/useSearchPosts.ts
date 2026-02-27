@@ -5,6 +5,7 @@ import { useFollows } from '@/hooks/useFollows';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { filterNSFWContent } from '@/lib/nsfwDetection';
+import { filterEventsByTopic } from '@/lib/topicFilter';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 export function useSearchPosts(searchQuery: string, limit: number = 100) {
@@ -15,7 +16,7 @@ export function useSearchPosts(searchQuery: string, limit: number = 100) {
   const { shouldFilter } = useNSFWFilter();
 
   return useQuery({
-    queryKey: ['search-posts', searchQuery, limit, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter],
+    queryKey: ['search-posts', searchQuery, limit, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter, config.topicFilter],
     queryFn: async () => {
       if (!searchQuery.trim()) {
         return [];
@@ -68,6 +69,11 @@ export function useSearchPosts(searchQuery: string, limit: number = 100) {
       // Filter NSFW content based on user preference
       if (shouldFilter) {
         results = filterNSFWContent(results);
+      }
+
+      // Apply topic filter
+      if (config.topicFilter) {
+        results = filterEventsByTopic(results, config.topicFilter);
       }
 
       return results;

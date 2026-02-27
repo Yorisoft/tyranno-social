@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RelayListManager } from '@/components/RelayListManager';
+import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { LoginArea } from '@/components/auth/LoginArea';
 import LoginDialog from '@/components/auth/LoginDialog';
 import { TyrannoCoin } from '@/components/TyrannoCoin';
@@ -40,6 +41,7 @@ import {
   Zap,
   UserPlus,
   LogOut,
+  Filter,
 } from 'lucide-react';
 import { useSeoMeta } from '@unhead/react';
 import { nip19 } from 'nostr-tools';
@@ -75,6 +77,7 @@ export default function SettingsPage() {
   const { user } = useCurrentUser();
   const { currentUser, otherUsers, setLogin, removeLogin } = useLoggedInAccounts();
   const [relaysExpanded, setRelaysExpanded] = useState(false);
+  const [topicFilterExpanded, setTopicFilterExpanded] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   // Get metadata for current user (only if user exists)
@@ -459,6 +462,66 @@ export default function SettingsPage() {
                 />
               </div>
             </CardContent>
+          </Card>
+
+          {/* Topic Filter Section */}
+          <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-purple-50/20 dark:from-card dark:to-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-primary" />
+                    Topic Filter
+                  </CardTitle>
+                  <CardDescription>
+                    Block posts by keywords, hashtags, and emojis
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTopicFilterExpanded(!topicFilterExpanded)}
+                >
+                  {topicFilterExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </CardHeader>
+            {topicFilterExpanded && (
+              <CardContent>
+                <TopicFilterManager />
+              </CardContent>
+            )}
+            {!topicFilterExpanded && (
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {(config.topicFilter?.keywords.length || 0) + (config.topicFilter?.hashtags.length || 0) + (config.topicFilter?.emojis.length || 0)} filters active
+                  </p>
+                  {config.topicFilter && (config.topicFilter.keywords.length > 0 || config.topicFilter.hashtags.length > 0 || config.topicFilter.emojis.length > 0) && (
+                    <div className="space-y-1">
+                      {config.topicFilter.keywords.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Keywords: {config.topicFilter.keywords.slice(0, 3).join(', ')}
+                          {config.topicFilter.keywords.length > 3 && ` +${config.topicFilter.keywords.length - 3} more`}
+                        </p>
+                      )}
+                      {config.topicFilter.hashtags.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Hashtags: #{config.topicFilter.hashtags.slice(0, 3).join(', #')}
+                          {config.topicFilter.hashtags.length > 3 && ` +${config.topicFilter.hashtags.length - 3} more`}
+                        </p>
+                      )}
+                      {config.topicFilter.emojis.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Emojis: {config.topicFilter.emojis.slice(0, 5).join(' ')}
+                          {config.topicFilter.emojis.length > 5 && ` +${config.topicFilter.emojis.length - 5} more`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            )}
           </Card>
 
           {/* Relays Section */}

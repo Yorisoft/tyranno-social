@@ -23,6 +23,15 @@ export interface PrivateHomeRelays {
   updatedAt: number;
 }
 
+export interface TopicFilter {
+  /** Keywords to filter from posts */
+  keywords: string[];
+  /** Hashtags to filter from posts */
+  hashtags: string[];
+  /** Emojis to filter from posts */
+  emojis: string[];
+}
+
 export interface AppConfig {
   /** Current theme */
   theme: Theme;
@@ -34,6 +43,8 @@ export interface AppConfig {
   privateHomeRelays?: PrivateHomeRelays;
   /** Show content warnings (true = blur/hide, false = always show) */
   showContentWarnings: boolean;
+  /** Topic filter for blocking posts by keywords, hashtags, and emojis */
+  topicFilter?: TopicFilter;
   /** Font family */
   fontFamily?: string;
   /** Font size */

@@ -5,6 +5,7 @@ import { useAppContext } from '@/hooks/useAppContext';
 import { useFollows } from '@/hooks/useFollows';
 import { useNSFWFilter } from '@/hooks/useNSFWFilter';
 import { filterNSFWContent } from '@/lib/nsfwDetection';
+import { filterEventsByTopic } from '@/lib/topicFilter';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { FeedCategory } from './usePosts';
 
@@ -27,7 +28,7 @@ export function useInfinitePosts(category: FeedCategory = 'following') {
   const { shouldFilter } = useNSFWFilter();
 
   return useInfiniteQuery({
-    queryKey: ['posts-infinite', category, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter],
+    queryKey: ['posts-infinite', category, user?.pubkey, config.relayMetadata.updatedAt, followPubkeys.length, shouldFilter, config.topicFilter],
     queryFn: async ({ pageParam }) => {
       const kinds = categoryKinds[category];
       
@@ -120,6 +121,11 @@ export function useInfinitePosts(category: FeedCategory = 'following') {
       // Filter NSFW content based on user preference
       if (shouldFilter) {
         filteredEvents = filterNSFWContent(filteredEvents);
+      }
+
+      // Apply topic filter
+      if (config.topicFilter) {
+        filteredEvents = filterEventsByTopic(filteredEvents, config.topicFilter);
       }
 
       return filteredEvents;
