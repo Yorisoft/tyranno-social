@@ -35,6 +35,11 @@ const fontOptions = [
   { value: 'system', label: 'System', family: 'system-ui, -apple-system, sans-serif' },
   { value: 'serif', label: 'Serif', family: 'Georgia, serif' },
   { value: 'mono', label: 'Monospace', family: 'ui-monospace, monospace' },
+  { value: 'caveat', label: 'Caveat (Handwriting)', family: 'Caveat, cursive' },
+  { value: 'dancing-script', label: 'Dancing Script (Elegant)', family: 'Dancing Script, cursive' },
+  { value: 'pacifico', label: 'Pacifico (Playful)', family: 'Pacifico, cursive' },
+  { value: 'kalam', label: 'Kalam (Casual)', family: 'Kalam, cursive' },
+  { value: 'indie-flower', label: 'Indie Flower (Quirky)', family: 'Indie Flower, cursive' },
 ];
 
 const fontSizes = [
