@@ -48,119 +48,38 @@ export function ImageGalleryNew({ images, open, onClose, initialIndex = 0 }: Ima
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const handleDownloadCurrent = async () => {
+  const handleDownloadCurrent = () => {
     const url = images[currentIndex];
-    const filename = url.split('/').pop()?.split('?')[0] || `image-${currentIndex + 1}.jpg`;
     
-    try {
-      // Use CORS proxy to fetch the image
-      const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl);
-      
-      if (!response.ok) {
-        throw new Error('Proxy fetch failed');
-      }
-      
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      
-      // Create and trigger download
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      link.href = blobUrl;
-      link.download = filename;
-      
-      document.body.appendChild(link);
-      
-      // Use setTimeout to ensure the link is in DOM before clicking
-      setTimeout(() => {
-        link.click();
-        
-        // Clean up after a short delay
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-      }, 0);
-      
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast({
-        title: 'Download failed',
-        description: 'Unable to download image. Try right-clicking the image and select "Save Image As..."',
-        variant: 'destructive',
-      });
-    }
+    // Simply open the image in a new tab - user can right-click to save
+    // This is the most reliable cross-browser approach
+    window.open(url, '_blank', 'noopener,noreferrer');
+    
+    toast({
+      title: 'Image opened',
+      description: 'Right-click the image and select "Save Image As..." to download',
+    });
   };
 
-  const handleDownloadAll = async () => {
+  const handleDownloadAll = () => {
     if (images.length === 0) return;
 
     setIsDownloadingAll(true);
 
-    toast({
-      title: 'Downloading images...',
-      description: `Starting download of ${images.length} ${images.length === 1 ? 'image' : 'images'}`,
+    // Open all images in new tabs with slight delay
+    // User can then save each one via right-click
+    images.forEach((url, index) => {
+      setTimeout(() => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }, index * 300); // 300ms delay between each tab
     });
-
-    let successCount = 0;
-
-    // Download all images with slight delay between each
-    for (let i = 0; i < images.length; i++) {
-      const url = images[i];
-      const filename = url.split('/').pop()?.split('?')[0] || `image-${i + 1}.jpg`;
-      
-      try {
-        // Use CORS proxy to fetch the image
-        const proxyUrl = `https://proxy.shakespeare.diy/?url=${encodeURIComponent(url)}`;
-        const response = await fetch(proxyUrl);
-        
-        if (!response.ok) {
-          throw new Error('Proxy fetch failed');
-        }
-        
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.style.display = 'none';
-        link.href = blobUrl;
-        link.download = filename;
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        // Clean up after a short delay
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-        
-        successCount++;
-      } catch (error) {
-        console.error(`Failed to download image ${i + 1}:`, error);
-      }
-      
-      // Small delay between downloads
-      if (i < images.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 600));
-      }
-    }
 
     setIsDownloadingAll(false);
     
-    if (successCount > 0) {
-      toast({
-        title: 'Downloads complete!',
-        description: `Downloaded ${successCount} of ${images.length} ${images.length === 1 ? 'image' : 'images'}`,
-      });
-    } else {
-      toast({
-        title: 'Download failed',
-        description: 'Unable to download images. Try right-clicking individual images.',
-        variant: 'destructive',
-      });
-    }
+    toast({
+      title: 'Images opened!',
+      description: `Opened ${images.length} ${images.length === 1 ? 'image' : 'images'} in new tabs. Right-click each to save.`,
+    });
   };
 
   if (!open) return null;
