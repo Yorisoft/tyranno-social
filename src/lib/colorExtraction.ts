@@ -38,7 +38,7 @@ export async function extractColorsFromImage(imageUrl: string): Promise<{
         
         // Color extraction using simplified k-means clustering
         const colors: { r: number; g: number; b: number; count: number }[] = [];
-        const pixelStep = 4; // Sample every 4th pixel for performance
+        const pixelStep = 5; // Sample every 5th pixel for performance
         
         for (let i = 0; i < data.length; i += pixelStep * 4) {
           const r = data[i];
@@ -46,8 +46,8 @@ export async function extractColorsFromImage(imageUrl: string): Promise<{
           const b = data[i + 2];
           const a = data[i + 3];
           
-          // Skip transparent or very dark/light pixels
-          if (a < 128 || (r < 20 && g < 20 && b < 20) || (r > 235 && g > 235 && b > 235)) {
+          // Skip only fully transparent pixels - be more permissive with colors
+          if (a < 100) {
             continue;
           }
           
@@ -55,7 +55,7 @@ export async function extractColorsFromImage(imageUrl: string): Promise<{
           let found = false;
           for (const color of colors) {
             const diff = Math.abs(color.r - r) + Math.abs(color.g - g) + Math.abs(color.b - b);
-            if (diff < 50) {
+            if (diff < 60) {
               color.r = Math.round((color.r * color.count + r) / (color.count + 1));
               color.g = Math.round((color.g * color.count + g) / (color.count + 1));
               color.b = Math.round((color.b * color.count + b) / (color.count + 1));
@@ -73,9 +73,31 @@ export async function extractColorsFromImage(imageUrl: string): Promise<{
         // Sort by count and get top colors
         colors.sort((a, b) => b.count - a.count);
         
+        // If no colors found, use fallback colors from average
         if (colors.length === 0) {
-          reject(new Error('No colors found in image'));
-          return;
+          // Calculate average color from all pixels
+          let totalR = 0, totalG = 0, totalB = 0, count = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] >= 100) {
+              totalR += data[i];
+              totalG += data[i + 1];
+              totalB += data[i + 2];
+              count++;
+            }
+          }
+          
+          if (count > 0) {
+            colors.push({
+              r: Math.round(totalR / count),
+              g: Math.round(totalG / count),
+              b: Math.round(totalB / count),
+              count: count
+            });
+          } else {
+            // Last resort: use default colors
+            reject(new Error('Image is completely transparent'));
+            return;
+          }
         }
         
         // Get dominant colors
