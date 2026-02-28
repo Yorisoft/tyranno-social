@@ -32,11 +32,13 @@ import { NoteContent } from '@/components/NoteContent';
 import { EmojiReactionPicker } from '@/components/EmojiReactionPicker';
 import { MediaContent } from '@/components/MediaContent';
 import { ZapButton } from '@/components/ZapButton';
-import { BookmarkDialog } from '@/components/BookmarkDialog';
+import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
+import { ContentWarningWrapper } from '@/components/ContentWarningWrapper';
 import { MessageCircle, Repeat2, Send, Bookmark, MoreHorizontal, Copy, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nip19 } from 'nostr-tools';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface PostDetailDialogProps {
   event: NostrEvent | null;
@@ -80,7 +82,9 @@ function ReplyItem({ reply, isFollowing }: { reply: NostrEvent; isFollowing?: bo
           <div className="text-sm whitespace-pre-wrap break-words">
             <NoteContent event={reply} />
           </div>
-          <MediaContent event={reply} />
+          <ContentWarningWrapper event={reply} mediaOnly={true}>
+            <MediaContent event={reply} />
+          </ContentWarningWrapper>
         </div>
       </div>
     </div>
@@ -161,17 +165,7 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
   };
 
   const handleBookmarkClick = () => {
-    if (isBookmarked) {
-      // If already bookmarked, remove it directly
-      toggleBookmark.mutate({ eventId: displayEvent.id, isPrivate: false });
-    } else {
-      // If not bookmarked, show dialog to choose public/private
-      setBookmarkDialogOpen(true);
-    }
-  };
-
-  const handleBookmarkConfirm = (isPrivate: boolean) => {
-    toggleBookmark.mutate({ eventId: displayEvent.id, isPrivate });
+    setBookmarkDialogOpen(true);
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -210,22 +204,22 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
               )}
               
               <div className="flex items-start gap-3">
-                <a href={`/${npub}`} className="shrink-0">
+                <Link to={`/${npub}`} className="shrink-0">
                   <Avatar className="h-12 w-12 ring-2 ring-background">
                     <AvatarImage src={profileImage} alt={displayName} />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
                       {displayName[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                </a>
+                </Link>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <a
-                      href={`/${npub}`}
+                    <Link
+                      to={`/${npub}`}
                       className="font-semibold hover:text-primary transition-colors"
                     >
                       {displayName}
-                    </a>
+                    </Link>
                     <span className="text-sm text-muted-foreground">@{username}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{timeAgo}</p>
@@ -238,21 +232,28 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                 </div>
                 
                 {/* Media Content */}
-                <MediaContent event={displayEvent} />
+                <ContentWarningWrapper event={displayEvent} mediaOnly={true}>
+                  <MediaContent event={displayEvent} />
+                </ContentWarningWrapper>
               </div>
 
               {/* Reactions */}
               {!isLoadingReactions && reactions && Object.keys(reactions).length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(reactions).map(([emoji, data]) => (
-                    <Badge
-                      key={emoji}
-                      variant="secondary"
-                      className="text-base px-3 py-1 cursor-default"
-                    >
-                      {emoji} {data.count}
-                    </Badge>
-                  ))}
+                  {Object.entries(reactions).map(([emoji, data]) => {
+                    const isUserReaction = user && data.pubkeys.includes(user.pubkey);
+                    return (
+                      <Badge
+                        key={emoji}
+                        variant={isUserReaction ? "default" : "secondary"}
+                        className={`text-base px-3 py-1 cursor-default ${
+                          isUserReaction ? 'ring-2 ring-primary/50' : ''
+                        }`}
+                      >
+                        {emoji} {data.count}
+                      </Badge>
+                    );
+                  })}
                 </div>
               )}
 
@@ -294,7 +295,7 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
                   </Button>
                   <EmojiReactionPicker
                     eventId={displayEvent.id}
-                    className="h-8 px-2 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                    className="h-8 px-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
                   />
                 </div>
 
@@ -412,12 +413,11 @@ export function PostDetailDialog({ event, open, onOpenChange }: PostDetailDialog
         </ScrollArea>
       </DialogContent>
 
-      {/* Bookmark Dialog */}
-      <BookmarkDialog
+      {/* Bookmark Lists Dialog */}
+      <BookmarkListsDialog
         open={bookmarkDialogOpen}
         onOpenChange={setBookmarkDialogOpen}
-        onConfirm={handleBookmarkConfirm}
-        isBookmarked={!!isBookmarked}
+        eventId={displayEvent.id}
       />
     </Dialog>
   );

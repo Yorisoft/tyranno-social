@@ -1,15 +1,20 @@
 import { useMemo, useState } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { LinkPreview } from './LinkPreview';
-import { ImageGallery } from './ImageGallery';
+import { ImageGalleryNew } from './ImageGalleryNew';
 import { VideoPlayer } from './VideoPlayer';
+import { MusicPlayer } from './MusicPlayer';
+import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
+import { SpotifyEmbed, isSpotifyUrl } from './SpotifyEmbed';
+import { SoundCloudEmbed, isSoundCloudUrl } from './SoundCloudEmbed';
+import { ZapstrEmbed, isZapstrUrl } from './ZapstrEmbed';
 
 interface MediaContentProps {
   event: NostrEvent;
 }
 
 interface MediaItem {
-  type: 'image' | 'video' | 'link';
+  type: 'image' | 'video' | 'audio' | 'youtube' | 'spotify' | 'soundcloud' | 'zapstr' | 'link';
   url: string;
 }
 
@@ -39,16 +44,21 @@ export function MediaContent({ event }: MediaContentProps) {
         items.push({ type: 'image', url });
       } else if (mime?.startsWith('video/')) {
         items.push({ type: 'video', url });
+      } else if (mime?.startsWith('audio/')) {
+        items.push({ type: 'audio', url });
       } else if (url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/i)) {
         items.push({ type: 'image', url });
       } else if (url.match(/\.(mp4|webm|ogv|mov)(\?|$)/i)) {
         items.push({ type: 'video', url });
+      } else if (url.match(/\.(mp3|wav|ogg|m4a|aac|flac|opus)(\?|$)/i)) {
+        items.push({ type: 'audio', url });
       }
     }
 
     // Extract media URLs from content
     const imageMatches = event.content.matchAll(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s]*)?\b/gi);
     const videoMatches = event.content.matchAll(/https?:\/\/[^\s]+\.(mp4|webm|ogv|mov)(\?[^\s]*)?\b/gi);
+    const audioMatches = event.content.matchAll(/https?:\/\/[^\s]+\.(mp3|wav|ogg|m4a|aac|flac|opus)(\?[^\s]*)?\b/gi);
     const linkMatches = event.content.matchAll(/https?:\/\/[^\s]+/gi);
 
     // Add images
@@ -67,14 +77,33 @@ export function MediaContent({ event }: MediaContentProps) {
       }
     }
 
+    // Add audio
+    for (const match of audioMatches) {
+      const url = match[0];
+      if (!items.some(item => item.url === url)) {
+        items.push({ type: 'audio', url });
+      }
+    }
+
     // Add web links (excluding media URLs)
     for (const match of linkMatches) {
       const url = match[0];
-      const isMedia = url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|webm|ogv|mov)(\?|$)/i);
+      const isMedia = url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|webm|ogv|mov|mp3|wav|ogg|m4a|aac|flac|opus)(\?|$)/i);
       const isNostr = url.includes('nostr:') || url.match(/\/(npub1|note1|nevent1|naddr1|nprofile1)/);
       
       if (!isMedia && !isNostr && !items.some(item => item.url === url)) {
-        items.push({ type: 'link', url });
+        // Check for music streaming services and YouTube
+        if (isYouTubeUrl(url)) {
+          items.push({ type: 'youtube', url });
+        } else if (isSpotifyUrl(url)) {
+          items.push({ type: 'spotify', url });
+        } else if (isSoundCloudUrl(url)) {
+          items.push({ type: 'soundcloud', url });
+        } else if (isZapstrUrl(url)) {
+          items.push({ type: 'zapstr', url });
+        } else {
+          items.push({ type: 'link', url });
+        }
       }
     }
 
@@ -83,6 +112,11 @@ export function MediaContent({ event }: MediaContentProps) {
 
   const images = media.filter(item => item.type === 'image');
   const videos = media.filter(item => item.type === 'video');
+  const audios = media.filter(item => item.type === 'audio');
+  const youtubeVideos = media.filter(item => item.type === 'youtube');
+  const spotifyTracks = media.filter(item => item.type === 'spotify');
+  const soundcloudTracks = media.filter(item => item.type === 'soundcloud');
+  const zapstrTracks = media.filter(item => item.type === 'zapstr');
   const links = media.filter(item => item.type === 'link');
 
   const imageUrls = images.map(img => img.url);
@@ -108,23 +142,27 @@ export function MediaContent({ event }: MediaContentProps) {
             'grid-cols-2'
           }`}>
             {images.slice(0, 4).map((item, index) => (
-              <div
+              <button
                 key={`img-${index}`}
-                className={`relative overflow-hidden rounded-lg bg-muted ${
+                type="button"
+                className={`relative overflow-hidden rounded-lg bg-muted cursor-pointer border-0 p-0 ${
                   images.length === 3 && index === 0 ? 'col-span-3' : ''
                 }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Image clicked, opening gallery at index:', index);
+                  handleImageClick(index);
+                }}
+                data-image-gallery-trigger
               >
                 <img
                   src={item.url}
                   alt=""
-                  className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105 cursor-pointer"
+                  className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105 pointer-events-none"
                   loading="lazy"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleImageClick(index);
-                  }}
                 />
-              </div>
+              </button>
             ))}
             {images.length > 4 && (
               <div className="col-span-2 text-center text-sm text-muted-foreground">
@@ -146,6 +184,66 @@ export function MediaContent({ event }: MediaContentProps) {
         </div>
       )}
 
+      {/* Audio */}
+      {audios.length > 0 && (
+        <div className="space-y-2">
+          {audios.map((item, index) => (
+            <MusicPlayer
+              key={`audio-${index}`}
+              src={item.url}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* YouTube Videos */}
+      {youtubeVideos.length > 0 && (
+        <div className="space-y-3">
+          {youtubeVideos.map((item, index) => (
+            <YouTubeEmbed
+              key={`youtube-${index}`}
+              url={item.url}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Spotify Embeds */}
+      {spotifyTracks.length > 0 && (
+        <div className="space-y-3">
+          {spotifyTracks.map((item, index) => (
+            <SpotifyEmbed
+              key={`spotify-${index}`}
+              url={item.url}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* SoundCloud Embeds */}
+      {soundcloudTracks.length > 0 && (
+        <div className="space-y-3">
+          {soundcloudTracks.map((item, index) => (
+            <SoundCloudEmbed
+              key={`soundcloud-${index}`}
+              url={item.url}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Zapstr Embeds */}
+      {zapstrTracks.length > 0 && (
+        <div className="space-y-3">
+          {zapstrTracks.map((item, index) => (
+            <ZapstrEmbed
+              key={`zapstr-${index}`}
+              url={item.url}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Link Previews */}
       {links.length > 0 && (
         <div className="space-y-2">
@@ -162,11 +260,11 @@ export function MediaContent({ event }: MediaContentProps) {
       </div>
 
       {/* Image Gallery */}
-      <ImageGallery
+      <ImageGalleryNew
         images={imageUrls}
-        initialIndex={galleryIndex}
         open={galleryOpen}
-        onOpenChange={setGalleryOpen}
+        onClose={() => setGalleryOpen(false)}
+        initialIndex={galleryIndex}
       />
     </>
   );

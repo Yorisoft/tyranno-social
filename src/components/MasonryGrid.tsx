@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { PostCard } from '@/components/PostCard';
 
@@ -10,23 +11,102 @@ interface MasonryGridProps {
 export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: MasonryGridProps) {
   // Ensure columns is a valid number between 1 and 4
   const columns = Math.max(1, Math.min(4, Number(columnsProp) || 3));
+  const columnRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [columnPosts, setColumnPosts] = useState<NostrEvent[][]>([]);
+  const redistributeTimeoutRef = useRef<number>();
+  const imageLoadCountRef = useRef<number>(0);
+  const totalImagesRef = useRef<number>(0);
 
-  // Distribute posts across columns using balanced distribution
-  // This ensures posts are distributed more evenly across all columns
-  const columnPosts: NostrEvent[][] = Array.from({ length: columns }, () => []);
-  const columnHeights: number[] = Array.from({ length: columns }, () => 0);
-  
-  posts.forEach((post) => {
-    // Find the column with the least items (most balanced approach)
-    const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+  // Initialize column refs array
+  useEffect(() => {
+    columnRefs.current = columnRefs.current.slice(0, columns);
+  }, [columns]);
+
+  // Get actual column heights from DOM
+  const getColumnHeights = useCallback((): number[] => {
+    return Array.from({ length: columns }, (_, i) => {
+      const column = columnRefs.current[i];
+      return column ? column.scrollHeight : 0;
+    });
+  }, [columns]);
+
+  // Estimate height more accurately based on content
+  const estimatePostHeight = useCallback((post: NostrEvent): number => {
+    let height = 150; // Base height for card chrome (header, footer, padding)
     
-    // Add post to the shortest column
-    columnPosts[shortestColumnIndex].push(post);
+    // Add height for text content
+    const textLines = Math.ceil(post.content.length / 50); // Rough estimate of lines
+    height += Math.min(textLines * 20, 300); // Cap text height at 300px
     
-    // Increment the height of that column
-    // We use a simple increment, assuming posts have similar average heights
-    columnHeights[shortestColumnIndex]++;
-  });
+    // Check for images in content
+    const imageUrlPattern = /https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|bmp)/gi;
+    const imageUrls = post.content.match(imageUrlPattern) || [];
+    const hasImeta = post.tags.some(([name]) => name === 'imeta');
+    
+    if (imageUrls.length > 0 || hasImeta) {
+      // Images typically add significant height
+      height += 300; // Average image height in card
+    }
+    
+    // Check for video
+    const videoUrlPattern = /https?:\/\/[^\s]+\.(mp4|webm|mov)/gi;
+    const hasVideo = videoUrlPattern.test(post.content);
+    
+    if (hasVideo) {
+      height += 300; // Video player height
+    }
+    
+    return height;
+  }, []);
+
+  // Distribute posts across columns based on estimated heights
+  const distributePostsWithHeights = useCallback(() => {
+    const newColumnPosts: NostrEvent[][] = Array.from({ length: columns }, () => []);
+    const columnHeights: number[] = Array.from({ length: columns }, () => 0);
+
+    posts.forEach((post, index) => {
+      // For the first few posts, distribute one per column
+      if (index < columns) {
+        newColumnPosts[index].push(post);
+        columnHeights[index] = estimatePostHeight(post);
+      } else {
+        // Find the shortest column
+        const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+        newColumnPosts[shortestColumnIndex].push(post);
+        
+        // Add estimated height to this column
+        const estimatedHeight = estimatePostHeight(post);
+        columnHeights[shortestColumnIndex] += estimatedHeight + 16; // +16 for gap
+      }
+    });
+
+    setColumnPosts(newColumnPosts);
+  }, [posts, columns, estimatePostHeight]);
+
+  // Distribute posts when posts or columns change
+  useEffect(() => {
+    distributePostsWithHeights();
+  }, [posts, columns, distributePostsWithHeights]);
+
+  // Handle window resize with debounce
+  useEffect(() => {
+    const handleResize = () => {
+      if (redistributeTimeoutRef.current) {
+        clearTimeout(redistributeTimeoutRef.current);
+      }
+      redistributeTimeoutRef.current = window.setTimeout(() => {
+        distributePostsWithHeights();
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (redistributeTimeoutRef.current) {
+        clearTimeout(redistributeTimeoutRef.current);
+      }
+    };
+  }, [distributePostsWithHeights]);
 
   const gridClasses = {
     1: 'grid-cols-1',
@@ -44,7 +124,11 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
     <div className={containerClasses}>
       <div className={`grid ${gridClasses} gap-4`}>
         {columnPosts.map((columnItems, columnIndex) => (
-          <div key={columnIndex} className="flex flex-col gap-4">
+          <div 
+            key={columnIndex} 
+            ref={(el) => (columnRefs.current[columnIndex] = el)}
+            className="flex flex-col gap-4"
+          >
             {columnItems.map((post) => (
               <PostCard 
                 key={post.id} 

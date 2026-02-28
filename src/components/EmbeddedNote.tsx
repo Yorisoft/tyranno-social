@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
 import { MediaContent } from '@/components/MediaContent';
+import { NoteContent } from '@/components/NoteContent';
 
 interface EmbeddedNoteProps {
   eventId: string;
@@ -84,67 +85,6 @@ export function EmbeddedNote({ eventId, depth = 0 }: EmbeddedNoteProps) {
     addSuffix: true,
   });
 
-  // Simple text rendering without recursive embedding if we've reached max depth
-  const renderContent = () => {
-    if (depth >= MAX_EMBED_DEPTH) {
-      return <div className="text-sm break-words whitespace-pre-wrap">{event.content}</div>;
-    }
-
-    // Parse content for note references
-    const regex = /(https?:\/\/[^\s]+)|nostr:(note1)([023456789acdefghjklmnpqrstuvwxyz]+)/g;
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-    let keyCounter = 0;
-
-    while ((match = regex.exec(event.content)) !== null) {
-      const [fullMatch, url, nostrPrefix, nostrData] = match;
-      const index = match.index;
-
-      if (index > lastIndex) {
-        parts.push(event.content.substring(lastIndex, index));
-      }
-
-      if (url) {
-        parts.push(
-          <a 
-            key={`url-${keyCounter++}`}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:underline break-all"
-          >
-            {url}
-          </a>
-        );
-      } else if (nostrPrefix && nostrData) {
-        try {
-          const nostrId = `${nostrPrefix}${nostrData}`;
-          const decoded = nip19.decode(nostrId);
-          
-          if (decoded.type === 'note') {
-            // Recursively embed the note
-            parts.push(
-              <div key={`embed-${keyCounter++}`} className="my-2">
-                <EmbeddedNote eventId={decoded.data} depth={depth + 1} />
-              </div>
-            );
-          }
-        } catch {
-          parts.push(fullMatch);
-        }
-      }
-
-      lastIndex = index + fullMatch.length;
-    }
-
-    if (lastIndex < event.content.length) {
-      parts.push(event.content.substring(lastIndex));
-    }
-
-    return parts.length > 0 ? parts : event.content;
-  };
-
   return (
     <Card className="border-2 border-muted bg-muted/30 hover:bg-muted/40 transition-colors">
       <CardHeader className="pb-3">
@@ -179,8 +119,8 @@ export function EmbeddedNote({ eventId, depth = 0 }: EmbeddedNoteProps) {
         </div>
       </CardHeader>
       <CardContent className="pb-3">
-        <div className="text-sm break-words whitespace-pre-wrap mb-3">
-          {renderContent()}
+        <div className="mb-3">
+          <NoteContent event={event} className="text-sm" />
         </div>
 
         {/* Media Display */}

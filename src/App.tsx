@@ -12,7 +12,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { NostrLoginProvider } from '@nostrify/react/login';
 import { AppProvider } from '@/components/AppProvider';
 import { NWCProvider } from '@/contexts/NWCContext';
+import { DMProvider } from '@/components/DMProvider';
+import { DMNotifications } from '@/components/DMNotifications';
 import { AppConfig } from '@/contexts/AppContext';
+import { PROTOCOL_MODE } from '@/lib/dmConstants';
 import AppRouter from './AppRouter';
 
 const head = createHead({
@@ -38,9 +41,20 @@ const defaultConfig: AppConfig = {
       { url: 'wss://relay.ditto.pub', read: true, write: true },
       { url: 'wss://relay.primal.net', read: true, write: true },
       { url: 'wss://relay.damus.io', read: true, write: true },
+      { url: 'wss://nos.lol', read: true, write: true },
+      { url: 'wss://relay.nostr.band', read: true, write: true },
     ],
     updatedAt: 0,
   },
+  dmInboxRelays: {
+    relays: [
+      'wss://relay.ditto.pub',
+      'wss://relay.primal.net',
+      'wss://relay.damus.io',
+    ],
+    updatedAt: 0,
+  },
+  showContentWarnings: true,
 };
 
 export function App() {
@@ -52,12 +66,15 @@ export function App() {
             <NostrProvider>
               <NostrSync />
               <NWCProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Suspense>
-                    <AppRouter />
-                  </Suspense>
-                </TooltipProvider>
+                <DMProvider config={{ enabled: true, protocolMode: PROTOCOL_MODE.NIP04_OR_NIP17 }}>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Suspense>
+                      <AppRouter />
+                    </Suspense>
+                    {/* <DMNotifications /> */}
+                  </TooltipProvider>
+                </DMProvider>
               </NWCProvider>
             </NostrProvider>
           </NostrLoginProvider>

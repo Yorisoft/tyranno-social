@@ -9,11 +9,65 @@ export interface RelayMetadata {
   updatedAt: number;
 }
 
+export interface DMInboxRelays {
+  /** List of relay URLs for receiving DMs (kind 10050) */
+  relays: string[];
+  /** Unix timestamp of when the DM relay list was last updated */
+  updatedAt: number;
+}
+
+export interface PrivateHomeRelays {
+  /** List of relay URLs for private content (kind 10013) */
+  relays: string[];
+  /** Unix timestamp of when the private relay list was last updated */
+  updatedAt: number;
+}
+
+export interface TopicFilter {
+  /** Keywords to filter from posts */
+  keywords: string[];
+  /** Hashtags to filter from posts */
+  hashtags: string[];
+  /** Emojis to filter from posts */
+  emojis: string[];
+}
+
+export interface PersonalizedTheme {
+  /** Wallpaper image URL (data URL or blob URL) */
+  wallpaperUrl: string;
+  /** Extracted primary color */
+  primaryColor: string;
+  /** Extracted secondary color */
+  secondaryColor: string;
+  /** Extracted accent color */
+  accentColor: string;
+  /** Background color (light or dark based on image) */
+  backgroundColor: string;
+  /** Foreground/text color */
+  foregroundColor: string;
+  /** Card transparency (0-100, default 85) */
+  cardOpacity?: number;
+}
+
 export interface AppConfig {
   /** Current theme */
   theme: Theme;
   /** NIP-65 relay list metadata */
   relayMetadata: RelayMetadata;
+  /** NIP-17 DM inbox relays (kind 10050) */
+  dmInboxRelays?: DMInboxRelays;
+  /** NIP-37 Private home relays (kind 10013) */
+  privateHomeRelays?: PrivateHomeRelays;
+  /** Show content warnings (true = blur/hide, false = always show) */
+  showContentWarnings: boolean;
+  /** Topic filter for blocking posts by keywords, hashtags, and emojis */
+  topicFilter?: TopicFilter;
+  /** Personalized theme with custom wallpaper */
+  personalizedTheme?: PersonalizedTheme;
+  /** Font family */
+  fontFamily?: string;
+  /** Font size */
+  fontSize?: string;
 }
 
 export interface AppContextType {

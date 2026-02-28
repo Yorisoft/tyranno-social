@@ -223,7 +223,7 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose }) => {
               </Button>
 
               <div className='mx-auto max-w-sm'>
-                <div className='p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800'>
+                <div className='p-3 bg-rose-50 dark:bg-rose-950/20 rounded-lg border border-rose-200 dark:border-rose-800'>
                   <div className='flex items-center gap-2 mb-1'>
                     <span className='text-xs font-semibold text-amber-800 dark:text-amber-200'>
                       Important Warning

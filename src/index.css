@@ -4,89 +4,100 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --background: 345 25% 98%;
+    --foreground: 345 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 345 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 345 15% 15%;
 
-    --primary: 0 55% 45%;
+    --primary: 345 65% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 20% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 345 20% 95%;
+    --secondary-foreground: 345 15% 15%;
 
-    --muted: 0 20% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 345 15% 94%;
+    --muted-foreground: 345 8% 42%;
 
-    --accent: 0 55% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 345 40% 92%;
+    --accent-foreground: 345 15% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 20% 90%;
-    --input: 0 20% 90%;
-    --ring: 0 55% 45%;
+    --border: 345 20% 88%;
+    --input: 345 20% 88%;
+    --ring: 345 65% 45%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 345 15% 97%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-foreground: 345 12% 30%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 345 65% 45%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 345 20% 95%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent-foreground: 345 15% 15%;
 
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 345 15% 90%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 345 65% 45%;
   }
 
   .dark {
-    --background: 0 20% 8%;
-    --foreground: 0 10% 95%;
+    /* Dark backgrounds with subtle color warmth */
+    --background: 0 8% 7%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 20% 10%;
-    --card-foreground: 0 10% 95%;
+    /* Cards with subtle color tint for visual interest */
+    --card: 0 12% 10%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 20% 10%;
-    --popover-foreground: 0 10% 95%;
+    /* Popovers match cards */
+    --popover: 0 12% 10%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 0 60% 55%;
+    /* Primary color - customizable via color selector */
+    --primary: 0 70% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 15% 15%;
-    --secondary-foreground: 0 10% 95%;
+    /* Secondary elements with subtle color */
+    --secondary: 0 8% 15%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 15% 15%;
-    --muted-foreground: 0 10% 60%;
+    /* Muted elements with subtle color */
+    --muted: 0 8% 14%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 0 50% 20%;
-    --accent-foreground: 0 10% 95%;
+    /* Accent elements with subtle color */
+    --accent: 0 10% 16%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 10% 95%;
+    /* Destructive */
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 15% 20%;
-    --input: 0 15% 20%;
-    --ring: 0 60% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Borders and inputs - subtle with hint of color */
+    --border: 0 8% 18%;
+    --input: 0 8% 18%;
+    --ring: 0 70% 60%;
+
+    /* Sidebar with subtle color */
+    --sidebar-background: 0 8% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 70% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 8% 14%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 8% 16%;
+    --sidebar-ring: 0 70% 60%;
   }
 }
 
@@ -97,5 +108,129 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Light mode enhancements */
+  :root {
+    /* Burgundy gradient backgrounds */
+    --gradient-warm: linear-gradient(135deg, hsl(345 25% 98%) 0%, hsl(345 20% 96%) 50%, hsl(345 15% 97%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(345 65% 45%) 0%, hsl(340 60% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(345 40% 92%) 0%, hsl(345 30% 95%) 100%);
+    
+    /* Subtle shadows with burgundy tones */
+    --shadow-warm: 0 2px 8px -2px hsl(345 40% 50% / 0.08), 0 4px 16px -4px hsl(345 40% 50% / 0.06);
+    --shadow-warm-lg: 0 8px 24px -8px hsl(345 40% 50% / 0.12), 0 12px 32px -12px hsl(345 40% 50% / 0.08);
+  }
+
+  /* Card enhancements for light mode */
+  :root .border {
+    @apply border-border/60;
+  }
+
+  /* Add subtle texture to cards in light mode */
+  :root [class*="card"] {
+    box-shadow: var(--shadow-warm);
+  }
+
+  /* Enhance hover states in light mode */
+  :root [class*="hover:"]:hover {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Custom color picker range input styling */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: 2px solid hsl(var(--border));
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: 2px solid hsl(var(--border));
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  input[type="range"]::-moz-range-thumb:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Personalized Theme - Custom Wallpaper Background */
+  .personalized-theme {
+    --wallpaper-url: none;
+    --card-opacity: 0.85;
+  }
+
+  .personalized-theme body {
+    background-image: var(--wallpaper-url);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Add overlay to improve readability over wallpaper */
+  .personalized-theme body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ensure content is above the overlay */
+  .personalized-theme body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Enhance card backgrounds in personalized mode with adjustable opacity */
+  .personalized-theme [class*="card"],
+  .personalized-theme header,
+  .personalized-theme footer {
+    backdrop-filter: blur(20px) saturate(150%);
+    background: hsl(var(--background) / var(--card-opacity));
+  }
+
+  /* More transparent backgrounds for better wallpaper visibility */
+  .personalized-theme .bg-gradient-to-br,
+  .personalized-theme .bg-gradient-to-r {
+    background: hsl(var(--background) / calc(var(--card-opacity) * 0.9));
+  }
+
+  /* Ensure text is visible in personalized mode with text shadow */
+  .personalized-theme h1,
+  .personalized-theme h2,
+  .personalized-theme h3 {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Make sure foreground text has good contrast */
+  .personalized-theme .text-foreground,
+  .personalized-theme .text-muted-foreground {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 }
