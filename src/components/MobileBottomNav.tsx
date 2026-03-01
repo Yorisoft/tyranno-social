@@ -51,7 +51,7 @@ export function MobileBottomNav() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/profile/${user.npub}`)}
+            onClick={() => navigate(`/${user.npub}`)}
             className="flex-col h-auto py-2 px-3 gap-1"
           >
             <User className="h-5 w-5" />
