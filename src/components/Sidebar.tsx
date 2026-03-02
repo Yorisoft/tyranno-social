@@ -213,8 +213,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         // Collapsed state - just show the toggle button
         <div className="sticky top-4" />
       ) : (
-        <ScrollArea className="h-[calc(100vh-2rem)] sticky top-4 hide-scrollbar">
-          <div className="space-y-4 pr-4 pb-8">
+        <div className="sticky top-4 space-y-4 pr-4 pb-8">
         {/* Theme Toggle */}
         <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-rose-50/30 dark:from-card dark:to-card">
           <CardContent className="pt-6 space-y-4">
@@ -659,8 +658,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
           </CardContent>
         </Card>
 
-          </div>
-        </ScrollArea>
+        </div>
       )}
     </aside>
   );
