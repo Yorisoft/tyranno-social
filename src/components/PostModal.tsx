@@ -11,7 +11,8 @@ import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { nip19 } from 'nostr-tools';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { X, Send, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, Users, Share2 } from 'lucide-react';
+import { X, Send, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, Users, Share2, ArrowUpLeft } from 'lucide-react';
+import { RepostDialog } from '@/components/RepostDialog';
 
 import { useAuthor } from '@/hooks/useAuthor';
 import { useReplies } from '@/hooks/useReplies';
@@ -21,6 +22,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useBookmarkPost } from '@/hooks/useBookmarkPost';
 import { useToast } from '@/hooks/useToast';
+import { useEventById } from '@/hooks/useEventById';
 import { genUserName } from '@/lib/genUserName';
 
 import { NoteContent } from '@/components/NoteContent';
@@ -102,6 +104,58 @@ function ReplyRow({
 }
 
 /* ─────────────────────────────────────────────────────────── */
+/* Parent post context (thread view)                           */
+/* ─────────────────────────────────────────────────────────── */
+
+function ParentPostContext({
+  event,
+  onClose,
+}: {
+  event: NostrEvent;
+  onClose: () => void;
+}) {
+  const author = useAuthor(event.pubkey);
+  const meta: NostrMetadata | undefined = author.data?.metadata;
+  const name = meta?.display_name || meta?.name || genUserName(event.pubkey);
+  const handle = meta?.name || genUserName(event.pubkey);
+  const npub = nip19.npubEncode(event.pubkey);
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+        <ArrowUpLeft className="h-3.5 w-3.5" />
+        <span>Replying to</span>
+      </div>
+      <div className="flex gap-3">
+        <Link to={`/${npub}`} onClick={onClose} className="shrink-0">
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={meta?.picture} alt={name} />
+            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+              {name[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Link
+              to={`/${npub}`}
+              onClick={onClose}
+              className="text-xs font-semibold hover:text-primary transition-colors"
+            >
+              {name}
+            </Link>
+            <span className="text-xs text-muted-foreground">@{handle}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3 whitespace-pre-wrap break-words leading-relaxed">
+            <NoteContent event={event} />
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────── */
 /* Main modal                                                   */
 /* ─────────────────────────────────────────────────────────── */
 
@@ -113,6 +167,7 @@ interface PostModalProps {
 export function PostModal({ event, onClose }: PostModalProps) {
   const [replyText, setReplyText] = useState('');
   const [bookmarkOpen, setBookmarkOpen] = useState(false);
+  const [repostOpen, setRepostOpen] = useState(false);
 
   const { user } = useCurrentUser();
   const { mutate: publish, isPending } = useNostrPublish();
@@ -130,6 +185,16 @@ export function PostModal({ event, onClose }: PostModalProps) {
   const { data: followPubkeys = [] } = useFollows(user?.pubkey);
   const { toggleBookmark, useIsBookmarked } = useBookmarkPost();
   const { data: isBookmarked } = useIsBookmarked(event.id);
+
+  // Thread view — look for parent event via 'e' tag with 'reply' or 'root' marker
+  const parentEventId = (() => {
+    const replyTag = event.tags.find(([t, , , marker]) => t === 'e' && (marker === 'reply' || marker === 'root'));
+    if (replyTag) return replyTag[1];
+    // Fallback: first 'e' tag without a marker (older NIP-10 style)
+    const firstETag = event.tags.find(([t]) => t === 'e');
+    return firstETag?.[1] ?? null;
+  })();
+  const { data: parentEvent } = useEventById(parentEventId);
 
   // Sort: follows first, then oldest-first within each group
   const sortedReplies = replies
@@ -211,6 +276,11 @@ export function PostModal({ event, onClose }: PostModalProps) {
         {/* ── Scrollable body ── */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
 
+          {/* ── Parent post (thread context) ── */}
+          {parentEvent && (
+            <ParentPostContext event={parentEvent} onClose={onClose} />
+          )}
+
           {/* Author */}
           <div className="flex items-start gap-3">
             <Link to={`/${npub}`} onClick={onClose} className="shrink-0">
@@ -265,7 +335,19 @@ export function PostModal({ event, onClose }: PostModalProps) {
                 <MessageCircle className="h-4 w-4 mr-1" />
                 {replies?.length ?? 0}
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10"
+                onClick={() => {
+                  if (!user) {
+                    toast({ title: 'Login required', description: 'Please log in to repost.', variant: 'destructive' });
+                    return;
+                  }
+                  setRepostOpen(true);
+                }}
+                title="Repost or Quote Post"
+              >
                 <Repeat2 className="h-4 w-4" />
               </Button>
               <ZapButton
@@ -383,6 +465,11 @@ export function PostModal({ event, onClose }: PostModalProps) {
         open={bookmarkOpen}
         onOpenChange={setBookmarkOpen}
         eventId={event.id}
+      />
+      <RepostDialog
+        event={event}
+        open={repostOpen}
+        onOpenChange={setRepostOpen}
       />
     </div>
   );

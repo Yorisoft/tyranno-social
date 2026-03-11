@@ -6,6 +6,7 @@ import { useRepostedEvent } from '@/hooks/useRepostedEvent';
 import { useBookmarkPost } from '@/hooks/useBookmarkPost';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
+import { useMutedUsers } from '@/hooks/useMutedUsers';
 import { genUserName } from '@/lib/genUserName';
 import { formatEventTime } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -19,7 +20,9 @@ import { ZapButton } from '@/components/ZapButton';
 import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
 import { ContentWarningWrapper } from '@/components/ContentWarningWrapper';
 import { nip19 } from 'nostr-tools';
-import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User } from 'lucide-react';
+import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, VolumeX } from 'lucide-react';
+import { FollowButton } from '@/components/FollowButton';
+import { RepostDialog } from '@/components/RepostDialog';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -38,7 +41,9 @@ interface PostCardProps {
 
 export function PostCard({ event, onClick }: PostCardProps) {
   const [bookmarkDialogOpen, setBookmarkDialogOpen] = useState(false);
+  const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const { user } = useCurrentUser();
+  const { mute, unmute, isMuted } = useMutedUsers();
   
   const isRepost = event.kind === 6 || event.kind === 16;
   const { data: repostedEvent } = useRepostedEvent(event);
@@ -146,13 +151,18 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 </Link>
                 <p className="text-xs text-muted-foreground line-clamp-1">@{username}</p>
               </div>
-              <Link
-                to={`/${noteId}`}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {timeAgo}
-              </Link>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div onClick={(e) => e.stopPropagation()}>
+                  <FollowButton pubkey={displayEvent.pubkey} iconOnly />
+                </div>
+                <Link
+                  to={`/${noteId}`}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {timeAgo}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -209,6 +219,14 @@ export function PostCard({ event, onClick }: PostCardProps) {
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-green-500 hover:bg-green-500/10 transition-colors"
+              onClick={() => {
+                if (!user) {
+                  toast({ title: 'Login required', description: 'Please log in to repost.', variant: 'destructive' });
+                  return;
+                }
+                setRepostDialogOpen(true);
+              }}
+              title="Repost or Quote Post"
             >
               <Repeat2 className="h-4 w-4" />
             </Button>
@@ -274,6 +292,30 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 <User className="h-4 w-4" />
                 Copy User npub
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {isMuted(displayEvent.pubkey) ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    unmute(displayEvent.pubkey);
+                    toast({ title: 'Unmuted', description: 'You will see posts from this user again.' });
+                  }}
+                  className="gap-2 cursor-pointer text-blue-600 dark:text-blue-400 focus:text-blue-600 focus:bg-blue-50 dark:focus:bg-blue-950/30"
+                >
+                  <VolumeX className="h-4 w-4" />
+                  Unmute User
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => {
+                    mute(displayEvent.pubkey);
+                    toast({ title: 'User muted', description: 'You will no longer see posts from this user.' });
+                  }}
+                  className="gap-2 cursor-pointer text-orange-600 dark:text-orange-400 focus:text-orange-600 focus:bg-orange-50 dark:focus:bg-orange-950/30"
+                >
+                  <VolumeX className="h-4 w-4" />
+                  Mute User
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -283,6 +325,11 @@ export function PostCard({ event, onClick }: PostCardProps) {
         open={bookmarkDialogOpen}
         onOpenChange={setBookmarkDialogOpen}
         eventId={event.id}
+      />
+      <RepostDialog
+        event={displayEvent}
+        open={repostDialogOpen}
+        onOpenChange={setRepostDialogOpen}
       />
     </Card>
   );

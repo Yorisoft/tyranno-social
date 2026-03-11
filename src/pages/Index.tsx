@@ -27,9 +27,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap, Bell } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap, Bell, Edit } from 'lucide-react';
+import { EditProfileForm } from '@/components/EditProfileForm';
+import { WalletBalance } from '@/components/WalletBalance';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useNavigate } from 'react-router-dom';
+import { useMutedUsers } from '@/hooks/useMutedUsers';
+import { PeopleToFollow } from '@/components/PeopleToFollow';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +51,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRelay, setSelectedRelay] = useState<string | null>(null);
   const [nsfwInfoOpen, setNsfwInfoOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   useSeoMeta({
     title: 'Tyrannosocial - A Beautiful Nostr Experience',
@@ -56,6 +61,7 @@ const Index = () => {
   const { user } = useCurrentUser();
   const { config } = useAppContext();
   const navigate = useNavigate();
+  const { isMuted } = useMutedUsers();
   const unreadDMCount = useUnreadDMCount();
   const { shouldFilter } = useNSFWFilter();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50);
@@ -107,11 +113,14 @@ const Index = () => {
   const relayPosts = relayData?.pages.flat() ?? [];
 
   // Use search results if searching, relay posts if relay selected, otherwise use feed
-  const posts = searchQuery.trim() 
+  const rawPosts = searchQuery.trim() 
     ? searchPosts 
     : selectedRelay 
       ? relayPosts 
       : feedPosts;
+
+  // Filter out muted users
+  const posts = rawPosts?.filter(p => !isMuted(p.pubkey)) ?? rawPosts;
   
   const isLoading = searchQuery.trim() 
     ? isLoadingSearch 
@@ -234,7 +243,22 @@ const Index = () => {
             </div>
 
             {/* Login/Avatar — always visible */}
-            <div className="shrink-0">
+            <div className="shrink-0 flex items-center gap-2">
+              {user && (
+                <>
+                  <WalletBalance />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditProfileOpen(true)}
+                    className="hidden sm:flex gap-1.5 text-muted-foreground hover:text-primary"
+                    title="Edit your profile"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="hidden lg:inline">Edit Profile</span>
+                  </Button>
+                </>
+              )}
               <LoginArea className="max-w-60" />
             </div>
           </div>
@@ -493,6 +517,9 @@ const Index = () => {
                 </div>
               </button>
 
+              {/* People to Follow */}
+              <PeopleToFollow />
+
               {/* Notifications panel */}
               {user && (
                 <Card className="border-border/50 dark:border-transparent overflow-hidden">
@@ -557,6 +584,22 @@ const Index = () => {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-primary" />
+              Edit Profile
+            </DialogTitle>
+            <DialogDescription>
+              Update your Nostr profile information
+            </DialogDescription>
+          </DialogHeader>
+          <EditProfileForm onSuccess={() => setEditProfileOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       {/* NSFW Filter Info Dialog */}
       <Dialog open={nsfwInfoOpen} onOpenChange={setNsfwInfoOpen}>

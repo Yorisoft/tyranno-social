@@ -18,7 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { genUserName } from '@/lib/genUserName';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Mail, Zap, CheckCircle2, Edit, Copy, MessageCircle, Users, UserPlus } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Mail, Zap, CheckCircle2, Edit, Copy, MessageCircle } from 'lucide-react';
+import { FollowButton } from '@/components/FollowButton';
 import { useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { EditProfileForm } from '@/components/EditProfileForm';
@@ -275,10 +276,11 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           </Button>
                         ) : (
                           <>
+                            <FollowButton pubkey={pubkey} className="w-full justify-center" />
                             <Button
                               onClick={handleSendDM}
-                              variant="default"
-                              className="gap-2 w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                              variant="outline"
+                              className="gap-2 w-full"
                             >
                               <MessageCircle className="h-4 w-4" />
                               Send Message
