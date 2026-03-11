@@ -427,7 +427,7 @@ const Index = () => {
           </div>
 
           {/* Right Sidebar */}
-          <aside className="w-80 shrink-0 hidden xl:block">
+          <aside className="w-96 shrink-0 hidden xl:block">
             <div className="sticky top-4 space-y-4">
               {user ? (
                 <ComposePost onPostPublished={handleRefresh} />
