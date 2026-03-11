@@ -194,13 +194,13 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         variant="outline"
         size="icon"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -left-4 top-4 z-50 h-8 w-8 rounded-full shadow-lg bg-background border-2 border-primary/20 hover:border-primary/40"
+        className="absolute -right-4 top-4 z-50 h-8 w-8 rounded-full shadow-lg bg-background border-2 border-primary/20 hover:border-primary/40"
         title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {isCollapsed ? (
-          <ChevronRightIcon className="h-4 w-4" />
-        ) : (
           <ChevronLeft className="h-4 w-4" />
+        ) : (
+          <ChevronRightIcon className="h-4 w-4" />
         )}
       </Button>
 
@@ -208,7 +208,7 @@ export function Sidebar({ selectedCategory, onCategoryChange }: SidebarProps) {
         // Collapsed state - just show the toggle button
         <div className="sticky top-4" />
       ) : (
-        <div className="sticky top-4 space-y-4 pr-4 pb-8">
+        <div className="sticky top-4 space-y-4 pl-0 pr-4 pb-8">
         {/* Theme Toggle */}
         <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-rose-50/30 dark:from-card dark:to-card">
           <CardContent className="pt-6 space-y-4">

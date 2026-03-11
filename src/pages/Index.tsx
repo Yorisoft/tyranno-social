@@ -229,6 +229,12 @@ const Index = () => {
       {/* Main Content */}
       <main className="px-4 py-8 pb-24 lg:pb-8">
         <div className="flex gap-6">
+          {/* Sidebar */}
+          <Sidebar
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+
           {/* Feed Section */}
           <div className="flex-1 min-w-0 space-y-6">
           {/* Compose Section */}
@@ -425,12 +431,6 @@ const Index = () => {
             )}
           </div>
           </div>
-
-          {/* Sidebar */}
-          <Sidebar
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
         </div>
       </main>
 
