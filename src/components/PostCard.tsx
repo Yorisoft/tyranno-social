@@ -196,32 +196,31 @@ export function PostCard({ event, onClick }: PostCardProps) {
           className="flex items-center justify-between pt-2 border-t border-border/50"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
+              className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
               onClick={() => onClick?.(displayEvent)}
             >
-              <MessageCircle className="h-4 w-4 mr-1" />
-              {replyCount > 0 && <span className="text-xs">{replyCount}</span>}
+              <MessageCircle className="h-4 w-4" />
+              {replyCount > 0 && <span className="text-xs ml-0.5">{replyCount}</span>}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 transition-colors"
+              className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-green-500 hover:bg-green-500/10 transition-colors"
             >
               <Repeat2 className="h-4 w-4" />
             </Button>
             <ZapButton
               target={displayEvent as any}
-              className="h-8 px-2 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors flex items-center gap-1"
+              className="h-8 px-1.5 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-colors flex items-center justify-center gap-1"
               showCount={true}
             />
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 px-2 transition-colors ${
+              className={`h-8 w-8 p-0 flex items-center justify-center transition-colors ${
                 isBookmarked
                   ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10'
                   : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'
@@ -233,16 +232,15 @@ export function PostCard({ event, onClick }: PostCardProps) {
             </Button>
             <EmojiReactionPicker
               eventId={displayEvent.id}
-              className="h-8 px-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+              className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
             />
-          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
