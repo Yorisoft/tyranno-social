@@ -41,11 +41,8 @@ export function PostCard({ event, onClick }: PostCardProps) {
   const [bookmarkDialogOpen, setBookmarkDialogOpen] = useState(false);
   const { user } = useCurrentUser();
   
-  // Check if this is a repost
   const isRepost = event.kind === 6 || event.kind === 16;
   const { data: repostedEvent } = useRepostedEvent(event);
-
-  // Use reposted event for display if available, otherwise use original
   const displayEvent = isRepost && repostedEvent ? repostedEvent : event;
   const reposter = useAuthor(event.pubkey);
   
@@ -54,7 +51,6 @@ export function PostCard({ event, onClick }: PostCardProps) {
   const { data: reactions } = useReactions(displayEvent.id);
   const { data: replies } = useReplies(displayEvent.id);
 
-  // Bookmarks
   const { toggleBookmark, useIsBookmarked } = useBookmarkPost();
   const { data: isBookmarked } = useIsBookmarked(displayEvent.id);
   const { toast } = useToast();
@@ -65,50 +61,32 @@ export function PostCard({ event, onClick }: PostCardProps) {
 
   const npub = nip19.npubEncode(displayEvent.pubkey);
   const noteId = nip19.noteEncode(displayEvent.id);
-
   const timeAgo = formatEventTime(displayEvent.created_at);
 
-  // Reposter info
   const reposterMetadata: NostrMetadata | undefined = reposter.data?.metadata;
   const reposterName = reposterMetadata?.display_name || reposterMetadata?.name || genUserName(event.pubkey);
 
   const replyCount = replies?.length || 0;
   
-  // Get user's reaction if they reacted
   const userReaction = reactions && user
-    ? Object.entries(reactions).find(([emoji, data]) => data.pubkeys.includes(user.pubkey))
+    ? Object.entries(reactions).find(([, data]) => data.pubkeys.includes(user.pubkey))
     : null;
 
-  // Get top reactions, ensuring user's reaction is included
   const topReactions = reactions
     ? (() => {
         const sorted = Object.entries(reactions).sort((a, b) => b[1].count - a[1].count);
-        
-        // If user reacted and their reaction isn't in top 3, include it
         if (userReaction) {
           const userReactionInTop = sorted.slice(0, 3).some(([emoji]) => emoji === userReaction[0]);
           if (!userReactionInTop) {
-            // Replace the 3rd reaction with user's reaction
             return [sorted[0], sorted[1], userReaction].filter(Boolean);
           }
         }
-        
         return sorted.slice(0, 3);
       })()
     : [];
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    // Only suppress the card click if the user hit something explicitly marked as interactive
-    if (target.closest('[data-no-card-click]')) {
-      return;
-    }
-    onClick?.();
-  };
-
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
     if (!user) {
       toast({
         title: 'Login required',
@@ -117,36 +95,22 @@ export function PostCard({ event, onClick }: PostCardProps) {
       });
       return;
     }
-
-    // Always show the lists dialog to choose which list to add to
     setBookmarkDialogOpen(true);
-  };
-
-  const handleBookmarkConfirm = (isPrivate: boolean) => {
-    toggleBookmark.mutate({ eventId: displayEvent.id, isPrivate });
   };
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({
-        title: 'Copied!',
-        description: `${label} copied to clipboard`,
-      });
-    } catch (error) {
-      console.error('Failed to copy:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to copy to clipboard',
-        variant: 'destructive',
-      });
+      toast({ title: 'Copied!', description: `${label} copied to clipboard` });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to copy to clipboard', variant: 'destructive' });
     }
   };
 
   return (
-    <Card 
+    <Card
       className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 hover:border-primary/20 dark:border-transparent cursor-pointer bg-gradient-to-br from-card via-card to-rose-50/20 dark:from-card dark:via-card dark:to-card"
-      onClick={handleCardClick}
+      onClick={onClick}
     >
       {isRepost && repostedEvent && (
         <div className="px-4 pt-3 pb-2">
@@ -156,9 +120,14 @@ export function PostCard({ event, onClick }: PostCardProps) {
           </div>
         </div>
       )}
+
       <CardHeader className={isRepost && repostedEvent ? "pb-3 pt-2" : "pb-3"}>
         <div className="flex items-start gap-3">
-          <Link to={`/${npub}`} className="shrink-0" data-no-card-click>
+          <Link
+            to={`/${npub}`}
+            className="shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Avatar className="h-10 w-10 ring-2 ring-background transition-all group-hover:ring-primary/20">
               <AvatarImage src={profileImage} alt={displayName} />
               <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
@@ -172,7 +141,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 <Link
                   to={`/${npub}`}
                   className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1"
-                  data-no-card-click
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {displayName}
                 </Link>
@@ -181,7 +150,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
               <Link
                 to={`/${noteId}`}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                data-no-card-click
+                onClick={(e) => e.stopPropagation()}
               >
                 {timeAgo}
               </Link>
@@ -189,19 +158,21 @@ export function PostCard({ event, onClick }: PostCardProps) {
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="pb-4">
+        {/* Post text — clicking here opens the dialog */}
         <div className="mb-4 break-words whitespace-pre-wrap">
           <NoteContent event={displayEvent} className="text-sm leading-relaxed" />
         </div>
 
-        {/* Media Display (images, videos, link previews) */}
-        <div className="mb-4" data-no-card-click>
+        {/* Media */}
+        <div className="mb-4" onClick={(e) => e.stopPropagation()}>
           <ContentWarningWrapper event={displayEvent} mediaOnly={true}>
             <MediaContent event={displayEvent} />
           </ContentWarningWrapper>
         </div>
 
-        {/* Reactions Display */}
+        {/* Reactions */}
         {topReactions.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {topReactions.map(([emoji, data]) => {
@@ -221,12 +192,16 @@ export function PostCard({ event, onClick }: PostCardProps) {
           </div>
         )}
 
-        {/* Replies from people the user follows */}
-        <div data-no-card-click>
+        {/* Replies from follows */}
+        <div onClick={(e) => e.stopPropagation()}>
           <FollowRepliesPreview event={displayEvent} onReplyClick={() => onClick?.()} />
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border/50" data-no-card-click>
+        {/* Action bar */}
+        <div
+          className="flex items-center justify-between pt-2 border-t border-border/50"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -241,9 +216,6 @@ export function PostCard({ event, onClick }: PostCardProps) {
               variant="ghost"
               size="sm"
               className="h-8 px-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 transition-colors"
-              onClick={() => {
-                // Add repost functionality if needed
-              }}
             >
               <Repeat2 className="h-4 w-4" />
             </Button>
@@ -256,8 +228,8 @@ export function PostCard({ event, onClick }: PostCardProps) {
               variant="ghost"
               size="sm"
               className={`h-8 px-2 transition-colors ${
-                isBookmarked 
-                  ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10' 
+                isBookmarked
+                  ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10'
                   : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'
               }`}
               onClick={handleBookmarkClick}
@@ -271,66 +243,50 @@ export function PostCard({ event, onClick }: PostCardProps) {
             />
           </div>
 
-          {/* More options menu */}
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(displayEvent.id, 'Event ID');
-                }}
+                onClick={() => copyToClipboard(displayEvent.id, 'Event ID')}
                 className="gap-2 cursor-pointer"
               >
                 <Copy className="h-4 w-4" />
                 Copy Event ID
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(displayEvent.pubkey, 'User ID');
-                }}
+                onClick={() => copyToClipboard(displayEvent.pubkey, 'User ID')}
                 className="gap-2 cursor-pointer"
               >
                 <User className="h-4 w-4" />
                 Copy User ID
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(noteId, 'Note ID (note1)');
-                }}
+                onClick={() => copyToClipboard(noteId, 'Note ID (note1)')}
                 className="gap-2 cursor-pointer"
               >
                 <Copy className="h-4 w-4" />
                 Copy Note ID
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(npub, 'User npub');
-                }}
+                onClick={() => copyToClipboard(npub, 'User npub')}
                 className="gap-2 cursor-pointer"
               >
                 <User className="h-4 w-4" />
                 Copy User npub
               </DropdownMenuItem>
             </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          </DropdownMenu>
         </div>
       </CardContent>
 
-      {/* Bookmark Dialog */}
       <BookmarkListsDialog
         open={bookmarkDialogOpen}
         onOpenChange={setBookmarkDialogOpen}
