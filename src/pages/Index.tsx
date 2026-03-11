@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { type FeedCategory } from '@/hooks/usePosts';
 import { useInfinitePosts } from '@/hooks/useInfinitePosts';
@@ -11,6 +11,8 @@ import { SearchBar } from '@/components/SearchBar';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { NotificationItem } from '@/components/NotificationItem';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useEventById } from '@/hooks/useEventById';
+import type { NotificationEvent } from '@/hooks/useNotifications';
 import { Sidebar } from '@/components/Sidebar';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -41,6 +43,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<FeedCategory>('following');
   const [columns, setColumns] = useLocalStorage<number>('masonry-columns', 3);
   const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
+  const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRelay, setSelectedRelay] = useState<string | null>(null);
   const [nsfwInfoOpen, setNsfwInfoOpen] = useState(false);
@@ -56,6 +59,26 @@ const Index = () => {
   const unreadDMCount = useUnreadDMCount();
   const { shouldFilter } = useNSFWFilter();
   const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50);
+  const { data: pendingEvent } = useEventById(pendingEventId);
+
+  // Once the pending event loads, open the modal and clear the pending ID
+  useEffect(() => {
+    if (pendingEvent) {
+      setSelectedPost(pendingEvent);
+      setPendingEventId(null);
+    }
+  }, [pendingEvent]);
+
+  const handleNotificationClick = useCallback((notification: NotificationEvent) => {
+    // Find the 'e' tag — the post being replied to / reacted to / reposted / zapped
+    const eTag = notification.tags.find(([name]) => name === 'e');
+    if (eTag?.[1]) {
+      setPendingEventId(eTag[1]);
+    } else {
+      // Mentions: the notification itself is a kind-1 post — open it directly
+      setSelectedPost(notification);
+    }
+  }, []);
   
   const { 
     data: infiniteData, 
@@ -515,6 +538,7 @@ const Index = () => {
                           <NotificationItem
                             key={notification.id}
                             notification={notification}
+                            onClick={() => handleNotificationClick(notification)}
                           />
                         ))}
                       </div>
