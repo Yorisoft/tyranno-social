@@ -11,7 +11,7 @@ import type { NostrEvent, NostrMetadata } from '@nostrify/nostrify';
 import { nip19 } from 'nostr-tools';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { X, Send, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, Users } from 'lucide-react';
+import { X, Send, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, Users, Share2 } from 'lucide-react';
 
 import { useAuthor } from '@/hooks/useAuthor';
 import { useReplies } from '@/hooks/useReplies';
@@ -38,6 +38,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -165,6 +166,29 @@ export function PostModal({ event, onClose }: PostModalProps) {
     }
   };
 
+  const sharePost = async () => {
+    const noteId = nip19.noteEncode(event.id);
+    const url = `${window.location.origin}/${noteId}`;
+    const shareData = {
+      title: `Post by ${name}`,
+      text: event.content.slice(0, 100) + (event.content.length > 100 ? '…' : ''),
+      url,
+    };
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: 'Link copied!', description: 'Shareable link copied to clipboard' });
+      }
+    } catch (err) {
+      // User cancelled share — not an error
+      if (err instanceof Error && err.name !== 'AbortError') {
+        toast({ title: 'Error', description: 'Could not share post', variant: 'destructive' });
+      }
+    }
+  };
+
   return (
     /* Backdrop */
     <div
@@ -270,6 +294,10 @@ export function PostModal({ event, onClose }: PostModalProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={sharePost} className="gap-2 cursor-pointer">
+                  <Share2 className="h-4 w-4" /> Share post
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => copy(event.id, 'Event ID')} className="gap-2 cursor-pointer">
                   <Copy className="h-4 w-4" /> Copy Event ID
                 </DropdownMenuItem>
