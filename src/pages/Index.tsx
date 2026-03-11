@@ -183,10 +183,22 @@ const Index = () => {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                   Tyrannosocial
                 </h1>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  Powered by Nostr
-                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    Powered by Nostr
+                  </span>
+                  <span className="opacity-30">·</span>
+                  <a
+                    href="https://shakespeare.diy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 hover:text-primary transition-colors"
+                  >
+                    <Sparkles className="h-3 w-3 text-rose-500 dark:text-primary" />
+                    Vibed with Shakespeare
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -447,23 +459,6 @@ const Index = () => {
           </aside>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border/50 bg-gradient-to-r from-background/80 via-rose-50/30 to-background/80 backdrop-blur-lg mt-16 dark:from-background/80 dark:via-background/80 dark:to-background/80">
-        <div className="px-4 py-6">
-          <p className="text-center text-sm text-muted-foreground">
-            <a
-              href="https://shakespeare.diy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-all inline-flex items-center gap-1 hover:scale-105"
-            >
-              Vibed with Shakespeare
-              <Sparkles className="h-3 w-3 text-rose-600 dark:text-primary" />
-            </a>
-          </p>
-        </div>
-      </footer>
 
       {/* Post Modal */}
       {selectedPost && (
