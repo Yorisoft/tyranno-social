@@ -9,6 +9,8 @@ import { PostModal } from '@/components/PostModal';
 import { ComposePost } from '@/components/ComposePost';
 import { SearchBar } from '@/components/SearchBar';
 import { LoginArea } from '@/components/auth/LoginArea';
+import { NotificationItem } from '@/components/NotificationItem';
+import { useNotifications } from '@/hooks/useNotifications';
 import { Sidebar } from '@/components/Sidebar';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -23,7 +25,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap, Bell } from 'lucide-react';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -53,6 +55,7 @@ const Index = () => {
   const navigate = useNavigate();
   const unreadDMCount = useUnreadDMCount();
   const { shouldFilter } = useNSFWFilter();
+  const { data: notifications, isLoading: isLoadingNotifications } = useNotifications(50);
   
   const { 
     data: infiniteData, 
@@ -478,6 +481,52 @@ const Index = () => {
                   <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary -rotate-90 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
               </button>
+
+              {/* Notifications panel */}
+              {user && (
+                <Card className="border-border/50 dark:border-transparent overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
+                    <Bell className="h-4 w-4 text-primary" />
+                    <span className="font-semibold text-sm">Notifications</span>
+                    {notifications && notifications.length > 0 && (
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        {notifications.length}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="h-96 overflow-y-auto">
+                    {isLoadingNotifications ? (
+                      <div className="p-3 space-y-3">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="flex gap-3 items-start">
+                            <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                            <div className="space-y-1.5 flex-1">
+                              <Skeleton className="h-3 w-28" />
+                              <Skeleton className="h-3 w-full" />
+                              <Skeleton className="h-3 w-2/3" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : notifications && notifications.length > 0 ? (
+                      <div className="p-2 space-y-1.5">
+                        {notifications.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
+                        <Bell className="h-8 w-8 opacity-30" />
+                        <p className="text-sm">No notifications yet</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
             </div>
           </aside>
         </div>
