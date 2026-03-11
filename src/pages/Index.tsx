@@ -244,6 +244,13 @@ const Index = () => {
           <div className="md:hidden mt-4">
             <SearchBar onSearch={setSearchQuery} />
           </div>
+
+          {/* Compose - Mobile only (right sidebar is hidden on mobile) */}
+          {user && (
+            <div className="xl:hidden mt-4">
+              <ComposePost onPostPublished={handleRefresh} />
+            </div>
+          )}
         </div>
       </header>
 
