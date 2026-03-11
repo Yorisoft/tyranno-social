@@ -455,6 +455,29 @@ const Index = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Messages */}
+              <button
+                onClick={() => navigate('/messages')}
+                className="w-full group relative overflow-hidden rounded-xl border-2 border-primary/20 hover:border-primary/40 bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/50 dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-pink-950/20 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative p-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+                      <div className="relative p-2.5 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
+                        <MessageCircle className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors">Messages</p>
+                      <p className="text-xs text-muted-foreground">Private conversations</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary -rotate-90 group-hover:translate-x-1 transition-all duration-300" />
+                </div>
+              </button>
             </div>
           </aside>
         </div>
