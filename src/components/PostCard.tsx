@@ -20,7 +20,8 @@ import { ZapButton } from '@/components/ZapButton';
 import { BookmarkListsDialog } from '@/components/BookmarkListsDialog';
 import { ContentWarningWrapper } from '@/components/ContentWarningWrapper';
 import { nip19 } from 'nostr-tools';
-import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, VolumeX } from 'lucide-react';
+import { MessageCircle, Repeat2, Bookmark, MoreHorizontal, Copy, User, VolumeX, Pin, PinOff } from 'lucide-react';
+import { usePinnedPost } from '@/hooks/usePinnedPost';
 import { FollowButton } from '@/components/FollowButton';
 import { RepostDialog } from '@/components/RepostDialog';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export function PostCard({ event, onClick }: PostCardProps) {
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const { user } = useCurrentUser();
   const { mute, unmute, isMuted } = useMutedUsers();
+  const { pinnedEventId, pinPost, unpinPost } = usePinnedPost(user?.pubkey ?? '');
   
   const isRepost = event.kind === 6 || event.kind === 16;
   const { data: repostedEvent } = useRepostedEvent(event);
@@ -292,6 +294,29 @@ export function PostCard({ event, onClick }: PostCardProps) {
                 <User className="h-4 w-4" />
                 Copy User npub
               </DropdownMenuItem>
+              {/* Pin option — only for own posts */}
+              {user && user.pubkey === displayEvent.pubkey && (
+                <>
+                  <DropdownMenuSeparator />
+                  {pinnedEventId === displayEvent.id ? (
+                    <DropdownMenuItem
+                      onClick={() => unpinPost()}
+                      className="gap-2 cursor-pointer text-primary focus:text-primary focus:bg-primary/5"
+                    >
+                      <PinOff className="h-4 w-4" />
+                      Unpin from Profile
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => pinPost(displayEvent.id)}
+                      className="gap-2 cursor-pointer text-primary focus:text-primary focus:bg-primary/5"
+                    >
+                      <Pin className="h-4 w-4" />
+                      Pin to Profile
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
               <DropdownMenuSeparator />
               {isMuted(displayEvent.pubkey) ? (
                 <DropdownMenuItem
