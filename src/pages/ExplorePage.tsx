@@ -13,6 +13,8 @@ import { useTrendingHashtags } from '@/hooks/useTrendingHashtags';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { PostModal } from '@/components/PostModal';
+import { MasonryGrid } from '@/components/MasonryGrid';
+import { ColumnSelector } from '@/components/ColumnSelector';
 import { NoteContent } from '@/components/NoteContent';
 import { MediaContent } from '@/components/MediaContent';
 import { ContentWarningWrapper } from '@/components/ContentWarningWrapper';
@@ -142,6 +144,7 @@ type ExploreTab = 'hot' | 'trending';
 export function ExplorePage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useLocalStorage<ExploreTab>('explore-tab', 'hot');
+  const [columns, setColumns] = useLocalStorage<number>('explore-columns', 3);
   const [selectedPost, setSelectedPost] = useState<NostrEvent | null>(null);
 
   useSeoMeta({
@@ -182,7 +185,7 @@ export function ExplorePage() {
             <LoginArea className="max-w-48 hidden sm:flex" />
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExploreTab)}>
               <TabsList className="bg-background/50">
                 <TabsTrigger value="hot" className="gap-2 data-[state=active]:bg-orange-100 data-[state=active]:text-orange-700 dark:data-[state=active]:bg-orange-950/40 dark:data-[state=active]:text-orange-400">
@@ -195,17 +198,20 @@ export function ExplorePage() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            {activeTab === 'hot' && (
+              <ColumnSelector columns={columns} onColumnsChange={setColumns} />
+            )}
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-6 pb-24 lg:pb-8 max-w-4xl mx-auto">
+      <main className={`px-4 py-6 pb-24 lg:pb-8 ${activeTab === 'trending' ? 'max-w-4xl mx-auto' : ''}`}>
         {activeTab === 'hot' && (
           <div className="space-y-4">
             {isLoadingHot ? (
-              <div className="space-y-4">
-                {Array.from({ length: 6 }).map((_, i) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 9 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
                     <div className="p-4 space-y-3">
                       <div className="flex items-start gap-3">
@@ -237,14 +243,11 @@ export function ExplorePage() {
                   <Flame className="h-4 w-4 text-orange-500" />
                   <span>Top {hotPosts.length} posts by engagement in the last 48 hours</span>
                 </div>
-                {hotPosts.map((hp, i) => (
-                  <HotPostCard
-                    key={hp.event.id}
-                    hotPost={hp}
-                    rank={i + 1}
-                    onClick={setSelectedPost}
-                  />
-                ))}
+                <MasonryGrid
+                  posts={hotPosts.map((hp) => hp.event)}
+                  columns={columns}
+                  onPostClick={setSelectedPost}
+                />
               </div>
             )}
           </div>
