@@ -1,6 +1,10 @@
 /**
  * AppearancePanel — unified appearance settings with a live post preview.
  *
+ * Layout:
+ *   - Desktop (md+): Two-column. Controls on the left, sticky live preview on the right.
+ *   - Mobile: Full-width controls + floating "Preview" button that opens a bottom sheet.
+ *
  * Options surfaced:
  *   1. Dark / Light mode
  *   2. Theme color (hue picker + presets)
@@ -9,22 +13,23 @@
  *   5. Font family
  *   6. Font size
  *   7. Personalized wallpaper (delegates to PersonalizedThemeManager)
- *
- * A fake post preview updates live as every option changes.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PersonalizedThemeManager } from '@/components/PersonalizedThemeManager';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Slider } from '@/components/ui/slider';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   Select,
   SelectContent,
@@ -34,7 +39,7 @@ import {
 } from '@/components/ui/select';
 import {
   Moon, Sun, Palette, Type, Sparkles, MessageCircle,
-  Repeat2, Bookmark, Heart, Zap, ImageIcon,
+  Repeat2, Bookmark, Heart, Zap, ImageIcon, Eye,
 } from 'lucide-react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -131,7 +136,6 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
       {/* Header */}
       <div style={{ padding, borderBottom: `1px solid ${border}` }}>
         <div className="flex items-start gap-3">
-          {/* Avatar */}
           <div
             className="shrink-0 flex items-center justify-center text-white font-bold text-sm"
             style={{
@@ -174,7 +178,7 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
         <div
           className="w-full mb-3 flex items-center justify-center gap-2"
           style={{
-            height: 100,
+            height: 80,
             borderRadius,
             background: isDark ? `hsl(${hue}, 8%, 15%)` : `hsl(${hue}, 30%, 95%)`,
             color: muted,
@@ -182,7 +186,7 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
             border: `1px solid ${border}`,
           }}
         >
-          <ImageIcon size={16} />
+          <ImageIcon size={14} />
           <span>Image preview</span>
         </div>
 
@@ -242,12 +246,51 @@ function SectionLabel({ icon: Icon, label }: { icon: typeof Moon; label: string 
   );
 }
 
+// ─── Sticky Preview Panel (desktop) ──────────────────────────────────────────
+
+interface StickyPreviewProps {
+  hue: number;
+  radius: string;
+  density: string;
+  fontFamily: string;
+  fontSize: string;
+  isDark: boolean;
+}
+
+function StickyPreviewPanel({ hue, radius, density, fontFamily, fontSize, isDark }: StickyPreviewProps) {
+  return (
+    <div className="sticky top-24 space-y-3">
+      {/* Label */}
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse shadow-sm shadow-green-400/60" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Live Preview</span>
+      </div>
+
+      {/* Preview area */}
+      <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-muted/30 to-muted/10 p-4 shadow-inner">
+        <PreviewCard
+          hue={hue}
+          radius={radius}
+          density={density}
+          fontFamily={fontFamily}
+          fontSize={fontSize}
+          isDark={isDark}
+        />
+      </div>
+
+      <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-2">
+        Every change you make is reflected here instantly.
+      </p>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AppearancePanel() {
   const { theme, setTheme } = useTheme();
   const { config, updateConfig } = useAppContext();
-  const { user } = useCurrentUser();
+  const [previewSheetOpen, setPreviewSheetOpen] = useState(false);
 
   const isDark = theme === 'dark';
   const hasWallpaper = !!config.personalizedTheme;
@@ -304,26 +347,18 @@ export function AppearancePanel() {
     document.documentElement.style.fontSize = size.size;
   };
 
-  return (
-    <div className="space-y-8">
+  const previewProps: StickyPreviewProps = {
+    hue,
+    radius: currentRadius,
+    density: currentDensity,
+    fontFamily: previewFontFamily,
+    fontSize: previewFontSize,
+    isDark,
+  };
 
-      {/* ── Live Preview ── */}
-      <div className="space-y-3">
-        <SectionLabel icon={Sparkles} label="Live Preview" />
-        <p className="text-xs text-muted-foreground">This is exactly how your posts will appear in the feed.</p>
-        <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
-          <PreviewCard
-            hue={hue}
-            radius={currentRadius}
-            density={currentDensity}
-            fontFamily={previewFontFamily}
-            fontSize={previewFontSize}
-            isDark={isDark}
-          />
-        </div>
-      </div>
-
-      <Separator />
+  // ── Settings controls (shared between desktop + mobile) ─────────────────────
+  const settingsControls = (
+    <div className="space-y-7">
 
       {/* ── Dark Mode ── */}
       <div className="flex items-center justify-between">
@@ -532,12 +567,56 @@ export function AppearancePanel() {
               className="data-[state=checked]:bg-primary"
             />
           </div>
-          {hasWallpaper && <PersonalizedThemeManager />}
-          {!hasWallpaper && (
-            <PersonalizedThemeManager />
-          )}
+          <PersonalizedThemeManager />
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* ── Desktop: two-column layout ── */}
+      <div className="hidden md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
+        {/* Left column: all settings */}
+        <div>{settingsControls}</div>
+
+        {/* Right column: sticky live preview */}
+        <StickyPreviewPanel {...previewProps} />
+      </div>
+
+      {/* ── Mobile: single column + floating preview button ── */}
+      <div className="md:hidden">
+        {settingsControls}
+      </div>
+
+      {/* Floating "Preview" button — mobile only */}
+      <div className="fixed bottom-24 right-4 z-50 md:hidden">
+        <Sheet open={previewSheetOpen} onOpenChange={setPreviewSheetOpen}>
+          <SheetTrigger asChild>
+            <Button
+              size="sm"
+              className="h-12 w-12 rounded-full shadow-xl shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center p-0 border-2 border-background/50"
+              aria-label="Open live preview"
+            >
+              <Eye className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh] overflow-y-auto pb-8">
+            <SheetHeader className="mb-4">
+              <SheetTitle className="flex items-center gap-2 text-base">
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse shadow-sm shadow-green-400/60" />
+                Live Preview
+              </SheetTitle>
+            </SheetHeader>
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
+              <PreviewCard {...previewProps} />
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-3 px-4 leading-relaxed">
+              This updates live as you adjust your appearance settings.
+            </p>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }

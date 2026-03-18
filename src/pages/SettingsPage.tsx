@@ -122,7 +122,7 @@ export default function SettingsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-8 max-w-4xl mx-auto">
+      <main className="px-4 py-8 max-w-5xl mx-auto">
         <div className="space-y-6">
           {/* Account Section */}
           <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-purple-50/20 dark:from-card dark:to-card">
