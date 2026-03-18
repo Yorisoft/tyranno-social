@@ -68,6 +68,10 @@ export interface AppConfig {
   fontFamily?: string;
   /** Font size */
   fontSize?: string;
+  /** Card corner radius: 'none' | 'sm' | 'md' | 'lg' | 'xl' (default 'md') */
+  cardRadius?: string;
+  /** Post density: 'compact' | 'comfortable' | 'spacious' (default 'comfortable') */
+  postDensity?: string;
 }
 
 export interface AppContextType {

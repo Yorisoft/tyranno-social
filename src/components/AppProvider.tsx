@@ -63,6 +63,8 @@ const AppConfigSchema = z.object({
   personalizedTheme: PersonalizedThemeSchema.optional(),
   fontFamily: z.string().optional(),
   fontSize: z.string().optional(),
+  cardRadius: z.string().optional(),
+  postDensity: z.string().optional(),
 }) satisfies z.ZodType<AppConfig>;
 
 export function AppProvider(props: AppProviderProps) {
@@ -102,6 +104,9 @@ export function AppProvider(props: AppProviderProps) {
 
   // Apply font settings to document
   useApplyFontSettings(config.fontFamily, config.fontSize);
+
+  // Apply card radius + density
+  useApplyAppearanceSettings(config.cardRadius, config.postDensity);
 
   // Apply personalized theme if configured
   useEffect(() => {
@@ -176,4 +181,35 @@ function useApplyFontSettings(fontFamily?: string, fontSize?: string) {
       root.style.fontSize = fontSize;
     }
   }, [fontFamily, fontSize]);
+}
+
+const RADIUS_MAP: Record<string, string> = {
+  none: '0px',
+  sm: '0.25rem',
+  md: '0.5rem',
+  lg: '0.75rem',
+  xl: '1.5rem',
+};
+
+const DENSITY_MAP: Record<string, string> = {
+  compact: '0.5rem',
+  comfortable: '1rem',
+  spacious: '1.75rem',
+};
+
+/**
+ * Hook to apply card radius + density CSS variables
+ */
+function useApplyAppearanceSettings(cardRadius?: string, postDensity?: string) {
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const radius = RADIUS_MAP[cardRadius ?? 'md'] ?? RADIUS_MAP.md;
+    root.style.setProperty('--radius', radius);
+  }, [cardRadius]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const padding = DENSITY_MAP[postDensity ?? 'comfortable'] ?? DENSITY_MAP.comfortable;
+    root.style.setProperty('--card-padding', padding);
+  }, [postDensity]);
 }
