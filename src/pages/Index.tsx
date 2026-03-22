@@ -9,6 +9,7 @@ import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useRelayFirehose } from '@/hooks/useRelayFirehose';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { PhotoGalleryGrid } from '@/components/PhotoGalleryGrid';
+import { VideoGalleryGrid } from '@/components/VideoGalleryGrid';
 import { PostModal } from '@/components/PostModal';
 import { ComposePost } from '@/components/ComposePost';
 import { SearchBar } from '@/components/SearchBar';
@@ -533,6 +534,8 @@ const Index = () => {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                   {selectedCategory === 'photos' && !selectedRelay && !isMutualFeed && !isConversationsFeed ? (
                     <PhotoGalleryGrid posts={posts} onPostClick={setSelectedPost} />
+                  ) : selectedCategory === 'videos' && !selectedRelay && !isMutualFeed && !isConversationsFeed ? (
+                    <VideoGalleryGrid posts={posts} onPostClick={setSelectedPost} />
                   ) : (
                     <MasonryGrid posts={posts} columns={columns} onPostClick={setSelectedPost} />
                   )}
