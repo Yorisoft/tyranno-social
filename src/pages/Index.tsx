@@ -645,7 +645,12 @@ const Index = () => {
                 <Card className="border-border/50 dark:border-transparent overflow-hidden">
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
                     <Bell className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-sm">Notifications</span>
+                    <button
+                      onClick={() => navigate('/notifications')}
+                      className="font-semibold text-sm hover:text-primary transition-colors"
+                    >
+                      Notifications
+                    </button>
                     {notifications && notifications.length > 0 && (
                       <Badge variant="secondary" className="ml-auto text-xs">
                         {notifications.length}

@@ -51,7 +51,6 @@ import {
   ShieldAlert,
   UserCheck,
   Flame,
-  Bell,
 } from 'lucide-react';
 import {
   Sheet,
@@ -202,13 +201,6 @@ export function Sidebar({ selectedCategory, onCategoryChange, onCircleSelect, se
             >
               <Flame className="h-4 w-4 text-orange-500 group-hover:text-orange-500" />
               Explore / What's Hot
-            </button>
-            <button
-              className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-primary/5 hover:text-primary transition-colors text-sm font-medium group"
-              onClick={() => navigate('/notifications')}
-            >
-              <Bell className="h-4 w-4 text-primary group-hover:text-primary" />
-              Notifications
             </button>
             <button
               className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-primary/5 hover:text-primary transition-colors text-sm font-medium group"
