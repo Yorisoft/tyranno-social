@@ -169,16 +169,11 @@ const Index = () => {
     refetch();
   };
 
-  // Gallery modes (photos/videos) don't auto-scroll — they show a manual Load More
-  const isGalleryMode =
-    (selectedCategory === 'photos' || selectedCategory === 'videos') &&
-    !selectedRelay && !isMutualFeed && !isConversationsFeed;
-
-  // Intersection observer for infinite scroll (disabled in gallery modes)
+  // Intersection observer for infinite scroll
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loadMoreRef.current || searchQuery.trim() || isGalleryMode) return;
+    if (!loadMoreRef.current || searchQuery.trim()) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -188,14 +183,14 @@ const Index = () => {
       },
       { 
         threshold: 0.1,
-        rootMargin: '400px',
+        rootMargin: '400px' // Load more posts 400px before reaching the trigger
       }
     );
 
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, searchQuery, isGalleryMode]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, searchQuery]);
 
   const categoryIcons: Record<FeedCategory, typeof FileText> = {
     following: Users,
@@ -546,7 +541,7 @@ const Index = () => {
                   )}
                 </div>
 
-                {/* Load more / infinite scroll trigger */}
+                {/* Infinite scroll trigger and loading indicator */}
                 {!searchQuery && (
                   <div ref={loadMoreRef} className="py-8 flex justify-center">
                     {isFetchingNextPage ? (
@@ -555,9 +550,8 @@ const Index = () => {
                         <span>Loading more posts...</span>
                       </div>
                     ) : hasNextPage ? (
-                      /* Gallery modes always show a button; list modes auto-trigger via observer */
-                      <Button
-                        variant="outline"
+                      <Button 
+                        variant="outline" 
                         onClick={() => fetchNextPage()}
                         className="gap-2"
                       >
