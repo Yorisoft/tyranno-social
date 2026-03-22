@@ -232,11 +232,11 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              <div>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground">
                   Tyrannosocial
                 </h1>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Sparkles className="h-3 w-3" />
                     Powered by Nostr
