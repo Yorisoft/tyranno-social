@@ -8,6 +8,7 @@ import { useInfiniteConversationsFeed } from '@/hooks/useInfiniteConversationsFe
 import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useRelayFirehose } from '@/hooks/useRelayFirehose';
 import { MasonryGrid } from '@/components/MasonryGrid';
+import { PhotoGalleryGrid } from '@/components/PhotoGalleryGrid';
 import { PostModal } from '@/components/PostModal';
 import { ComposePost } from '@/components/ComposePost';
 import { SearchBar } from '@/components/SearchBar';
@@ -530,7 +531,11 @@ const Index = () => {
             ) : posts && posts.length > 0 ? (
               <>
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                   <MasonryGrid posts={posts} columns={columns} onPostClick={setSelectedPost} />
+                  {selectedCategory === 'photos' && !selectedRelay && !isMutualFeed && !isConversationsFeed ? (
+                    <PhotoGalleryGrid posts={posts} onPostClick={setSelectedPost} />
+                  ) : (
+                    <MasonryGrid posts={posts} columns={columns} onPostClick={setSelectedPost} />
+                  )}
                 </div>
 
                 {/* Infinite scroll trigger and loading indicator */}
