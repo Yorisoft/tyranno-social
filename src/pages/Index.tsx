@@ -2,9 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { type FeedCategory } from '@/hooks/usePosts';
 import { useInfinitePosts } from '@/hooks/useInfinitePosts';
+import { useInfiniteMutualFollowsPosts } from '@/hooks/useInfiniteMutualFollowsPosts';
+import { useMutualFollows } from '@/hooks/useMutualFollows';
+import { useInfiniteConversationsFeed } from '@/hooks/useInfiniteConversationsFeed';
 import { useSearchPosts } from '@/hooks/useSearchPosts';
 import { useRelayFirehose } from '@/hooks/useRelayFirehose';
 import { MasonryGrid } from '@/components/MasonryGrid';
+import { PhotoGalleryGrid } from '@/components/PhotoGalleryGrid';
+import { VideoGalleryGrid } from '@/components/VideoGalleryGrid';
 import { PostModal } from '@/components/PostModal';
 import { ComposePost } from '@/components/ComposePost';
 import { SearchBar } from '@/components/SearchBar';
@@ -18,6 +23,7 @@ import { ColumnSelector } from '@/components/ColumnSelector';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { InstallPWA } from '@/components/InstallPWA';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { MobileComposeFAB } from '@/components/MobileComposeFAB';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useUnreadDMCount } from '@/hooks/useUnreadDMCount';
@@ -27,7 +33,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sparkles, FileText, Image, Music, Video, Users, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap, Bell, Edit, CircleDot, X as XIcon } from 'lucide-react';
+import { Sparkles, FileText, Image, Music, Video, Users, UserCheck, MessagesSquare, Loader2, ChevronDown, Wifi, MessageCircle, ShieldCheck, AlertTriangle, RefreshCw, Zap, Bell, Edit, CircleDot, X as XIcon } from 'lucide-react';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { WalletBalance } from '@/components/WalletBalance';
 import { useAppContext } from '@/hooks/useAppContext';
@@ -50,6 +56,8 @@ const Index = () => {
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRelay, setSelectedRelay] = useState<string | null>(null);
+  const [isMutualFeed, setIsMutualFeed] = useState(false);
+  const [isConversationsFeed, setIsConversationsFeed] = useState(false);
   const [nsfwInfoOpen, setNsfwInfoOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [selectedCircleDTag, setSelectedCircleDTag] = useState<string | null>(null);
@@ -98,6 +106,13 @@ const Index = () => {
     refetch: refetchFeed,
     isRefetching: isRefetchingFeed
   } = useInfinitePosts(selectedCategory);
+
+  // Mutual follows feed
+  const { data: mutualFollowsData, isLoading: isLoadingMutualFeed, fetchNextPage: fetchNextMutualPage, hasNextPage: hasNextMutualPage, isFetchingNextPage: isFetchingNextMutualPage, refetch: refetchMutual, isRefetching: isRefetchingMutual } = useInfiniteMutualFollowsPosts();
+  const { data: mutualFollowsPubkeys = [] } = useMutualFollows();
+
+  // Conversations feed
+  const { data: conversationsData, isLoading: isLoadingConversations, fetchNextPage: fetchNextConversationsPage, hasNextPage: hasNextConversationsPage, isFetchingNextPage: isFetchingNextConversationsPage, refetch: refetchConversations, isRefetching: isRefetchingConversations } = useInfiniteConversationsFeed();
   
   const { 
     data: relayData, 
@@ -114,13 +129,19 @@ const Index = () => {
   // Flatten infinite query pages
   const feedPosts = infiniteData?.pages.flat() ?? [];
   const relayPosts = relayData?.pages.flat() ?? [];
+  const mutualPosts = mutualFollowsData?.pages.flat() ?? [];
+  const conversationPosts = conversationsData?.pages.flat() ?? [];
 
-  // Use search results if searching, relay posts if relay selected, otherwise use feed
+  // Use search results if searching, relay posts if relay selected, special feeds if active, otherwise use main feed
   const rawPosts = searchQuery.trim() 
     ? searchPosts 
     : selectedRelay 
       ? relayPosts 
-      : feedPosts;
+      : isMutualFeed
+        ? mutualPosts
+        : isConversationsFeed
+          ? conversationPosts
+          : feedPosts;
 
   // Filter out muted users, then optionally filter by selected circle
   const posts = rawPosts
@@ -132,13 +153,17 @@ const Index = () => {
     ? isLoadingSearch 
     : selectedRelay 
       ? isLoadingRelay 
-      : isLoadingFeed;
+      : isMutualFeed
+        ? isLoadingMutualFeed
+        : isConversationsFeed
+          ? isLoadingConversations
+          : isLoadingFeed;
 
-  const fetchNextPage = selectedRelay ? fetchNextRelayPage : fetchNextFeedPage;
-  const hasNextPage = selectedRelay ? hasNextRelayPage : hasNextFeedPage;
-  const isFetchingNextPage = selectedRelay ? isFetchingNextRelayPage : isFetchingNextFeedPage;
-  const refetch = selectedRelay ? refetchRelay : refetchFeed;
-  const isRefetching = selectedRelay ? isRefetchingRelay : isRefetchingFeed;
+  const fetchNextPage = selectedRelay ? fetchNextRelayPage : isMutualFeed ? fetchNextMutualPage : isConversationsFeed ? fetchNextConversationsPage : fetchNextFeedPage;
+  const hasNextPage = selectedRelay ? hasNextRelayPage : isMutualFeed ? hasNextMutualPage : isConversationsFeed ? hasNextConversationsPage : hasNextFeedPage;
+  const isFetchingNextPage = selectedRelay ? isFetchingNextRelayPage : isMutualFeed ? isFetchingNextMutualPage : isConversationsFeed ? isFetchingNextConversationsPage : isFetchingNextFeedPage;
+  const refetch = selectedRelay ? refetchRelay : isMutualFeed ? refetchMutual : isConversationsFeed ? refetchConversations : refetchFeed;
+  const isRefetching = selectedRelay ? isRefetchingRelay : isMutualFeed ? isRefetchingMutual : isConversationsFeed ? isRefetchingConversations : isRefetchingFeed;
 
   const handleRefresh = () => {
     refetch();
@@ -220,11 +245,11 @@ const Index = () => {
                   />
                 </div>
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              <div>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground">
                   Tyrannosocial
                 </h1>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Sparkles className="h-3 w-3" />
                     Powered by Nostr
@@ -282,7 +307,7 @@ const Index = () => {
           {/* Sidebar */}
           <Sidebar
             selectedCategory={selectedCategory}
-            onCategoryChange={(cat) => { setSelectedCategory(cat); setSelectedCircleDTag(null); setSelectedCirclePubkeys(null); setSelectedCircleLabel(null); }}
+            onCategoryChange={(cat) => { setSelectedCategory(cat); setSelectedCircleDTag(null); setSelectedCirclePubkeys(null); setSelectedCircleLabel(null); setIsMutualFeed(false); setIsConversationsFeed(false); setSelectedRelay(null); }}
             onCircleSelect={(pubkeys, label) => {
               if (pubkeys === null) {
                 setSelectedCircleDTag(null);
@@ -317,12 +342,22 @@ const Index = () => {
                   </Badge>
                 )}
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="sm" className="gap-2 bg-gradient-to-r from-primary/10 to-orange-100/50 text-primary border-primary/20 dark:from-primary/20 dark:to-primary/10">
                       {selectedRelay ? (
                         <>
                           <Wifi className="h-4 w-4" />
                           {selectedRelay.replace('wss://', '').split('/')[0]}
+                        </>
+                      ) : isMutualFeed ? (
+                        <>
+                          <UserCheck className="h-4 w-4" />
+                          Mutual Follows
+                        </>
+                      ) : isConversationsFeed ? (
+                        <>
+                          <MessagesSquare className="h-4 w-4" />
+                          Conversations
                         </>
                       ) : (
                         <>
@@ -337,12 +372,48 @@ const Index = () => {
                     <DropdownMenuItem
                       onClick={() => {
                         setSelectedRelay(null);
+                        setIsMutualFeed(false);
+                        setIsConversationsFeed(false);
                       }}
-                      className={`cursor-pointer ${!selectedRelay ? 'bg-accent' : ''}`}
+                      className={`cursor-pointer ${!selectedRelay && !isMutualFeed && !isConversationsFeed ? 'bg-accent' : ''}`}
                     >
                       <Users className="h-4 w-4 mr-2" />
                       My Feed (Following)
                     </DropdownMenuItem>
+                    {user && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedRelay(null);
+                          setIsMutualFeed(true);
+                          setIsConversationsFeed(false);
+                        }}
+                        className={`cursor-pointer ${isMutualFeed ? 'bg-accent' : ''}`}
+                      >
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        <div className="flex flex-col">
+                          <span>Mutual Follows</span>
+                          {mutualFollowsPubkeys.length > 0 && (
+                            <span className="text-[10px] text-muted-foreground">{mutualFollowsPubkeys.length} mutual{mutualFollowsPubkeys.length !== 1 ? 's' : ''}</span>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    )}
+                    {user && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedRelay(null);
+                          setIsMutualFeed(false);
+                          setIsConversationsFeed(true);
+                        }}
+                        className={`cursor-pointer ${isConversationsFeed ? 'bg-accent' : ''}`}
+                      >
+                        <MessagesSquare className="h-4 w-4 mr-2" />
+                        <div className="flex flex-col">
+                          <span>Conversations</span>
+                          <span className="text-[10px] text-muted-foreground">Replies your follows are writing</span>
+                        </div>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                       Relay Firehose
@@ -352,6 +423,8 @@ const Index = () => {
                         key={relay.url}
                         onClick={() => {
                           setSelectedRelay(relay.url);
+                          setIsMutualFeed(false);
+                          setIsConversationsFeed(false);
                         }}
                         className={`cursor-pointer ${selectedRelay === relay.url ? 'bg-accent' : ''}`}
                       >
@@ -459,7 +532,13 @@ const Index = () => {
             ) : posts && posts.length > 0 ? (
               <>
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                   <MasonryGrid posts={posts} columns={columns} onPostClick={setSelectedPost} />
+                  {selectedCategory === 'photos' && !selectedRelay && !isMutualFeed && !isConversationsFeed ? (
+                    <PhotoGalleryGrid posts={posts} onPostClick={setSelectedPost} />
+                  ) : selectedCategory === 'videos' && !selectedRelay && !isMutualFeed && !isConversationsFeed ? (
+                    <VideoGalleryGrid posts={posts} onPostClick={setSelectedPost} />
+                  ) : (
+                    <MasonryGrid posts={posts} columns={columns} onPostClick={setSelectedPost} />
+                  )}
                 </div>
 
                 {/* Infinite scroll trigger and loading indicator */}
@@ -489,10 +568,32 @@ const Index = () => {
             ) : (
               <Card className="border-dashed">
                 <CardContent className="py-12 px-8 text-center">
-                  <div className="max-w-sm mx-auto space-y-6">
-                    <p className="text-muted-foreground">
-                      No posts found. Check your relay connections or wait a moment for content to load.
-                    </p>
+                  <div className="max-w-sm mx-auto space-y-4">
+                    {isMutualFeed ? (
+                      <>
+                        <div className="inline-flex p-4 rounded-full bg-primary/10 mb-2">
+                          <UserCheck className="h-8 w-8 text-primary" />
+                        </div>
+                        <p className="font-semibold text-foreground">No mutual follows found</p>
+                        <p className="text-sm text-muted-foreground">
+                          This feed shows posts from people who follow you back. Follow more people and wait for them to follow you back!
+                        </p>
+                      </>
+                    ) : isConversationsFeed ? (
+                      <>
+                        <div className="inline-flex p-4 rounded-full bg-primary/10 mb-2">
+                          <MessagesSquare className="h-8 w-8 text-primary" />
+                        </div>
+                        <p className="font-semibold text-foreground">No conversations yet</p>
+                        <p className="text-sm text-muted-foreground">
+                          This feed shows replies your follows are writing. Check back soon or follow more people to see more conversations!
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        No posts found. Check your relay connections or wait a moment for content to load.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -552,7 +653,12 @@ const Index = () => {
                 <Card className="border-border/50 dark:border-transparent overflow-hidden">
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
                     <Bell className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-sm">Notifications</span>
+                    <button
+                      onClick={() => navigate('/notifications')}
+                      className="font-semibold text-sm hover:text-primary transition-colors"
+                    >
+                      Notifications
+                    </button>
                     {notifications && notifications.length > 0 && (
                       <Badge variant="secondary" className="ml-auto text-xs">
                         {notifications.length}
@@ -611,6 +717,9 @@ const Index = () => {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Mobile Floating Compose Button */}
+      <MobileComposeFAB onPostPublished={handleRefresh} />
 
       {/* Edit Profile Dialog */}
       <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>

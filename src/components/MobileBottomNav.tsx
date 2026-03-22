@@ -5,7 +5,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Home, Bell, Settings, PenSquare, MessageCircle, Flame, Users } from 'lucide-react';
+import { Home, Bell, Settings, MessageCircle, Flame } from 'lucide-react';
 
 export function MobileBottomNav() {
   const { user } = useCurrentUser();
@@ -63,21 +63,15 @@ export function MobileBottomNav() {
           <span className="text-[10px] font-medium">Messages</span>
         </Button>
 
-        {/* Compose — prominent centre button */}
+        {/* Explore */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/compose')}
-          className={`relative ${btnClass('/compose')}`}
+          onClick={() => navigate('/explore')}
+          className={btnClass('/explore')}
         >
-          <div className={`p-1.5 rounded-full transition-colors ${
-            isActive('/compose')
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-primary/10 text-primary group-hover:bg-primary/20'
-          }`}>
-            <PenSquare className="h-5 w-5" />
-          </div>
-          <span className="text-[10px] font-medium">Compose</span>
+          <Flame className="h-5 w-5 text-orange-500" />
+          <span className="text-[10px] font-medium">Explore</span>
         </Button>
 
         {/* Notifications */}
@@ -94,17 +88,6 @@ export function MobileBottomNav() {
             </Badge>
           )}
           <span className="text-[10px] font-medium">Alerts</span>
-        </Button>
-
-        {/* Explore */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/explore')}
-          className={btnClass('/explore')}
-        >
-          <Flame className="h-5 w-5 text-orange-500" />
-          <span className="text-[10px] font-medium">Explore</span>
         </Button>
 
         {/* Settings */}

@@ -40,6 +40,15 @@ export function NoteContent({
     return null;
   }, [event.content]);
 
+  // If content is a stringified Nostr event (has a `content` string field),
+  // derive the inner text now so we can use it later without breaking hook order.
+  const innerContent = useMemo<string | null>(() => {
+    if (jsonData && typeof jsonData.content === 'string') {
+      return jsonData.content;
+    }
+    return null;
+  }, [jsonData]);
+
   // Check if content is mostly hexadecimal hash data
   const isHashData = useMemo(() => {
     const cleaned = event.content.replace(/\s+/g, '');
@@ -285,6 +294,22 @@ export function NoteContent({
   }, [event.content, mentionedPubkeys, mediaUrls, showHiddenLinks]);
 
   const { content, hiddenLinkCount } = processedContent;
+
+  // After all hooks: if content was a stringified Nostr event, render the
+  // extracted inner content string instead (all hooks have already run safely).
+  if (innerContent !== null) {
+    return (
+      <NoteContent
+        event={{ ...event, content: innerContent }}
+        className={className}
+      />
+    );
+  }
+
+  // If content is unrecognised JSON with no extractable text, hide it.
+  if (jsonData) {
+    return null;
+  }
 
   return (
     <div className={cn("whitespace-pre-wrap break-words", className)}>

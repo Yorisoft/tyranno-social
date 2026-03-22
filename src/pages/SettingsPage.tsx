@@ -15,25 +15,18 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RelayListManager } from '@/components/RelayListManager';
 import { TopicFilterManager } from '@/components/TopicFilterManager';
-import { PersonalizedThemeManager } from '@/components/PersonalizedThemeManager';
+import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 import { LoginArea } from '@/components/auth/LoginArea';
 import LoginDialog from '@/components/auth/LoginDialog';
-import { ColorThemeSelector } from '@/components/ColorThemeSelector';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
+
 import {
   Moon,
   Sun,
   Wifi,
   AlertTriangle,
   ArrowLeft,
-  Type,
   Sparkles,
   User,
   Check,
@@ -43,7 +36,6 @@ import {
   UserPlus,
   LogOut,
   Filter,
-  Palette,
   Database,
   ChevronRight,
   ChevronDown,
@@ -52,28 +44,7 @@ import { useSeoMeta } from '@unhead/react';
 import { nip19 } from 'nostr-tools';
 import type { NostrMetadata } from '@nostrify/nostrify';
 
-const fontOptions = [
-  { value: 'inter', label: 'Inter (Default)', family: 'Inter Variable, Inter, system-ui, sans-serif' },
-  { value: 'system', label: 'System', family: 'system-ui, -apple-system, sans-serif' },
-  { value: 'serif', label: 'Serif', family: 'Georgia, serif' },
-  { value: 'mono', label: 'Monospace', family: 'ui-monospace, monospace' },
-  { value: 'caveat', label: 'Caveat (Handwriting)', family: 'Caveat, cursive' },
-  { value: 'dancing-script', label: 'Dancing Script (Elegant)', family: 'Dancing Script, cursive' },
-  { value: 'pacifico', label: 'Pacifico (Playful)', family: 'Pacifico, cursive' },
-  { value: 'kalam', label: 'Kalam (Casual)', family: 'Kalam, cursive' },
-  { value: 'indie-flower', label: 'Indie Flower (Quirky)', family: 'Indie Flower, cursive' },
-  { value: 'permanent-marker', label: 'Permanent Marker (Bold)', family: 'Permanent Marker, cursive' },
-  { value: 'patrick-hand-sc', label: 'Patrick Hand SC (Comic)', family: 'Patrick Hand SC, cursive' },
-];
 
-const fontSizes = [
-  { value: 'xs', label: 'Extra Small', size: '12px' },
-  { value: 'sm', label: 'Small', size: '14px' },
-  { value: 'base', label: 'Medium (Default)', size: '16px' },
-  { value: 'lg', label: 'Large', size: '18px' },
-  { value: 'xl', label: 'Extra Large', size: '20px' },
-  { value: '2xl', label: 'Huge', size: '24px' },
-];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -84,7 +55,6 @@ export default function SettingsPage() {
   const [relaysExpanded, setRelaysExpanded] = useState(false);
   const [topicFilterExpanded, setTopicFilterExpanded] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const [showPersonalizedUploader, setShowPersonalizedUploader] = useState(false);
   const [backupExpanded, setBackupExpanded] = useState(false);
 
   // Get metadata for current user (only if user exists)
@@ -97,11 +67,6 @@ export default function SettingsPage() {
   });
 
   const isDark = theme === 'dark';
-  const hasPersonalizedTheme = !!config.personalizedTheme;
-
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
 
   const toggleContentWarnings = () => {
     updateConfig((current) => ({
@@ -109,56 +74,6 @@ export default function SettingsPage() {
       showContentWarnings: !config.showContentWarnings,
     }));
   };
-
-  const togglePersonalizedMode = (checked: boolean) => {
-    if (checked) {
-      // Show the uploader
-      setShowPersonalizedUploader(true);
-    } else {
-      // Remove personalized theme
-      updateConfig((current) => {
-        const newConfig = { ...current };
-        delete newConfig.personalizedTheme;
-        return newConfig;
-      });
-      
-      // Remove wallpaper from DOM
-      const root = document.documentElement;
-      root.classList.remove('personalized-theme');
-      root.style.removeProperty('--wallpaper-url');
-      
-      // Hide uploader
-      setShowPersonalizedUploader(false);
-    }
-  };
-
-  const handleFontChange = (fontValue: string) => {
-    const font = fontOptions.find(f => f.value === fontValue);
-    if (font) {
-      updateConfig((current) => ({
-        ...current,
-        fontFamily: font.family,
-      }));
-      // Apply to document
-      document.documentElement.style.fontFamily = font.family;
-    }
-  };
-
-  const handleFontSizeChange = (sizeValue: string) => {
-    const size = fontSizes.find(s => s.value === sizeValue);
-    if (size) {
-      updateConfig((current) => ({
-        ...current,
-        fontSize: size.size,
-      }));
-      // Apply to document
-      document.documentElement.style.fontSize = size.size;
-    }
-  };
-
-  // Get current font and size
-  const currentFont = fontOptions.find(f => f.family === config.fontFamily)?.value || 'inter';
-  const currentSize = fontSizes.find(s => s.size === config.fontSize)?.value || 'base';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-rose-50/30 to-pink-50/40 dark:from-background dark:via-background dark:to-primary/5">
@@ -207,7 +122,7 @@ export default function SettingsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-8 max-w-4xl mx-auto">
+      <main className="px-4 py-8 max-w-5xl mx-auto">
         <div className="space-y-6">
           {/* Account Section */}
           <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-purple-50/20 dark:from-card dark:to-card">
@@ -377,147 +292,11 @@ export default function SettingsPage() {
                 Appearance
               </CardTitle>
               <CardDescription>
-                Customize the look and feel of your interface
+                Customize the look and feel of your interface — changes are live
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Personalized Mode Toggle */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="personalized-toggle" className="cursor-pointer font-medium flex items-center gap-2">
-                    <Palette className="h-4 w-4 text-primary" />
-                    Personalized
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Use a custom wallpaper with auto-generated colors
-                  </p>
-                </div>
-                <Switch
-                  id="personalized-toggle"
-                  checked={hasPersonalizedTheme}
-                  onCheckedChange={togglePersonalizedMode}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </div>
-
-              {/* Personalized Theme Manager - show when enabled OR when user toggled it on */}
-              {(hasPersonalizedTheme || showPersonalizedUploader) && (
-                <>
-                  <PersonalizedThemeManager />
-                  <Separator />
-                </>
-              )}
-
-              {/* Theme Toggle - disabled when personalized */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="theme-toggle" 
-                    className={`cursor-pointer font-medium ${hasPersonalizedTheme ? 'opacity-50' : ''}`}
-                  >
-                    Dark Mode
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {hasPersonalizedTheme 
-                      ? 'Disabled in personalized mode' 
-                      : 'Switch between light and dark themes'
-                    }
-                  </p>
-                </div>
-                <Switch
-                  id="theme-toggle"
-                  checked={isDark}
-                  onCheckedChange={toggleTheme}
-                  disabled={hasPersonalizedTheme}
-                  className="data-[state=checked]:bg-primary"
-                />
-              </div>
-
-              <Separator />
-
-              {/* Theme Colors - disabled when personalized */}
-              <div className="space-y-2">
-                <Label className={`flex items-center gap-2 ${hasPersonalizedTheme ? 'opacity-50' : ''}`}>
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Theme Colors
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {hasPersonalizedTheme
-                    ? 'Colors are auto-generated from your wallpaper'
-                    : 'Customize the color scheme of the app'
-                  }
-                </p>
-                {hasPersonalizedTheme ? (
-                  <div className="flex gap-2 p-3 rounded-md border bg-muted/20">
-                    <div
-                      className="h-8 w-8 rounded-md border-2 border-border"
-                      style={{ backgroundColor: config.personalizedTheme!.primaryColor }}
-                    />
-                    <div
-                      className="h-8 w-8 rounded-md border-2 border-border"
-                      style={{ backgroundColor: config.personalizedTheme!.secondaryColor }}
-                    />
-                    <div
-                      className="h-8 w-8 rounded-md border-2 border-border"
-                      style={{ backgroundColor: config.personalizedTheme!.accentColor }}
-                    />
-                  </div>
-                ) : (
-                  <ColorThemeSelector />
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Font Family */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Type className="h-4 w-4 text-primary" />
-                  Font Type
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Choose your preferred font family
-                </p>
-                <Select value={currentFont} onValueChange={handleFontChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontOptions.map((font) => (
-                      <SelectItem key={font.value} value={font.value}>
-                        <span style={{ fontFamily: font.family }}>
-                          {font.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              {/* Font Size */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Type className="h-4 w-4 text-primary" />
-                  Font Size
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Adjust the base text size
-                </p>
-                <Select value={currentSize} onValueChange={handleFontSizeChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontSizes.map((size) => (
-                      <SelectItem key={size.value} value={size.value}>
-                        {size.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <CardContent>
+              <AppearancePanel />
             </CardContent>
           </Card>
 
