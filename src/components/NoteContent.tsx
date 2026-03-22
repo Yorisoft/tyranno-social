@@ -95,6 +95,27 @@ export function NoteContent({
     );
   }
 
+  // If content parsed as JSON but didn't match any known card type, it may be
+  // a stringified Nostr event (e.g. a kind-1 whose content field is a raw event
+  // JSON). Extract the inner `content` string and render that instead so users
+  // don't see a wall of raw JSON.
+  if (jsonData && typeof jsonData.content === 'string') {
+    // Render a synthetic event with the extracted content so all the normal
+    // link/hashtag/mention processing still runs below.
+    return (
+      <NoteContent
+        event={{ ...event, content: jsonData.content }}
+        className={className}
+      />
+    );
+  }
+
+  // If content is JSON but has no `content` field we can extract, just hide it
+  // (it's structured data we don't know how to display).
+  if (jsonData) {
+    return null;
+  }
+
   // Get mentioned pubkeys from p tags for replacements
   const mentionedPubkeys = useMemo(() => {
     return event.tags
