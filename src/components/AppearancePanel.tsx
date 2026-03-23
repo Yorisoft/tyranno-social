@@ -559,9 +559,7 @@ export function AppearancePanel() {
               onCheckedChange={(checked) => {
                 if (!checked) {
                   updateConfig(c => { const n = { ...c }; delete n.personalizedTheme; return n; });
-                  const root = document.documentElement;
-                  root.classList.remove('personalized-theme');
-                  root.style.removeProperty('--wallpaper-url');
+                  setTimeout(() => window.location.reload(), 100);
                 }
               }}
               className="data-[state=checked]:bg-primary"

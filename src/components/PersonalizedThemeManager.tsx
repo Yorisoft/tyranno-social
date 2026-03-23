@@ -210,7 +210,8 @@ export function PersonalizedThemeManager() {
               wallpaperPosition,
             },
           }));
-          toast({ title: 'Wallpaper uploaded!', description: 'Your personalized theme has been applied.' });
+          toast({ title: 'Wallpaper uploaded!', description: 'Applying your personalized theme…' });
+          setTimeout(() => window.location.reload(), 800);
         } catch {
           toast({ title: 'Failed to upload wallpaper', description: 'There was an error processing the file. Please try again.', variant: 'destructive' });
         } finally {
@@ -232,7 +233,8 @@ export function PersonalizedThemeManager() {
   const handleRemoveWallpaper = () => {
     updateConfig((current) => { const n = { ...current }; delete n.personalizedTheme; return n; });
     removePersonalizedTheme();
-    toast({ title: 'Wallpaper removed', description: 'Your personalized theme has been removed.' });
+    toast({ title: 'Wallpaper removed', description: 'Restoring default theme…' });
+    setTimeout(() => window.location.reload(), 800);
   };
 
   const handleOpacityChange = (value: number[]) => {
