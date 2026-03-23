@@ -129,11 +129,6 @@ function useApplyTheme(theme: Theme, personalizedTheme?: PersonalizedTheme) {
   useEffect(() => {
     const root = window.document.documentElement;
 
-    // If personalized theme is active, don't apply theme class
-    if (personalizedTheme) {
-      return;
-    }
-
     root.classList.remove('light', 'dark');
 
     if (theme === 'system') {
@@ -151,7 +146,7 @@ function useApplyTheme(theme: Theme, personalizedTheme?: PersonalizedTheme) {
 
   // Handle system theme changes when theme is set to "system"
   useEffect(() => {
-    if (theme !== 'system' || personalizedTheme) return;
+    if (theme !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -165,7 +160,7 @@ function useApplyTheme(theme: Theme, personalizedTheme?: PersonalizedTheme) {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme, personalizedTheme]);
+  }, [theme]);
 }
 
 /**
