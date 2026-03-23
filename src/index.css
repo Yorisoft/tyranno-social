@@ -182,6 +182,38 @@
     --wallpaper-position: 50% 50%;
   }
 
+  /*
+   * In light mode with a wallpaper the default light CSS variables produce
+   * near-white semi-transparent cards on top of the (usually dark) wallpaper,
+   * making text unreadable. Override the critical color tokens to dark-style
+   * values so cards are always legible over any wallpaper.
+   *
+   * The wallpaper itself supplies the "brightness" — the cards just need to
+   * contrast against it, so we always use dark card backgrounds + light text.
+   */
+  .personalized-theme.light,
+  .personalized-theme:not(.dark) {
+    --background:          0 12% 10%;
+    --foreground:          0 0% 96%;
+    --card:                0 10% 12%;
+    --card-foreground:     0 0% 96%;
+    --popover:             0 10% 12%;
+    --popover-foreground:  0 0% 96%;
+    --secondary:           0 8% 18%;
+    --secondary-foreground:0 0% 90%;
+    --muted:               0 8% 16%;
+    --muted-foreground:    0 0% 62%;
+    --accent:              0 10% 20%;
+    --accent-foreground:   0 0% 96%;
+    --border:              0 8% 22%;
+    --input:               0 8% 22%;
+    --sidebar-background:  0 8% 8%;
+    --sidebar-foreground:  0 0% 95%;
+    --sidebar-accent:      0 8% 14%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border:      0 8% 16%;
+  }
+
   .personalized-theme body {
     background-image: var(--wallpaper-url);
     background-size: cover;
@@ -190,7 +222,7 @@
     background-repeat: no-repeat;
   }
 
-  /* Add overlay to improve readability over wallpaper */
+  /* Darkening overlay so text/cards always contrast against the wallpaper */
   .personalized-theme body::before {
     content: '';
     position: fixed;
@@ -198,7 +230,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.35);
     pointer-events: none;
     z-index: 0;
   }
@@ -223,17 +255,17 @@
     background: hsl(var(--background) / calc(var(--card-opacity) * 0.9));
   }
 
-  /* Ensure text is visible in personalized mode with text shadow */
+  /* Ensure headings are always readable over wallpaper */
   .personalized-theme h1,
   .personalized-theme h2,
   .personalized-theme h3 {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
-  /* Make sure foreground text has good contrast */
+  /* Make sure body text has good contrast */
   .personalized-theme .text-foreground,
   .personalized-theme .text-muted-foreground {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 
   /* Hide scrollbars */
