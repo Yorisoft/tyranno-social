@@ -20,6 +20,7 @@ import { useEventById } from '@/hooks/useEventById';
 import type { NotificationEvent } from '@/hooks/useNotifications';
 import { Sidebar } from '@/components/Sidebar';
 import { ColumnSelector } from '@/components/ColumnSelector';
+import { ColorPickerButton } from '@/components/ColorPickerButton';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { InstallPWA } from '@/components/InstallPWA';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -519,6 +520,7 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <ColorPickerButton />
                 <ColumnSelector columns={columns} onColumnsChange={setColumns} />
               </div>
             </div>
@@ -538,6 +540,7 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <ColorPickerButton />
                 <ColumnSelector columns={columns} onColumnsChange={setColumns} />
               </div>
             </div>

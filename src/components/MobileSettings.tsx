@@ -29,21 +29,7 @@ export function MobileSettings() {
         delete newConfig.personalizedTheme;
         return newConfig;
       });
-
-      // Remove personalized theme from DOM
-      const root = document.documentElement;
-      const body = document.body;
-
-      root.classList.remove('personalized-theme', 'light', 'dark');
-      root.style.removeProperty('--wallpaper-url');
-      root.classList.add(newTheme);
-
-      // Clear body background styles
-      body.style.removeProperty('background-image');
-      body.style.removeProperty('background-size');
-      body.style.removeProperty('background-position');
-      body.style.removeProperty('background-attachment');
-      body.style.removeProperty('background-repeat');
+      setTimeout(() => window.location.reload(), 100);
     } else {
       // Normal theme toggle
       setTheme(newTheme);
@@ -89,16 +75,7 @@ export function MobileSettings() {
                       delete newConfig.personalizedTheme;
                       return newConfig;
                     });
-                    const root = document.documentElement;
-                    const body = document.body;
-                    root.classList.remove('personalized-theme', 'light', 'dark');
-                    root.style.removeProperty('--wallpaper-url');
-                    root.style.removeProperty('--wallpaper-position');
-                    body.style.removeProperty('background-image');
-                    body.style.removeProperty('background-size');
-                    body.style.removeProperty('background-position');
-                    body.style.removeProperty('background-attachment');
-                    body.style.removeProperty('background-repeat');
+                    setTimeout(() => window.location.reload(), 100);
                   }}
                   className="text-sm text-destructive hover:text-destructive/80 font-medium transition-colors"
                 >

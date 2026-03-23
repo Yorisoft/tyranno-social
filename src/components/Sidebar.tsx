@@ -225,10 +225,7 @@ export function Sidebar({ selectedCategory, onCategoryChange, onCircleSelect, se
                 <button
                   onClick={() => {
                     updateConfig((current) => { const n = { ...current }; delete n.personalizedTheme; return n; });
-                    const root = document.documentElement;
-                    root.classList.remove('personalized-theme');
-                    root.style.removeProperty('--wallpaper-url');
-                    root.style.removeProperty('--wallpaper-position');
+                    setTimeout(() => window.location.reload(), 100);
                   }}
                   className="text-xs text-destructive hover:text-destructive/80 font-medium transition-colors"
                 >
