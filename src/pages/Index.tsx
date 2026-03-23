@@ -382,7 +382,7 @@ const Index = () => {
                 )}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="sm" className="gap-2 bg-gradient-to-r from-primary/10 to-orange-100/50 text-primary border-primary/20 dark:from-primary/20 dark:to-primary/10">
+                    <Button variant="secondary" size="sm" className="gap-2 bg-background/90 backdrop-blur-sm text-foreground border border-border shadow-sm hover:bg-accent hover:text-accent-foreground dark:bg-background/95 dark:text-foreground dark:border-border">
                       {selectedRelay ? (
                         <>
                           <Wifi className="h-4 w-4" />
@@ -481,7 +481,7 @@ const Index = () => {
                       value={selectedCategory}
                       onValueChange={(value) => setSelectedCategory(value as FeedCategory)}
                     >
-                      <SelectTrigger className="h-9 gap-1.5 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors text-sm font-medium text-primary w-auto pr-2">
+                      <SelectTrigger className="h-9 gap-1.5 bg-background/90 backdrop-blur-sm border border-border shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-medium text-foreground dark:bg-background/95 dark:text-foreground dark:border-border w-auto pr-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
