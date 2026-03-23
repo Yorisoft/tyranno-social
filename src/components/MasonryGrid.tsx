@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { PostCard } from '@/components/PostCard';
+import { InlineSuggestions } from '@/components/InlineSuggestions';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+
+// Show a suggestion strip after every N posts
+const SUGGESTION_INTERVAL = 22;
 
 interface MasonryGridProps {
   posts: NostrEvent[];
@@ -14,20 +19,12 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
   const columnRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [columnPosts, setColumnPosts] = useState<NostrEvent[][]>([]);
   const redistributeTimeoutRef = useRef<number>();
-  const imageLoadCountRef = useRef<number>(0);
-  const totalImagesRef = useRef<number>(0);
+
+  const { user } = useCurrentUser();
 
   // Initialize column refs array
   useEffect(() => {
     columnRefs.current = columnRefs.current.slice(0, columns);
-  }, [columns]);
-
-  // Get actual column heights from DOM
-  const getColumnHeights = useCallback((): number[] => {
-    return Array.from({ length: columns }, (_, i) => {
-      const column = columnRefs.current[i];
-      return column ? column.scrollHeight : 0;
-    });
   }, [columns]);
 
   // Estimate height more accurately based on content
@@ -44,7 +41,6 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
     const hasImeta = post.tags.some(([name]) => name === 'imeta');
     
     if (imageUrls.length > 0 || hasImeta) {
-      // Images typically add significant height
       height += 300; // Average image height in card
     }
     
@@ -121,22 +117,78 @@ export function MasonryGrid({ posts, columns: columnsProp, onPostClick }: Masonr
     columns === 2 ? 'max-w-4xl mx-auto w-full' :
     '';
 
+  // Build the list of column-sets separated by full-width suggestion strips.
+  // A "segment" is a slice of posts that fits between two suggestion cards.
+  // We only inject suggestions for logged-in users.
+  const segments: { posts: NostrEvent[][]; suggestionBatch: number | null }[] = [];
+
+  if (!user || posts.length <= SUGGESTION_INTERVAL) {
+    // No suggestions: single segment with all columns
+    segments.push({ posts: columnPosts, suggestionBatch: null });
+  } else {
+    // Split the flat post list into chunks of SUGGESTION_INTERVAL, then
+    // re-distribute each chunk into columns independently.
+    let suggestionCount = 0;
+    let offset = 0;
+
+    while (offset < posts.length) {
+      const chunk = posts.slice(offset, offset + SUGGESTION_INTERVAL);
+      offset += SUGGESTION_INTERVAL;
+
+      // Distribute this chunk into columns
+      const chunkColumns: NostrEvent[][] = Array.from({ length: columns }, () => []);
+      const heights: number[] = Array.from({ length: columns }, () => 0);
+
+      chunk.forEach((post, index) => {
+        if (index < columns) {
+          chunkColumns[index].push(post);
+          heights[index] = estimatePostHeight(post);
+        } else {
+          const shortest = heights.indexOf(Math.min(...heights));
+          chunkColumns[shortest].push(post);
+          heights[shortest] += estimatePostHeight(post) + 16;
+        }
+      });
+
+      const isLastChunk = offset >= posts.length;
+      segments.push({
+        posts: chunkColumns,
+        // Insert suggestion strip after every chunk except the last
+        suggestionBatch: isLastChunk ? null : suggestionCount++,
+      });
+
+      if (!isLastChunk) suggestionCount; // already incremented
+    }
+  }
+
   return (
     <div className={containerClasses}>
-      <div className={`grid ${gridClasses} gap-4`}>
-        {columnPosts.map((columnItems, columnIndex) => (
-          <div 
-            key={columnIndex} 
-            ref={(el) => (columnRefs.current[columnIndex] = el)}
-            className="flex flex-col gap-4"
-          >
-            {columnItems.map((post) => (
-              <PostCard 
-                key={post.id} 
-                event={post} 
-                onClick={(displayEvent) => onPostClick?.(displayEvent)}
-              />
-            ))}
+      <div className="space-y-4">
+        {segments.map((segment, segIndex) => (
+          <div key={segIndex} className="space-y-4">
+            {/* Column grid for this segment */}
+            <div className={`grid ${gridClasses} gap-4`}>
+              {segment.posts.map((columnItems, columnIndex) => (
+                <div
+                  key={columnIndex}
+                  ref={segIndex === 0 ? (el) => (columnRefs.current[columnIndex] = el) : undefined}
+                  className="flex flex-col gap-4"
+                >
+                  {columnItems.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      event={post}
+                      onClick={(displayEvent) => onPostClick?.(displayEvent)}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Full-width suggestion strip */}
+            {segment.suggestionBatch !== null && (
+              <InlineSuggestions batchIndex={segment.suggestionBatch} />
+            )}
           </div>
         ))}
       </div>
