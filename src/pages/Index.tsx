@@ -257,9 +257,7 @@ const Index = () => {
       </div>
       {/* Hero Header - Sticky */}
    
-                
-                </div>
-              </div>
+            
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                   Tyrannosocial
