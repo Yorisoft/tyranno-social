@@ -75,9 +75,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-background via-rose-50/30 to-pink-50/40 dark:from-background dark:via-background dark:to-primary/5">
-      {/* Header */}
-      
-
+  
 
       {/* Main Content */}
       <main className="px-3 py-5 max-w-5xl mx-auto pb-24 overflow-x-hidden">
