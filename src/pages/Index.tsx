@@ -18,7 +18,7 @@ import { NotificationItem } from '@/components/NotificationItem';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEventById } from '@/hooks/useEventById';
 import type { NotificationEvent } from '@/hooks/useNotifications';
-import { Sidebar } from '@/components/Sidebar';
+import { SidebarDrawer } from '@/components/SidebarDrawer';
 import { ColumnSelector } from '@/components/ColumnSelector';
 import { ColorPickerButton } from '@/components/ColorPickerButton';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -48,13 +48,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 const Index = () => {
@@ -72,6 +65,7 @@ const Index = () => {
   const [selectedCirclePubkeys, setSelectedCirclePubkeys] = useState<string[] | null>(null);
   const [selectedCircleLabel, setSelectedCircleLabel] = useState<string | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   // Hide header on scroll down, show on scroll up (mobile only)
@@ -241,15 +235,6 @@ const Index = () => {
     videos: 'Videos',
   };
 
-  const feedCategories: Array<{ id: FeedCategory; label: string }> = [
-    { id: 'following', label: 'All Notes' },
-    { id: 'text', label: 'Text' },
-    { id: 'articles', label: 'Articles' },
-    { id: 'photos', label: 'Photos' },
-    { id: 'music', label: 'Music' },
-    { id: 'videos', label: 'Videos' },
-  ];
-
   const CategoryIcon = categoryIcons[selectedCategory];
 
   return (
@@ -273,6 +258,34 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-3">
+            {/* Hamburger menu — opens sidebar drawer on all screen sizes */}
+            <SidebarDrawer
+              selectedCategory={selectedCategory}
+              open={sidebarOpen}
+              onOpenChange={setSidebarOpen}
+              onCategoryChange={(cat) => {
+                setSelectedCategory(cat);
+                setSelectedCircleDTag(null);
+                setSelectedCirclePubkeys(null);
+                setSelectedCircleLabel(null);
+                setIsMutualFeed(false);
+                setIsConversationsFeed(false);
+                setSelectedRelay(null);
+              }}
+              onCircleSelect={(pubkeys, label) => {
+                if (pubkeys === null) {
+                  setSelectedCircleDTag(null);
+                  setSelectedCirclePubkeys(null);
+                  setSelectedCircleLabel(null);
+                } else {
+                  setSelectedCircleDTag(label?.toLowerCase().replace(/\s+/g, '-') ?? null);
+                  setSelectedCirclePubkeys(pubkeys);
+                  setSelectedCircleLabel(label);
+                }
+              }}
+              selectedCircleDTag={selectedCircleDTag}
+            />
+
             {/* Logo and Title */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="relative shrink-0">
@@ -344,24 +357,6 @@ const Index = () => {
       {/* Main Content */}
       <main className="px-4 py-8 pb-24 lg:pb-8">
         <div className="flex gap-6">
-          {/* Sidebar */}
-          <Sidebar
-            selectedCategory={selectedCategory}
-            onCategoryChange={(cat) => { setSelectedCategory(cat); setSelectedCircleDTag(null); setSelectedCirclePubkeys(null); setSelectedCircleLabel(null); setIsMutualFeed(false); setIsConversationsFeed(false); setSelectedRelay(null); }}
-            onCircleSelect={(pubkeys, label) => {
-              if (pubkeys === null) {
-                setSelectedCircleDTag(null);
-                setSelectedCirclePubkeys(null);
-                setSelectedCircleLabel(null);
-              } else {
-                setSelectedCircleDTag(label?.toLowerCase().replace(/\s+/g, '-') ?? null);
-                setSelectedCirclePubkeys(pubkeys);
-                setSelectedCircleLabel(label);
-              }
-            }}
-            selectedCircleDTag={selectedCircleDTag}
-          />
-
           {/* Feed Section */}
           <div className="flex-1 min-w-0 space-y-6">
 
@@ -475,32 +470,7 @@ const Index = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Inline Category Selector — shown on mobile next to the feed button, hidden on desktop (sidebar handles it) */}
-                {!isConversationsFeed && (
-                  <div className="xl:hidden">
-                    <Select
-                      value={selectedCategory}
-                      onValueChange={(value) => setSelectedCategory(value as FeedCategory)}
-                    >
-                      <SelectTrigger className="h-9 gap-1.5 bg-background/90 backdrop-blur-sm border border-border shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-medium text-foreground dark:bg-background/95 dark:text-foreground dark:border-border w-auto pr-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {feedCategories.map((cat) => {
-                          const Icon = categoryIcons[cat.id];
-                          return (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                <span>{cat.label}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+
 
                 <Button
                   variant="ghost"
@@ -672,7 +642,7 @@ const Index = () => {
           </div>
 
           {/* Right Sidebar */}
-          <aside className="w-96 shrink-0 hidden xl:block">
+          <aside className="w-80 shrink-0 hidden lg:block">
             <div className="sticky top-4 space-y-4">
               {user ? (
                 <ComposePost onPostPublished={handleRefresh} />
@@ -786,7 +756,7 @@ const Index = () => {
       <InstallPWA />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      <MobileBottomNav onMenuOpen={() => setSidebarOpen(true)} />
 
       {/* Mobile Floating Compose Button */}
       <MobileComposeFAB onPostPublished={handleRefresh} />
