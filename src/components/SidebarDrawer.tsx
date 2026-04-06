@@ -47,8 +47,9 @@ export function SidebarDrawer({
 }: SidebarDrawerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
-  // If caller passes open/onOpenChange use those, otherwise use internal state
-  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  // Merge controlled + internal state: external open=true can force-open,
+  // but the hamburger button always drives internalOpen directly.
+  const isOpen = internalOpen || (controlledOpen ?? false);
   const setOpen = (v: boolean) => {
     setInternalOpen(v);
     controlledOnOpenChange?.(v);
