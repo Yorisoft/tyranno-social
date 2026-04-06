@@ -240,24 +240,10 @@ const Index = () => {
   const CategoryIcon = categoryIcons[selectedCategory];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-rose-50/30 to-pink-50/40 dark:from-background dark:via-background dark:to-primary/5">
-      {/* Small Zap Link - Top Banner */}
-      <div className="bg-gradient-to-r from-amber-50/50 via-yellow-50/30 to-amber-50/50 dark:from-amber-950/20 dark:via-yellow-950/10 dark:to-amber-950/20 border-b border-amber-200/30 dark:border-amber-900/20">
-        <div className="px-4 py-1.5">
-          <div className="flex justify-center">
-            <a
-              href="lightning:deadwolf170@minibits.cash"
-              className="text-[10px] sm:text-xs text-amber-700/80 dark:text-amber-400/70 hover:text-amber-900 dark:hover:text-amber-300 transition-colors flex items-center gap-1.5 group"
-            >
-              <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-amber-500/50 dark:fill-amber-400/30 group-hover:fill-amber-600 dark:group-hover:fill-amber-300 transition-colors" />
-              <span className="font-medium">Appreciate the Zaps!</span>
-            </a>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+
       {/* Hero Header - Sticky */}
-      <header className={`sticky top-0 z-40 relative border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm transition-transform duration-300 md:translate-y-0 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
+      <header className={`sticky top-0 z-40 relative border-b border-border bg-card shadow-sm transition-transform duration-300 md:translate-y-0 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             {/* Hamburger menu — opens sidebar drawer on all screen sizes */}
@@ -289,44 +275,16 @@ const Index = () => {
             />
 
             {/* Logo and Title */}
-            <button
-              className="flex items-center gap-3 shrink-0 group"
-              onClick={() => navigate('/')}
-              aria-label="Go to home"
-            >
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
-                <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
-                  <img
-                    src="/icon-512.png"
-                    alt="Tyrannosocial Logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-2xl filter brightness-110 rounded-full transition-transform group-hover:scale-105"
-                  />
-                </div>
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
-                  Tyrannosocial
-                </h1>
-                <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" />
-                    Powered by Nostr
-                  </span>
-                  <span className="opacity-30">·</span>
-                  <a
-                    href="https://shakespeare.diy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Sparkles className="h-3 w-3 text-rose-500 dark:text-primary" />
-                    Vibed with Shakespeare
-                  </a>
-                </div>
-              </div>
-            </button>
+            <div className="flex items-center gap-3 shrink-0">
+              <img
+                src="/icon-512.png"
+                alt="Tyrannosocial Logo"
+                className="h-10 w-10 rounded-sm"
+              />
+              <h1 className="text-xl font-normal text-foreground">
+                Tyrannosocial
+              </h1>
+            </div>
 
             {/* Search Bar - Desktop (hidden on mobile, shown below) */}
             <div className="hidden md:block flex-1 max-w-sm lg:max-w-lg">
@@ -346,16 +304,16 @@ const Index = () => {
           </div>
 
           {/* Toolbar row — feed selector, refresh, colors, columns */}
-          <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between gap-3 flex-wrap">
+          <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2 min-w-0">
               {/* Circle badge */}
               {selectedCircleLabel && (
-                <Badge className="gap-1.5 bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-800/50 pr-1 shrink-0">
+                <Badge className="gap-1.5 bg-primary/10 text-primary border-primary/20 pr-1 shrink-0">
                   <CircleDot className="h-3 w-3" />
                   {selectedCircleLabel}
                   <button
                     onClick={() => { setSelectedCircleDTag(null); setSelectedCirclePubkeys(null); setSelectedCircleLabel(null); }}
-                    className="ml-0.5 hover:bg-violet-200 dark:hover:bg-violet-800/50 rounded p-0.5 transition-colors"
+                    className="ml-0.5 hover:bg-primary/20 rounded p-0.5 transition-colors"
                   >
                     <XIcon className="h-3 w-3" />
                   </button>
@@ -364,13 +322,13 @@ const Index = () => {
 
               {/* Feed / search label */}
               {searchQuery ? (
-                <Badge variant="secondary" className="text-sm py-1 px-3 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border-blue-200 dark:from-secondary dark:to-secondary dark:text-secondary-foreground dark:border-border shrink-0">
+                <Badge variant="secondary" className="text-sm py-1 px-3 shrink-0">
                   Search Results
                 </Badge>
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="sm" className="gap-2 bg-background/90 backdrop-blur-sm text-foreground border border-border shadow-sm hover:bg-accent hover:text-accent-foreground dark:bg-background/95 dark:text-foreground dark:border-border shrink-0">
+                    <Button variant="secondary" size="sm" className="gap-2 bg-card text-foreground border border-border shadow-sm hover:bg-accent hover:text-accent-foreground shrink-0">
                       {selectedRelay ? (
                         <>
                           <Wifi className="h-4 w-4" />
@@ -530,14 +488,13 @@ const Index = () => {
           {/* Posts */}
           <div className="space-y-4">
             {!user && !searchQuery && (
-              <Card className="border-dashed border-2 border-primary/30 bg-gradient-to-br from-rose-50/80 via-pink-50/50 to-red-50/30 dark:from-primary/5 dark:via-transparent dark:to-transparent relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 -z-10" />
-                <CardContent className="py-12 px-8 text-center relative">
+              <Card className="border-dashed border-2 border-border bg-card">
+                <CardContent className="py-12 px-8 text-center">
                   <div className="max-w-md mx-auto space-y-4">
-                    <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/15 mb-2 shadow-lg">
-                      <Sparkles className="h-8 w-8 text-primary drop-shadow-sm" />
+                    <div className="inline-flex p-4 rounded-full bg-primary/10 mb-2">
+                      <Sparkles className="h-8 w-8 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
+                    <h2 className="text-2xl font-bold text-foreground">
                       Welcome to Tyrannosocial
                     </h2>
                     <p className="text-muted-foreground">
@@ -546,9 +503,9 @@ const Index = () => {
                     {shouldFilter && (
                       <button
                         onClick={() => setNsfwInfoOpen(true)}
-                        className="mt-4 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30 hover:bg-blue-100/50 dark:hover:bg-blue-950/30 transition-colors cursor-pointer w-full"
+                        className="mt-4 p-3 rounded bg-muted border border-border hover:bg-accent transition-colors cursor-pointer w-full"
                       >
-                        <p className="text-xs text-blue-700 dark:text-blue-400 flex items-center justify-center gap-2">
+                        <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                           <ShieldCheck className="h-4 w-4" />
                           Safe browsing mode active - NSFW content is automatically filtered
                         </p>
