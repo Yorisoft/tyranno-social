@@ -91,6 +91,13 @@ export default function SettingsPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
 
+            </div>
+            <div className="shrink-0">
+              <LoginArea className="max-w-[180px]" />
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="px-3 py-5 max-w-5xl mx-auto pb-24 overflow-x-hidden">
