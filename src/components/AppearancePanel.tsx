@@ -41,6 +41,7 @@ import {
   Moon, Sun, Palette, Type, Sparkles, MessageCircle,
   Repeat2, Bookmark, Heart, Zap, ImageIcon, Eye,
 } from 'lucide-react';
+import { applyHue, getSavedHue } from '@/lib/applyHue';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -296,29 +297,11 @@ export function AppearancePanel() {
   const hasWallpaper = !!config.personalizedTheme;
 
   // Local hue state (mirrors ColorThemeSelector)
-  const [hue, setHue] = useState<number>(() => {
-    try {
-      return parseInt(localStorage.getItem('nostr:color-hue') ?? '345') || 345;
-    } catch { return 345; }
-  });
+  const [hue, setHue] = useState<number>(getSavedHue);
 
-  const applyHue = (h: number) => {
+  const handleHue = (h: number) => {
     setHue(h);
-    localStorage.setItem('nostr:color-hue', String(h));
-    const root = document.documentElement;
-    // Only update the primary/ring — keep borders, backgrounds, and surfaces neutral
-    root.style.setProperty('--primary', `${h} 65% 45%`);
-    root.style.setProperty('--ring',    `${h} 65% 45%`);
-    // Neutrals stay fixed (no hue tint on borders, backgrounds, muted, etc.)
-    root.style.removeProperty('--accent');
-    root.style.removeProperty('--secondary');
-    root.style.removeProperty('--muted');
-    root.style.removeProperty('--border');
-    root.style.removeProperty('--input');
-    let style = document.getElementById('dark-mode-colors');
-    if (!style) { style = document.createElement('style'); style.id = 'dark-mode-colors'; document.head.appendChild(style); }
-    // Dark mode: only primary and ring pick up the hue; everything else stays neutral grey
-    style.textContent = `.dark { --primary:${h} 70% 60%;--ring:${h} 70% 60%;--sidebar-primary:${h} 70% 60%;--sidebar-ring:${h} 70% 60%; }`;
+    applyHue(h);
   };
 
   const currentRadius  = config.cardRadius  ?? 'md';
@@ -411,7 +394,7 @@ export function AppearancePanel() {
                 />
                 <input
                   type="range" min="0" max="360" value={hue}
-                  onChange={e => applyHue(Number(e.target.value))}
+                  onChange={e => handleHue(Number(e.target.value))}
                   className="relative w-full h-2 appearance-none bg-transparent cursor-pointer"
                   style={{ zIndex: 1 }}
                 />
@@ -424,7 +407,7 @@ export function AppearancePanel() {
                 <button
                   key={p.name}
                   title={p.name}
-                  onClick={() => applyHue(p.hue)}
+                  onClick={() => handleHue(p.hue)}
                   className="h-7 w-full rounded-md border-2 transition-transform hover:scale-110 active:scale-95"
                   style={{
                     background: `hsl(${p.hue}, 65%, 45%)`,
