@@ -297,7 +297,7 @@ const Index = () => {
               <div className="relative shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
                 <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
-
+ 53f00b889b18ff6557d6b6bca2b239f71e8a4b4a
                   />
                 </div>
               </div>
