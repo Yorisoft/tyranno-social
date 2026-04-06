@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
 import { EditProfileForm } from '@/components/EditProfileForm';
+import { ProfileBadges } from '@/components/ProfileBadges';
 import type { NostrMetadata, NostrEvent } from '@nostrify/nostrify';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -275,6 +276,9 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           )}
                         </div>
                         
+                        {/* NIP-58 Badges */}
+                        <ProfileBadges pubkey={pubkey} />
+
                         {/* Nostr Address */}
                         <div className="mt-4 pt-4 border-t border-border/50">
                           <button
