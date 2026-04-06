@@ -97,7 +97,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </header>
+
 
       {/* Main Content */}
       <main className="px-3 py-5 max-w-5xl mx-auto pb-24 overflow-x-hidden">
