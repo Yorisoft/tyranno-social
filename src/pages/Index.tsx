@@ -289,19 +289,23 @@ const Index = () => {
             />
 
             {/* Logo and Title */}
-            <div className="flex items-center gap-3 shrink-0">
+            <button
+              className="flex items-center gap-3 shrink-0 group"
+              onClick={() => navigate('/')}
+              aria-label="Go to home"
+            >
               <div className="relative shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
                 <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
                   <img
                     src="/icon-512.png"
                     alt="Tyrannosocial Logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-2xl filter brightness-110 rounded-full"
+                    className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-2xl filter brightness-110 rounded-full transition-transform group-hover:scale-105"
                   />
                 </div>
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground">
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                   Tyrannosocial
                 </h1>
                 <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
@@ -315,13 +319,14 @@ const Index = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Sparkles className="h-3 w-3 text-rose-500 dark:text-primary" />
                     Vibed with Shakespeare
                   </a>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Search Bar - Desktop (hidden on mobile, shown below) */}
             <div className="hidden md:block flex-1 max-w-sm lg:max-w-lg">

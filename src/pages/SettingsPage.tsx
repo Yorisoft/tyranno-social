@@ -7,7 +7,7 @@ import { useLoggedInAccounts } from '@/hooks/useLoggedInAccounts';
 import { useAuthor } from '@/hooks/useAuthor';
 import { genUserName } from '@/lib/genUserName';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,7 +25,6 @@ import {
   Sun,
   Wifi,
   AlertTriangle,
-  ArrowLeft,
   Sparkles,
   User,
   Check,
@@ -77,35 +76,35 @@ export default function SettingsPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
-        <div className="px-3 py-3">
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/')}
-                className="shrink-0 -ml-1 hidden lg:flex"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="relative shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:opacity-50" />
-                  <div className="relative p-0.5 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
-                    <img
-                      src="/icon-512.png"
-                      alt="Tyrannosocial Logo"
-                      className="h-8 w-8 drop-shadow-2xl filter brightness-110 rounded-full"
-                    />
-                  </div>
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            {/* Logo — clicking navigates home */}
+            <button
+              className="flex items-center gap-3 shrink-0 group"
+              onClick={() => navigate('/')}
+              aria-label="Go to home"
+            >
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
+                <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
+                  <img
+                    src="/icon-512.png"
+                    alt="Tyrannosocial Logo"
+                    className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-2xl filter brightness-110 rounded-full transition-transform group-hover:scale-105"
+                  />
                 </div>
-                <h1 className="text-base font-bold text-foreground leading-tight truncate">Settings</h1>
               </div>
-            </div>
+              <div>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  Tyrannosocial
+                </h1>
+                <p className="hidden sm:block text-xs text-muted-foreground">Settings</p>
+              </div>
+            </button>
 
-            {/* Login area — shrinks gracefully on small screens */}
+            {/* Login area */}
             <div className="shrink-0">
-              <LoginArea className="max-w-[180px]" />
+              <LoginArea className="max-w-60" />
             </div>
           </div>
         </div>
