@@ -1,9 +1,6 @@
 /**
- * ColorPickerButton
- *
- * A compact button that opens a popover with a hue slider + preset swatches.
- * Applies the same colour logic as AppearancePanel.
- * Only rendered when the user does NOT have a custom wallpaper active.
+ * ColorPickerButton — compact toolbar colour picker (hue slider + swatches).
+ * Uses the shared applyHue utility so behaviour is identical to AppearancePanel.
  */
 
 import { useState } from 'react';
@@ -11,6 +8,7 @@ import { Paintbrush } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAppContext } from '@/hooks/useAppContext';
+import { applyHue, getSavedHue } from '@/lib/applyHue';
 
 const PRESET_COLORS = [
   { name: 'Burgundy', hue: 345 },
@@ -25,34 +23,10 @@ const PRESET_COLORS = [
   { name: 'Cyan',     hue: 195 },
 ];
 
-function applyHue(h: number) {
-  localStorage.setItem('nostr:color-hue', String(h));
-  const root = document.documentElement;
-  root.style.setProperty('--primary',   `${h} 65% 45%`);
-  root.style.setProperty('--ring',      `${h} 65% 45%`);
-  root.style.setProperty('--accent',    `${h} 40% 92%`);
-  root.style.setProperty('--secondary', `${h} 20% 95%`);
-  root.style.setProperty('--muted',     `${h} 15% 94%`);
-  root.style.setProperty('--border',    `${h} 20% 88%`);
-  root.style.setProperty('--input',     `${h} 20% 88%`);
-  let style = document.getElementById('dark-mode-colors');
-  if (!style) {
-    style = document.createElement('style');
-    style.id = 'dark-mode-colors';
-    document.head.appendChild(style);
-  }
-  style.textContent = `.dark{--background:${h} 8% 7%;--card:${h} 12% 10%;--popover:${h} 12% 10%;--primary:${h} 70% 60%;--ring:${h} 70% 60%;--secondary:${h} 8% 15%;--muted:${h} 8% 14%;--accent:${h} 10% 16%;--border:${h} 8% 18%;--input:${h} 8% 18%;--sidebar-background:${h} 8% 8%;--sidebar-primary:${h} 70% 60%;--sidebar-accent:${h} 8% 14%;--sidebar-border:${h} 8% 16%;--sidebar-ring:${h} 70% 60%;}`;
-}
-
 export function ColorPickerButton() {
   const { config } = useAppContext();
+  const [hue, setHue] = useState(getSavedHue);
 
-  const [hue, setHue] = useState<number>(() => {
-    try { return parseInt(localStorage.getItem('nostr:color-hue') ?? '345') || 345; }
-    catch { return 345; }
-  });
-
-  // Hide when wallpaper is active
   if (config.personalizedTheme) return null;
 
   const handleHue = (h: number) => {
@@ -78,25 +52,16 @@ export function ColorPickerButton() {
             <div className="flex-1 relative h-5 flex items-center">
               <div
                 className="absolute inset-0 rounded-full"
-                style={{
-                  background:
-                    'linear-gradient(to right,hsl(0,70%,50%),hsl(60,70%,50%),hsl(120,70%,50%),hsl(180,70%,50%),hsl(240,70%,50%),hsl(300,70%,50%),hsl(360,70%,50%))',
-                }}
+                style={{ background: 'linear-gradient(to right,hsl(0,70%,50%),hsl(60,70%,50%),hsl(120,70%,50%),hsl(180,70%,50%),hsl(240,70%,50%),hsl(300,70%,50%),hsl(360,70%,50%))' }}
               />
               <input
-                type="range"
-                min="0"
-                max="360"
-                value={hue}
+                type="range" min="0" max="360" value={hue}
                 onChange={(e) => handleHue(Number(e.target.value))}
                 className="relative w-full h-2 appearance-none bg-transparent cursor-pointer"
                 style={{ zIndex: 1 }}
               />
             </div>
-            <div
-              className="h-7 w-7 rounded-md border-2 border-border shrink-0"
-              style={{ background: `hsl(${hue},65%,45%)` }}
-            />
+            <div className="h-7 w-7 rounded-md border border-border shrink-0" style={{ background: `hsl(${hue},65%,45%)` }} />
           </div>
 
           {/* Preset swatches */}
@@ -106,12 +71,10 @@ export function ColorPickerButton() {
                 key={p.name}
                 title={p.name}
                 onClick={() => handleHue(p.hue)}
-                className="h-7 w-full rounded-md border-2 transition-transform hover:scale-110 active:scale-95"
+                className="h-7 w-full rounded-md border-2 border-transparent transition-transform hover:scale-110 active:scale-95"
                 style={{
                   background: `hsl(${p.hue},65%,45%)`,
-                  borderColor: hue === p.hue ? `hsl(${p.hue},65%,45%)` : 'transparent',
-                  outline: hue === p.hue ? '2px solid white' : 'none',
-                  outlineOffset: '-3px',
+                  boxShadow: hue === p.hue ? `0 0 0 2px hsl(${p.hue},65%,45%)` : 'none',
                 }}
               />
             ))}

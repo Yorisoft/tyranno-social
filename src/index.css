@@ -36,61 +36,44 @@
     --text-size: 1rem;
 
     --sidebar-background: 345 15% 97%;
-
     --sidebar-foreground: 345 12% 30%;
-
     --sidebar-primary: 345 65% 45%;
-
     --sidebar-primary-foreground: 0 0% 100%;
-
     --sidebar-accent: 345 20% 95%;
-
     --sidebar-accent-foreground: 345 15% 15%;
-
     --sidebar-border: 345 15% 90%;
-
     --sidebar-ring: 345 65% 45%;
   }
 
   .dark {
-    /* Dark backgrounds with subtle color warmth */
     --background: 0 8% 7%;
     --foreground: 0 0% 98%;
 
-    /* Cards with subtle color tint for visual interest */
     --card: 0 12% 10%;
     --card-foreground: 0 0% 98%;
 
-    /* Popovers match cards */
     --popover: 0 12% 10%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary color - customizable via color selector */
     --primary: 0 70% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary elements with subtle color */
     --secondary: 0 8% 15%;
     --secondary-foreground: 0 0% 90%;
 
-    /* Muted elements with subtle color */
     --muted: 0 8% 14%;
     --muted-foreground: 0 0% 65%;
 
-    /* Accent elements with subtle color */
     --accent: 0 10% 16%;
     --accent-foreground: 0 0% 98%;
 
-    /* Destructive */
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders and inputs - subtle with hint of color */
     --border: 0 8% 18%;
     --input: 0 8% 18%;
     --ring: 0 70% 60%;
 
-    /* Sidebar with subtle color */
     --sidebar-background: 0 8% 8%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 0 70% 60%;

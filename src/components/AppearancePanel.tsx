@@ -41,6 +41,7 @@ import {
   Moon, Sun, Palette, Type, Sparkles, MessageCircle,
   Repeat2, Bookmark, Heart, Zap, ImageIcon, Eye,
 } from 'lucide-react';
+import { applyHue, getSavedHue } from '@/lib/applyHue';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -100,67 +101,53 @@ const DENSITY_PADDING_MAP: Record<string, string> = {
 };
 
 // ─── Live preview card ────────────────────────────────────────────────────────
+// Reads directly from CSS variables so it always matches the real app exactly.
 
 interface PreviewCardProps {
-  hue: number;
-  radius: string;
-  density: string;
   fontFamily: string;
   fontSize: string;
-  isDark: boolean;
 }
 
-function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: PreviewCardProps) {
-  const padding = DENSITY_PADDING_MAP[density] ?? '1rem';
-  const borderRadius = RADIUS_PX_MAP[radius] ?? '8px';
-  const primaryLight = `hsl(${hue}, 65%, 45%)`;
-  const primaryDark  = `hsl(${hue}, 70%, 60%)`;
-  const primary = isDark ? primaryDark : primaryLight;
-  const bg      = isDark ? `hsl(${hue}, 12%, 10%)` : '#ffffff';
-  const border  = isDark ? `hsl(${hue}, 8%, 18%)` : `hsl(${hue}, 20%, 88%)`;
-  const fg      = isDark ? '#f1f0ef' : '#1a1a1a';
-  const muted   = isDark ? '#8a8580' : '#6b7280';
+function PreviewCard({ fontFamily, fontSize }: PreviewCardProps) {
+  const root = document.documentElement;
+  const css = (v: string) =>
+    getComputedStyle(root).getPropertyValue(v).trim();
+
+  const card     = `hsl(${css('--card')})`;
+  const border   = `hsl(${css('--border')})`;
+  const fg       = `hsl(${css('--card-foreground')})`;
+  const muted    = `hsl(${css('--muted-foreground')})`;
+  const mutedBg  = `hsl(${css('--muted')})`;
+  const primary  = `hsl(${css('--primary')})`;
+  const primaryFg= `hsl(${css('--primary-foreground')})`;
+  const radius   = css('--radius') || '4px';
+  const padding  = css('--card-padding') || '1rem';
 
   return (
     <div
-      className="w-full overflow-hidden shadow-md transition-all duration-300"
-      style={{
-        borderRadius,
-        border: `1px solid ${border}`,
-        background: bg,
-        fontFamily,
-        fontSize,
-        color: fg,
-      }}
+      className="w-full overflow-hidden shadow-sm transition-all duration-300"
+      style={{ borderRadius: radius, border: `1px solid ${border}`, background: card, fontFamily, color: fg }}
     >
       {/* Header */}
       <div style={{ padding, borderBottom: `1px solid ${border}` }}>
         <div className="flex items-start gap-3">
           <div
-            className="shrink-0 flex items-center justify-center text-white font-bold text-sm"
-            style={{
-              width: 40, height: 40,
-              borderRadius: radius === 'none' ? '0' : radius === 'xl' ? '50%' : borderRadius,
-              background: `linear-gradient(135deg, ${primary}, hsl(${hue + 30}, 65%, 55%))`,
-            }}
+            className="shrink-0 flex items-center justify-center font-bold text-sm"
+            style={{ width: 40, height: 40, borderRadius: radius, background: primary, color: primaryFg }}
           >
             T
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="font-semibold leading-tight" style={{ color: fg }}>TyrannoUser</p>
+                <p className="font-semibold leading-tight text-sm" style={{ color: fg }}>TyrannoUser</p>
                 <p className="text-xs" style={{ color: muted }}>@tyrannouser · 2m ago</p>
               </div>
               <span
                 className="text-xs px-2 py-0.5 font-medium"
-                style={{
-                  borderRadius,
-                  background: `hsl(${hue}, 40%, ${isDark ? '20%' : '92%'})`,
-                  color: primary,
-                }}
+                style={{ borderRadius: radius, background: mutedBg, color: primary }}
               >
-                Following
+                Follow
               </span>
             </div>
           </div>
@@ -169,24 +156,17 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
 
       {/* Body */}
       <div style={{ padding }}>
-        <p className="leading-relaxed mb-3" style={{ color: fg }}>
-          This is how your posts will look with the current settings. Every detail updates live — colors, fonts, spacing and corners all change instantly! 🦖✨{' '}
+        <p className="leading-relaxed mb-3 text-sm" style={{ color: fg, fontSize: fontSize }}>
+          This is how your posts will look with the current settings.{' '}
           <span style={{ color: primary }}>#nostr #tyrannosocial</span>
         </p>
 
-        {/* Fake image placeholder */}
+        {/* Image placeholder */}
         <div
-          className="w-full mb-3 flex items-center justify-center gap-2"
-          style={{
-            height: 80,
-            borderRadius,
-            background: isDark ? `hsl(${hue}, 8%, 15%)` : `hsl(${hue}, 30%, 95%)`,
-            color: muted,
-            fontSize: '0.75rem',
-            border: `1px solid ${border}`,
-          }}
+          className="w-full mb-3 flex items-center justify-center gap-2 text-xs"
+          style={{ height: 72, borderRadius: radius, background: mutedBg, border: `1px solid ${border}`, color: muted }}
         >
-          <ImageIcon size={14} />
+          <ImageIcon size={13} />
           <span>Image preview</span>
         </div>
 
@@ -196,12 +176,7 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
             <span
               key={r}
               className="text-xs px-2 py-0.5"
-              style={{
-                borderRadius,
-                background: isDark ? `hsl(${hue}, 8%, 16%)` : `hsl(${hue}, 15%, 94%)`,
-                border: `1px solid ${border}`,
-                color: muted,
-              }}
+              style={{ borderRadius: radius, background: mutedBg, border: `1px solid ${border}`, color: muted }}
             >
               {r}
             </span>
@@ -209,10 +184,7 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
         </div>
 
         {/* Action bar */}
-        <div
-          className="flex items-center justify-between pt-2"
-          style={{ borderTop: `1px solid ${border}` }}
-        >
+        <div className="flex items-center justify-between pt-2" style={{ borderTop: `1px solid ${border}` }}>
           {[
             { icon: MessageCircle, label: '5' },
             { icon: Repeat2,       label: '2' },
@@ -220,12 +192,8 @@ function PreviewCard({ hue, radius, density, fontFamily, fontSize, isDark }: Pre
             { icon: Bookmark,      label: '' },
             { icon: Heart,         label: '' },
           ].map(({ icon: Icon, label }, i) => (
-            <button
-              key={i}
-              className="flex items-center gap-1 text-xs transition-colors"
-              style={{ color: i === 0 ? primary : muted }}
-            >
-              <Icon size={15} />
+            <button key={i} className="flex items-center gap-1 text-xs" style={{ color: i === 0 ? primary : muted }}>
+              <Icon size={14} />
               {label && <span>{label}</span>}
             </button>
           ))}
@@ -248,36 +216,16 @@ function SectionLabel({ icon: Icon, label }: { icon: typeof Moon; label: string 
 
 // ─── Sticky Preview Panel (desktop) ──────────────────────────────────────────
 
-interface StickyPreviewProps {
-  hue: number;
-  radius: string;
-  density: string;
-  fontFamily: string;
-  fontSize: string;
-  isDark: boolean;
-}
-
-function StickyPreviewPanel({ hue, radius, density, fontFamily, fontSize, isDark }: StickyPreviewProps) {
+function StickyPreviewPanel({ fontFamily, fontSize }: { fontFamily: string; fontSize: string }) {
   return (
     <div className="sticky top-24 space-y-3">
-      {/* Label */}
       <div className="flex items-center gap-2 mb-1">
-        <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse shadow-sm shadow-green-400/60" />
+        <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Live Preview</span>
       </div>
-
-      {/* Preview area */}
-      <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-muted/30 to-muted/10 p-4 shadow-inner">
-        <PreviewCard
-          hue={hue}
-          radius={radius}
-          density={density}
-          fontFamily={fontFamily}
-          fontSize={fontSize}
-          isDark={isDark}
-        />
+      <div className="rounded border border-border bg-muted/30 p-3">
+        <PreviewCard fontFamily={fontFamily} fontSize={fontSize} />
       </div>
-
       <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-2">
         Every change you make is reflected here instantly.
       </p>
@@ -296,26 +244,11 @@ export function AppearancePanel() {
   const hasWallpaper = !!config.personalizedTheme;
 
   // Local hue state (mirrors ColorThemeSelector)
-  const [hue, setHue] = useState<number>(() => {
-    try {
-      return parseInt(localStorage.getItem('nostr:color-hue') ?? '345') || 345;
-    } catch { return 345; }
-  });
+  const [hue, setHue] = useState<number>(getSavedHue);
 
-  const applyHue = (h: number) => {
+  const handleHue = (h: number) => {
     setHue(h);
-    localStorage.setItem('nostr:color-hue', String(h));
-    const root = document.documentElement;
-    root.style.setProperty('--primary', `${h} 65% 45%`);
-    root.style.setProperty('--ring',    `${h} 65% 45%`);
-    root.style.setProperty('--accent',  `${h} 40% 92%`);
-    root.style.setProperty('--secondary', `${h} 20% 95%`);
-    root.style.setProperty('--muted',   `${h} 15% 94%`);
-    root.style.setProperty('--border',  `${h} 20% 88%`);
-    root.style.setProperty('--input',   `${h} 20% 88%`);
-    let style = document.getElementById('dark-mode-colors');
-    if (!style) { style = document.createElement('style'); style.id = 'dark-mode-colors'; document.head.appendChild(style); }
-    style.textContent = `.dark { --background:${h} 8% 7%;--card:${h} 12% 10%;--popover:${h} 12% 10%;--primary:${h} 70% 60%;--ring:${h} 70% 60%;--secondary:${h} 8% 15%;--muted:${h} 8% 14%;--accent:${h} 10% 16%;--border:${h} 8% 18%;--input:${h} 8% 18%;--sidebar-background:${h} 8% 8%;--sidebar-primary:${h} 70% 60%;--sidebar-accent:${h} 8% 14%;--sidebar-border:${h} 8% 16%;--sidebar-ring:${h} 70% 60%; }`;
+    applyHue(h);
   };
 
   const currentRadius  = config.cardRadius  ?? 'md';
@@ -347,14 +280,7 @@ export function AppearancePanel() {
     document.documentElement.style.setProperty('--text-size', size.size);
   };
 
-  const previewProps: StickyPreviewProps = {
-    hue,
-    radius: currentRadius,
-    density: currentDensity,
-    fontFamily: previewFontFamily,
-    fontSize: previewFontSize,
-    isDark,
-  };
+  const previewProps = { fontFamily: previewFontFamily, fontSize: previewFontSize };
 
   // ── Settings controls (shared between desktop + mobile) ─────────────────────
   const settingsControls = (
@@ -408,7 +334,7 @@ export function AppearancePanel() {
                 />
                 <input
                   type="range" min="0" max="360" value={hue}
-                  onChange={e => applyHue(Number(e.target.value))}
+                  onChange={e => handleHue(Number(e.target.value))}
                   className="relative w-full h-2 appearance-none bg-transparent cursor-pointer"
                   style={{ zIndex: 1 }}
                 />
@@ -421,13 +347,12 @@ export function AppearancePanel() {
                 <button
                   key={p.name}
                   title={p.name}
-                  onClick={() => applyHue(p.hue)}
+                  onClick={() => handleHue(p.hue)}
                   className="h-7 w-full rounded-md border-2 transition-transform hover:scale-110 active:scale-95"
                   style={{
                     background: `hsl(${p.hue}, 65%, 45%)`,
-                    borderColor: hue === p.hue ? `hsl(${p.hue}, 65%, 45%)` : 'transparent',
-                    outline: hue === p.hue ? `2px solid white` : 'none',
-                    outlineOffset: '-3px',
+                    borderColor: 'transparent',
+                    boxShadow: hue === p.hue ? `0 0 0 2px hsl(${p.hue}, 65%, 45%)` : 'none',
                   }}
                 />
               ))}
