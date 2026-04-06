@@ -387,7 +387,8 @@ function DiscoveryPanel({
   const [searchQuery, setSearchQuery] = useState<string | null>('nostr');
   const [importingId, setImportingId] = useState<string | null>(null);
 
-  const { data: lists, isLoading } = usePublicFollowLists(searchQuery);
+  const { data: lists, isLoading, isFetching } = usePublicFollowLists(searchQuery);
+  const showLoading = isLoading || isFetching;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -421,20 +422,27 @@ function DiscoveryPanel({
           Popular Topics
         </h2>
         <div className="flex flex-wrap gap-2">
-          {TOPICS.map(({ label, keyword, icon: Icon, color }) => (
-            <button
-              key={keyword}
-              onClick={() => handleTopicClick(keyword)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
-                activeTopic === keyword
-                  ? `bg-gradient-to-r ${color} text-white border-transparent shadow-md scale-105`
-                  : 'border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground bg-card'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
+          {TOPICS.map(({ label, keyword, icon: Icon, color }) => {
+            const isActive = activeTopic === keyword;
+            const isSpinning = isActive && showLoading;
+            return (
+              <button
+                key={keyword}
+                onClick={() => handleTopicClick(keyword)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                  isActive
+                    ? `bg-gradient-to-r ${color} text-white border-transparent shadow-md scale-105`
+                    : 'border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground bg-card'
+                }`}
+              >
+                {isSpinning
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Icon className="h-3.5 w-3.5" />
+                }
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -455,11 +463,17 @@ function DiscoveryPanel({
       </form>
 
       {/* Results */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
+      {showLoading ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Searching relays for <span className="font-semibold capitalize">{searchQuery}</span> lists…
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
         </div>
       ) : !lists || lists.length === 0 ? (
         <div className="py-8 text-center text-muted-foreground">
