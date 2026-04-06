@@ -15,6 +15,7 @@ export function useTheme(): { theme: Theme; setTheme: (theme: Theme) => void } {
         ...currentConfig,
         theme,
       }));
+      setTimeout(() => window.location.reload(), 50);
     }
   }
 }
