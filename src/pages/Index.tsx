@@ -256,8 +256,61 @@ const Index = () => {
         </div>
       </div>
       {/* Hero Header - Sticky */}
-   
-            
+      <header className={`sticky top-0 z-40 relative border-b border-border/50 bg-background/95 backdrop-blur-lg shadow-sm transition-transform duration-300 md:translate-y-0 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-rose-500/5 to-primary/10 -z-10" />
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            {/* Hamburger menu — opens sidebar drawer on all screen sizes */}
+            <SidebarDrawer
+              selectedCategory={selectedCategory}
+              open={sidebarOpen}
+              onOpenChange={setSidebarOpen}
+              onCategoryChange={(cat) => {
+                setSelectedCategory(cat);
+                setSelectedCircleDTag(null);
+                setSelectedCirclePubkeys(null);
+                setSelectedCircleLabel(null);
+                setIsMutualFeed(false);
+                setIsConversationsFeed(false);
+                setSelectedRelay(null);
+              }}
+              onCircleSelect={(pubkeys, label) => {
+                if (pubkeys === null) {
+                  setSelectedCircleDTag(null);
+                  setSelectedCirclePubkeys(null);
+                  setSelectedCircleLabel(null);
+                } else {
+                  setSelectedCircleDTag(label?.toLowerCase().replace(/\s+/g, '-') ?? null);
+                  setSelectedCirclePubkeys(pubkeys);
+                  setSelectedCircleLabel(label);
+                }
+              }}
+              selectedCircleDTag={selectedCircleDTag}
+            />
+
+            {/* Logo and Title */}
+            <button
+              className="flex items-center gap-3 shrink-0 group"
+              onClick={() => navigate('/')}
+              aria-label="Go to home"
+            >
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-60 animate-pulse dark:from-yellow-600 dark:via-red-900 dark:to-yellow-700 dark:opacity-50" />
+                <div className="relative p-1 bg-gradient-to-br from-rose-100/50 to-pink-100/30 rounded-full dark:from-transparent dark:to-transparent">
+<<<<<<< HEAD
+                  <img 
+                    src={`${import.meta.env.BASE_URL}icon-512.png`} 
+                    alt="Tyrannosocial Logo" 
+                    className="h-12 w-12 sm:h-14 sm:w-14 drop-shadow-2xl filter brightness-110 rounded-full"
+=======
+                  <img
+                    src="/icon-512.png"
+                    alt="Tyrannosocial Logo"
+                    className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-2xl filter brightness-110 rounded-full transition-transform group-hover:scale-105"
+>>>>>>> 53f00b889b18ff6557d6b6bca2b239f71e8a4b4a
+                  />
+                </div>
+              </div>
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                   Tyrannosocial
