@@ -1,31 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/useTheme';
-import { useAppContext } from '@/hooks/useAppContext';
-import { useBookmarkSets, useBookmarkSetItems } from '@/hooks/useBookmarkSets';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useNSFWFilter } from '@/hooks/useNSFWFilter';
-import { useWebOfTrust } from '@/hooks/useWebOfTrust';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { RelayListManager } from '@/components/RelayListManager';
-import { PostCard } from '@/components/PostCard';
-import { PostModal } from '@/components/PostModal';
-import { TrendingHashtags } from '@/components/TrendingHashtags';
-import { PeopleToFollow } from '@/components/PeopleToFollow';
-import { CirclesManager } from '@/components/CirclesManager';
 import {
   Moon,
   Sun,
@@ -47,6 +21,7 @@ import {
   UserCheck,
   Flame,
   ImageOff,
+  CircleDot,
 } from 'lucide-react';
 import {
   Sheet,
@@ -332,14 +307,19 @@ export function SidebarContent({ selectedCategory, onCategoryChange, onCircleSel
         </CardContent>
       </Card>
 
-      {/* Circles */}
-      <CirclesManager
-        onCircleSelect={(pubkeys, label) => {
-          onCircleSelect?.(pubkeys, label);
-          onNavigate?.();
-        }}
-        selectedCircleDTag={selectedCircleDTag}
-      />
+      {/* Circles — link to dedicated page */}
+      <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-violet-50/20 dark:from-card dark:to-card">
+        <CardContent className="pt-4 pb-3">
+          <button
+            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-primary/5 hover:text-primary transition-colors text-sm font-medium group"
+            onClick={() => handleNavigate('/circles')}
+          >
+            <CircleDot className="h-4 w-4 text-violet-500 group-hover:text-violet-500" />
+            Circles
+            <span className="ml-auto text-xs text-muted-foreground group-hover:text-primary transition-colors">Manage →</span>
+          </button>
+        </CardContent>
+      </Card>
 
       {/* Relays */}
       <Card className="border-border/50 dark:border-transparent bg-gradient-to-br from-card to-blue-50/20 dark:from-card dark:to-card">
