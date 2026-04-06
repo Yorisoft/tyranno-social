@@ -18,6 +18,7 @@ import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 import { LoginArea } from '@/components/auth/LoginArea';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 import {
   Moon,
@@ -83,7 +84,7 @@ export default function SettingsPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/')}
-                className="shrink-0 -ml-1"
+                className="shrink-0 -ml-1 hidden lg:flex"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -400,6 +401,8 @@ export default function SettingsPage() {
 
         </div>
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }
