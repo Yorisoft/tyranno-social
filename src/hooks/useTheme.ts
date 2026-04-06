@@ -11,6 +11,7 @@ export function useTheme(): { theme: Theme; setTheme: (theme: Theme) => void } {
   return {
     theme: config.theme,
     setTheme: (theme: Theme) => {
+      if (theme === config.theme) return;
       updateConfig((currentConfig) => ({
         ...currentConfig,
         theme,
