@@ -1,11 +1,12 @@
 /**
  * ProfileBadges — NIP-58 badge display for profile pages.
  *
- * Shows the badges a user has chosen to display (kind 10008), fetching
- * the badge definitions (kind 30009) to get names, images, and descriptions.
+ * Always renders a "Badges" section. Shows:
+ *   - Skeletons while loading
+ *   - Badge chips when the user has badges
+ *   - An empty-state prompt when they have none
  *
- * Each badge is rendered as a thumbnail with a tooltip on hover/tap showing
- * the full name and description. Clicking opens a larger image in a dialog.
+ * Clicking a badge chip opens a detail dialog with the full image.
  */
 
 import { useState } from 'react';
@@ -35,28 +36,34 @@ function BadgeThumbnail({
         <TooltipTrigger asChild>
           <button
             onClick={() => onClick(badge)}
-            className="group relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-background hover:ring-primary/40 transition-all duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label={badge.name}
           >
-            {badge.thumb && !imgError ? (
-              <img
-                src={badge.thumb}
-                alt={badge.name}
-                className="h-full w-full object-cover"
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              /* Fallback icon when no image or image fails to load */
-              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10">
-                <Award className="h-5 w-5 text-primary" />
-              </div>
-            )}
+            {/* Badge image */}
+            <div className="h-8 w-8 rounded-lg overflow-hidden shrink-0 ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
+              {badge.thumb && !imgError ? (
+                <img
+                  src={badge.thumb}
+                  alt={badge.name}
+                  className="h-full w-full object-cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10">
+                  <Award className="h-4 w-4 text-primary" />
+                </div>
+              )}
+            </div>
+            {/* Badge name */}
+            <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors max-w-[100px] truncate leading-tight">
+              {badge.name}
+            </span>
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-[180px] text-center">
+        <TooltipContent side="top" className="max-w-[200px] text-center">
           <p className="font-semibold text-xs">{badge.name}</p>
           {badge.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{badge.description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-3">{badge.description}</p>
           )}
         </TooltipContent>
       </Tooltip>
@@ -68,45 +75,56 @@ export function ProfileBadges({ pubkey }: ProfileBadgesProps) {
   const { data: badges, isLoading } = useProfileBadges(pubkey);
   const [selectedBadge, setSelectedBadge] = useState<BadgeDefinition | null>(null);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 pt-3 mt-3 border-t border-border/50">
-        <Award className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-        <div className="flex gap-2">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-10 w-10 rounded-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!badges || badges.length === 0) return null;
-
   return (
     <>
-      <div className="flex items-center gap-3 pt-3 mt-3 border-t border-border/50">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-          <Award className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Badges</span>
+      <div className="mt-4 pt-4 border-t border-border/50 space-y-3">
+
+        {/* Section header */}
+        <div className="flex items-center gap-1.5">
+          <Award className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Badges
+          </span>
+          {!isLoading && badges && badges.length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-[10px]">
+              {badges.length}
+            </span>
+          )}
         </div>
 
-        {/* Badge thumbnails — overlapping stack */}
-        <div className="flex items-center">
-          {badges.map((badge, i) => (
-            <div
-              key={`${badge.issuerPubkey}:${badge.dTag}`}
-              className="relative"
-              style={{ marginLeft: i === 0 ? 0 : '-8px', zIndex: badges.length - i }}
-            >
-              <BadgeThumbnail badge={badge} onClick={setSelectedBadge} />
+        {/* Loading skeletons */}
+        {isLoading && (
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-9 w-28 rounded-xl" />
+            ))}
+          </div>
+        )}
+
+        {/* Badge chips */}
+        {!isLoading && badges && badges.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {badges.map((badge) => (
+              <BadgeThumbnail
+                key={`${badge.issuerPubkey}:${badge.dTag}`}
+                badge={badge}
+                onClick={setSelectedBadge}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isLoading && (!badges || badges.length === 0) && (
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-dashed border-border/60 bg-muted/30">
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-muted shrink-0">
+              <Award className="h-4 w-4 text-muted-foreground/50" />
             </div>
-          ))}
-        </div>
-
-        <span className="text-xs text-muted-foreground">
-          {badges.length} {badges.length === 1 ? 'badge' : 'badges'}
-        </span>
+            <p className="text-xs text-muted-foreground leading-snug">
+              No badges collected yet
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Detail dialog */}
