@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies and build
         run: |
           npm install
-          npm run build
+          npx vite build --base=/tyranno-social/
           cp dist/index.html dist/404.html
 
       - name: Setup Pages
