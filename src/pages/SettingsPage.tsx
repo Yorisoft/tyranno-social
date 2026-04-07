@@ -90,7 +90,6 @@ export default function SettingsPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-                  </div>
                 </div>
                 <h1 className="text-base font-bold text-foreground leading-tight truncate">Settings</h1>
               </div>
