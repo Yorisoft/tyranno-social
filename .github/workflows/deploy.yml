@@ -38,11 +38,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies and build
-        env:
-          VITE_BASE_PATH: /tyranno-social/
         run: |
           npm install
-          npm run build
+          npx vite build --base=/tyranno-social/
+          cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -5,9 +5,6 @@ import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
-  // Set base only when building for GitHub Pages (VITE_BASE_PATH env var).
-  // The Shakespeare preview and local dev always use '/'.
-  base: process.env.VITE_BASE_PATH || '/',
   server: {
     host: "::",
     port: 8080,
