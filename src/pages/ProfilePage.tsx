@@ -328,63 +328,101 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           <p className="text-sm mb-4 whitespace-pre-wrap break-words leading-relaxed">{bio}</p>
                         )}
                         
-                        {/* Personal links: website + NIP-39 external identities */}
-                        {(website || identities.length > 0 || lud16 || lud06) && (
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {website && (
-                              <a
-                                href={website.startsWith('http') ? website : `https://${website}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/8 text-primary border border-primary/20 hover:bg-primary/15 hover:border-primary/40 transition-all duration-150"
-                              >
-                                <Globe className="h-3.5 w-3.5 shrink-0" />
-                                <span className="truncate max-w-[160px]">{website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
-                              </a>
-                            )}
+                        {/* Personal links: website + kind-0 links/fields + NIP-39 external identities + lightning */}
+                        {(() => {
+                          // Collect extra links from non-standard but widely-used kind-0 fields:
+                          // 1. metadata.links — array of { label, url } objects (used by some clients incl. this one)
+                          // 2. metadata.fields — array of [label, url] tuples (used by Amethyst etc.)
+                          const meta = metadata as Record<string, unknown> | undefined;
+                          const extraLinks: Array<{ label: string; url: string }> = [];
 
-                            {identities.map((id) => {
-                              const icon = getPlatformIcon(id.platform);
-                              const href = id.profileUrl;
-                              const label = id.identity;
-                              const chipClass = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-150 ' + getPlatformChipClass(id.platform);
-                              return href ? (
+                          if (Array.isArray(meta?.links)) {
+                            for (const l of meta.links as Array<{ label?: string; url?: string }>) {
+                              if (l?.url) extraLinks.push({ label: l.label || l.url.replace(/^https?:\/\//, ''), url: l.url });
+                            }
+                          }
+                          if (Array.isArray(meta?.fields)) {
+                            for (const f of meta.fields as Array<[string?, string?]>) {
+                              const [label, url] = f;
+                              if (url && url.startsWith('http')) extraLinks.push({ label: label || url.replace(/^https?:\/\//, ''), url });
+                            }
+                          }
+
+                          const hasContent = website || identities.length > 0 || extraLinks.length > 0 || lud16 || lud06;
+                          if (!hasContent) return null;
+
+                          return (
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {website && (
                                 <a
-                                  key={id.raw}
-                                  href={href}
+                                  href={website.startsWith('http') ? website : `https://${website}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  title={`${id.platformLabel}: ${id.identity}`}
-                                  className={chipClass}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/8 text-primary border border-primary/20 hover:bg-primary/15 hover:border-primary/40 transition-all duration-150"
                                 >
-                                  {icon}
-                                  <span className="truncate max-w-[120px]">{label}</span>
+                                  <Globe className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate max-w-[160px]">{website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
                                 </a>
-                              ) : (
-                                <span
-                                  key={id.raw}
-                                  title={`${id.platformLabel}: ${id.identity}`}
-                                  className={chipClass}
-                                >
-                                  {icon}
-                                  <span className="truncate max-w-[120px]">{label}</span>
-                                </span>
-                              );
-                            })}
+                              )}
 
-                            {(lud16 || lud06) && (
-                              <button
-                                onClick={() => copyToClipboard(lud16 || lud06 || '', 'Lightning address')}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 transition-all duration-150 group cursor-pointer"
-                                title="Click to copy Lightning address"
-                              >
-                                <Zap className="h-3.5 w-3.5 shrink-0" />
-                                <span className="truncate max-w-[140px] font-mono">{lud16 || lud06}</span>
-                                <Copy className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                              {/* Extra links from kind-0 metadata (links[] / fields[]) */}
+                              {extraLinks.map((link, i) => (
+                                <a
+                                  key={`extra-${i}`}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/8 text-primary border border-primary/20 hover:bg-primary/15 hover:border-primary/40 transition-all duration-150"
+                                >
+                                  <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate max-w-[140px]">{link.label}</span>
+                                </a>
+                              ))}
+
+                              {/* NIP-39 external identities (kind 10011) */}
+                              {identities.map((id) => {
+                                const icon = getPlatformIcon(id.platform);
+                                const href = id.profileUrl;
+                                const label = id.identity;
+                                const chipClass = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-150 ' + getPlatformChipClass(id.platform);
+                                return href ? (
+                                  <a
+                                    key={id.raw}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={`${id.platformLabel}: ${id.identity}`}
+                                    className={chipClass}
+                                  >
+                                    {icon}
+                                    <span className="truncate max-w-[120px]">{label}</span>
+                                  </a>
+                                ) : (
+                                  <span
+                                    key={id.raw}
+                                    title={`${id.platformLabel}: ${id.identity}`}
+                                    className={chipClass}
+                                  >
+                                    {icon}
+                                    <span className="truncate max-w-[120px]">{label}</span>
+                                  </span>
+                                );
+                              })}
+
+                              {(lud16 || lud06) && (
+                                <button
+                                  onClick={() => copyToClipboard(lud16 || lud06 || '', 'Lightning address')}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 transition-all duration-150 group cursor-pointer"
+                                  title="Click to copy Lightning address"
+                                >
+                                  <Zap className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate max-w-[140px] font-mono">{lud16 || lud06}</span>
+                                  <Copy className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* NIP-58 Badges */}
                         <ProfileBadges pubkey={pubkey} />
