@@ -62,7 +62,6 @@ export function useLoggedInAccounts() {
     authors,
     currentUser,
     otherUsers,
-    logins,
     setLogin,
     removeLogin,
   };
