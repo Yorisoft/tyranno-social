@@ -415,6 +415,24 @@ const Index = () => {
                       </DropdownMenuItem>
                     )}
 
+                    {/* ── Relay Firehose ── */}
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Relay Firehose
+                    </div>
+                    {config.relayMetadata.relays.filter((relay) => {
+                        try { const h = new URL(relay.url).hostname; return h !== 'localhost' && h !== '127.0.0.1' && h !== '::1'; } catch { return false; }
+                      }).map((relay) => (
+                      <DropdownMenuItem
+                        key={relay.url}
+                        onClick={() => { setSelectedRelay(relay.url); setIsMutualFeed(false); setIsConversationsFeed(false); }}
+                        className={`cursor-pointer ${selectedRelay === relay.url ? 'bg-accent' : ''}`}
+                      >
+                        <Wifi className="h-4 w-4 mr-2" />
+                        <span className="truncate">{relay.url.replace('wss://', '')}</span>
+                      </DropdownMenuItem>
+                    ))}
+
                     {/* ── Circles ── */}
                     {user && followSets.length > 0 && (
                       <>
@@ -445,24 +463,6 @@ const Index = () => {
                         ))}
                       </>
                     )}
-
-                    {/* ── Relay Firehose ── */}
-                    <DropdownMenuSeparator />
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Relay Firehose
-                    </div>
-                    {config.relayMetadata.relays.filter((relay) => {
-                        try { const h = new URL(relay.url).hostname; return h !== 'localhost' && h !== '127.0.0.1' && h !== '::1'; } catch { return false; }
-                      }).map((relay) => (
-                      <DropdownMenuItem
-                        key={relay.url}
-                        onClick={() => { setSelectedRelay(relay.url); setIsMutualFeed(false); setIsConversationsFeed(false); }}
-                        className={`cursor-pointer ${selectedRelay === relay.url ? 'bg-accent' : ''}`}
-                      >
-                        <Wifi className="h-4 w-4 mr-2" />
-                        <span className="truncate">{relay.url.replace('wss://', '')}</span>
-                      </DropdownMenuItem>
-                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
