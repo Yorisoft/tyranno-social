@@ -17,7 +17,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useToast } from '@/hooks/useToast';
 import { genUserName } from '@/lib/genUserName';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -748,7 +748,6 @@ export function CirclesPage() {
         )}
       </Dialog>
 
-      <MobileBottomNav />
     </div>
   );
 }

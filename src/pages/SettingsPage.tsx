@@ -18,7 +18,7 @@ import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 import { LoginArea } from '@/components/auth/LoginArea';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+
 import {
   Moon, Sun, Wifi, AlertTriangle, ArrowLeft,
   User, Check, Link as LinkIcon, Zap, LogOut,
@@ -378,7 +378,6 @@ export default function SettingsPage() {
 
       </main>
 
-      <MobileBottomNav />
     </div>
   );
 }

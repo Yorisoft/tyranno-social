@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 
 import Index from "./pages/Index";
 import { NIP19Page } from "./pages/NIP19Page";
@@ -34,6 +35,8 @@ export function AppRouter() {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {/* Global mobile bottom nav — fixed, rendered on every route */}
+      <MobileBottomNav />
     </BrowserRouter>
   );
 }
