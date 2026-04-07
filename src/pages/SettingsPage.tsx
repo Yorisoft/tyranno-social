@@ -35,7 +35,6 @@ import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 
 import { LoginArea } from '@/components/auth/LoginArea';
-import { useNostrLogin } from '@nostrify/react/login';
 
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
