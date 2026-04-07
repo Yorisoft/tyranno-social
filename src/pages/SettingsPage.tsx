@@ -20,7 +20,6 @@ import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 import { LoginArea } from '@/components/auth/LoginArea';
-import { useNostrLogin } from '@nostrify/react/login';
 
 import {
   Moon, Sun, Wifi, AlertTriangle, ArrowLeft,
@@ -86,8 +85,7 @@ export default function SettingsPage() {
   const { theme } = useTheme();
   const { config, updateConfig } = useAppContext();
   const { user } = useCurrentUser();
-  const { currentUser, otherUsers, setLogin, removeLogin } = useLoggedInAccounts();
-  const { logins } = useNostrLogin();
+  const { currentUser, otherUsers, logins, setLogin, removeLogin } = useLoggedInAccounts();
   const { toast } = useToast();
   const [relaysExpanded, setRelaysExpanded] = useState(false);
   const [topicFilterExpanded, setTopicFilterExpanded] = useState(false);
