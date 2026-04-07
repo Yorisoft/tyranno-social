@@ -20,6 +20,7 @@ import { TopicFilterManager } from '@/components/TopicFilterManager';
 import { AppearancePanel } from '@/components/AppearancePanel';
 import { BackupManager } from '@/components/BackupManager';
 import { LoginArea } from '@/components/auth/LoginArea';
+import { useNsec } from '@/hooks/useNsec';
 
 import {
   Moon, Sun, Wifi, AlertTriangle, ArrowLeft,
@@ -85,17 +86,13 @@ export default function SettingsPage() {
   const { theme } = useTheme();
   const { config, updateConfig } = useAppContext();
   const { user } = useCurrentUser();
-  const { currentUser, otherUsers, logins, setLogin, removeLogin } = useLoggedInAccounts();
+  const { currentUser, otherUsers, setLogin, removeLogin } = useLoggedInAccounts();
   const { toast } = useToast();
+  const nsec = useNsec();
   const [relaysExpanded, setRelaysExpanded] = useState(false);
   const [topicFilterExpanded, setTopicFilterExpanded] = useState(false);
   const [backupExpanded, setBackupExpanded] = useState(false);
   const [keyVisible, setKeyVisible] = useState(false);
-
-  // Check whether the current login has a raw nsec available
-  const currentLogin = logins[0];
-  const nsecLogin = currentLogin?.type === 'nsec' ? currentLogin : null;
-  const nsec = nsecLogin ? nip19.nsecEncode((nsecLogin as { type: 'nsec'; secretKey: Uint8Array }).secretKey) : null;
 
   const handleCopyNsec = async () => {
     if (!nsec) return;
