@@ -5,14 +5,9 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Home, Bell, Settings, MessageCircle, Flame, Menu } from 'lucide-react';
+import { Home, Bell, Settings, MessageCircle, Flame } from 'lucide-react';
 
-interface MobileBottomNavProps {
-  /** Called when the user taps the Menu icon in the bottom bar */
-  onMenuOpen?: () => void;
-}
-
-export function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
+export function MobileBottomNav() {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,16 +90,16 @@ export function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
           <span className="text-[10px] font-medium">Alerts</span>
         </Button>
 
-        {/* Menu — opens the sidebar drawer */}
+        {/* Settings */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={onMenuOpen}
-          className="flex-col h-auto py-2 px-3 gap-1 transition-colors text-muted-foreground hover:text-foreground"
-          aria-label="Open menu"
+          onClick={() => navigate('/settings')}
+          className={btnClass('/settings')}
+          aria-label="Settings"
         >
-          <Menu className="h-5 w-5" />
-          <span className="text-[10px] font-medium">Menu</span>
+          <Settings className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Settings</span>
         </Button>
 
       </div>

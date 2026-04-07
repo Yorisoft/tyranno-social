@@ -66,7 +66,6 @@ const Index = () => {
   const [selectedCirclePubkeys, setSelectedCirclePubkeys] = useState<string[] | null>(null);
   const [selectedCircleLabel, setSelectedCircleLabel] = useState<string | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   // Hide header on scroll down, show on scroll up (mobile only)
@@ -250,8 +249,6 @@ const Index = () => {
             {/* Hamburger menu — opens sidebar drawer on all screen sizes */}
             <SidebarDrawer
               selectedCategory={selectedCategory}
-              open={sidebarOpen}
-              onOpenChange={setSidebarOpen}
               onCategoryChange={(cat) => {
                 setSelectedCategory(cat);
                 setSelectedCircleDTag(null);
@@ -749,7 +746,7 @@ const Index = () => {
       <InstallPWA />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav onMenuOpen={() => setSidebarOpen(true)} />
+      <MobileBottomNav />
 
       {/* Mobile Floating Compose Button */}
       <MobileComposeFAB onPostPublished={handleRefresh} />
